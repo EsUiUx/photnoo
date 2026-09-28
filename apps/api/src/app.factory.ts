@@ -15,7 +15,8 @@ export function configureApp(app: NestExpressApplication): INestApplication {
   app.set('trust proxy', env.TRUST_PROXY_HOPS);
   app.use(helmet());
   app.use(cookieParser());
-  app.enableCors({ origin: env.WEB_ORIGIN, credentials: true });
+  // ETag must be readable so the browser uploader can complete multipart uploads.
+  app.enableCors({ origin: env.WEB_ORIGIN, credentials: true, exposedHeaders: ['ETag'] });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('v1', { exclude: ['health'] });
   app.enableShutdownHooks();

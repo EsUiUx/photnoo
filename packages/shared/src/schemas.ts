@@ -45,6 +45,31 @@ export const passwordResetConfirmSchema = z.object({
 });
 export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;
 
+export const createFolderSchema = z.object({ name: z.string().trim().min(1).max(60) });
+export type CreateFolderInput = z.infer<typeof createFolderSchema>;
+
+/** Start of a multipart upload (PRD P-06, P-07). Size and name are checked before any URL is issued. */
+export const createUploadSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  size: z.number().int().positive(),
+  type: z.string().max(100).optional(),
+  folderId: z.string().uuid().optional(),
+});
+export type CreateUploadInput = z.infer<typeof createUploadSchema>;
+
+export const signPartsSchema = z.object({
+  partNumbers: z.array(z.number().int().min(1).max(10_000)).min(1).max(100),
+});
+export type SignPartsInput = z.infer<typeof signPartsSchema>;
+
+export const completeUploadSchema = z.object({
+  parts: z
+    .array(z.object({ partNumber: z.number().int().min(1).max(10_000), etag: z.string().min(1).max(200) }))
+    .min(1)
+    .max(10_000),
+});
+export type CompleteUploadInput = z.infer<typeof completeUploadSchema>;
+
 export const createGallerySchema = z.object({
   name: z.string().trim().min(1).max(80),
   clientName: z.string().trim().min(1).max(100),

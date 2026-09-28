@@ -21,7 +21,17 @@ export const DeliveryRules = {
   maxFileBytes: 2 * 1024 ** 3,
   /** Per-gallery bandwidth breaker (default: 50 GB in one hour). */
   breakerBytesPerHour: 50 * 1024 ** 3,
+  /** Multipart part size. R2 and S3 need at least 5 MiB for every part but the last. */
+  uploadPartBytes: 10 * 1024 ** 2,
+  /** Signed upload-part URL lifetime. */
+  uploadUrlTtlSeconds: 3600,
+  /** Preview long edge in pixels (PRD section 4). */
+  previewMaxPixels: 1600,
 } as const;
+
+export function partCount(sizeBytes: number): number {
+  return Math.max(1, Math.ceil(sizeBytes / DeliveryRules.uploadPartBytes));
+}
 
 export const AllowanceWarnings = [0.8, 0.95, 1] as const;
 

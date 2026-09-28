@@ -41,6 +41,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           code: typeof payload.code === 'string' ? payload.code : defaultCode(status),
           message: typeof payload.message === 'string' ? payload.message : exception.message,
           ...(payload.fields ? { fields: payload.fields } : {}),
+          ...(payload.details ? { details: payload.details } : {}),
           requestId,
         },
       });

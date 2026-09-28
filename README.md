@@ -23,8 +23,21 @@ Product scope and rules live in **Photnoo PRD v1**; architecture and roadmap in 
 - pnpm 9 via Corepack: `corepack pnpm@9.15.4 <command>` (or `corepack enable` once, then `pnpm`)
 - Docker Desktop, for local Postgres, Redis, MinIO (stand-in for Cloudflare R2) and Mailpit.
   No Docker? Run `pnpm db:local` in its own terminal instead of `pnpm infra:up`: it starts a real
-  PostgreSQL 17 from npm binaries on port 5432 (data in `.local/postgres`). Redis, MinIO and
+  PostgreSQL 17 from npm binaries on port 5432 (data in `.local/postgres`), and set
+  `STORAGE_DRIVER=local` in `.env` to keep uploaded files on disk instead of MinIO. Redis and
   Mailpit still need Docker; without them `/health` reports `degraded` and emails are only logged.
+
+## Processes
+
+| Process | Command | Does |
+| --- | --- | --- |
+| API | `pnpm --filter @photnoo/api start` | REST API under `/v1`, `/health` |
+| Worker | `pnpm --filter @photnoo/api start:worker` | Background jobs: file type check, SHA-256, previews |
+| Web | `pnpm --filter @photnoo/web dev` | Next.js on :3000, proxies `/v1/*` to the API |
+
+Jobs run on Postgres (pg-boss, schema `pgboss`), so the worker needs no Redis. Uploads go from
+the browser straight to storage with signed URLs; the API only checks, signs and records. R2 (and
+MinIO) buckets need a CORS rule allowing `PUT` from the web origin and exposing the `ETag` header.
 
 ## First run
 

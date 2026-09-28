@@ -5,7 +5,11 @@ import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { CsrfMiddleware } from './auth/csrf.middleware';
 import { ConfigModule } from './config/config.module';
+import { GalleriesModule } from './galleries/galleries.module';
 import { HealthController } from './health/health.controller';
+import { JobsModule } from './jobs/jobs.module';
+import { MediaModule } from './media/media.module';
+import { StorageModule } from './storage/storage.module';
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
@@ -30,7 +34,11 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
     AuditModule,
     MailModule,
+    StorageModule,
+    JobsModule,
     AuthModule,
+    GalleriesModule,
+    MediaModule,
   ],
   controllers: [HealthController],
 })
