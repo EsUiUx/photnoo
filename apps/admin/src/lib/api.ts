@@ -44,6 +44,10 @@ export async function api<T = unknown>(path: string, options: { method?: 'GET' |
   if (response.status === 204) return undefined as T;
   const payload = (await response.json().catch(() => null)) as { error?: { code?: string; message?: string; fields?: FieldError[] } } | null;
   if (!response.ok) {
+    // No JSON body on a 5xx means the proxy could not reach the API (not started, or crashed).
+    if (!payload && response.status >= 500) {
+      throw new ApiError(response.status, 'api_unavailable', 'The API is not responding. Check that it and the database are running.');
+    }
     throw new ApiError(response.status, payload?.error?.code ?? 'error', payload?.error?.message ?? response.statusText, payload?.error?.fields ?? []);
   }
   return payload as T;
