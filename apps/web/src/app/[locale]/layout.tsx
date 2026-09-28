@@ -1,13 +1,18 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Sans_Arabic, Inter } from 'next/font/google';
+import { Albert_Sans, IBM_Plex_Sans_Arabic } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { direction, routing } from '@/i18n/routing';
 import '../globals.css';
 
-// Fonts are placeholders until the designer confirms the Figma typeface.
-const latin = Inter({ subsets: ['latin'], variable: '--font-latin', display: 'swap' });
+// Albert Sans is the Figma typeface. IBM Plex Sans Arabic is a stand-in until Arabic designs exist.
+const latin = Albert_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-latin',
+  display: 'swap',
+});
 const arabic = IBM_Plex_Sans_Arabic({
   subsets: ['arabic'],
   weight: ['400', '500', '600', '700'],

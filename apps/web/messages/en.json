@@ -4,26 +4,224 @@
     "description": "Deliver galleries to your clients with a private link, a password and proof of every download."
   },
   "Nav": {
-    "howItWorks": "How it works",
-    "pricing": "Pricing",
-    "login": "Log in",
-    "apply": "Request access",
+    "label": "Main",
+    "home": "Home",
+    "workflow": "Workflow",
+    "engine": "Engine",
+    "plans": "Plans",
+    "login": "Login",
+    "trial": "Start Free Trial",
     "language": "العربية"
   },
-  "Home": {
-    "title": "Deliver your work the way it deserves.",
-    "subtitle": "Upload a gallery, send your client a private link and password, and get proof of every download. Files delete themselves when the link expires.",
-    "primaryCta": "Request access",
-    "secondaryCta": "See pricing",
-    "invite": "Photnoo is invite-only while we onboard our first photographers."
+  "Hero": {
+    "title": "One Workflow, Every Step Covered.",
+    "subtitle": "PHOTNOO simplifies every stage of the photographer journey — from booking a client to delivering the final gallery.",
+    "login": "Login",
+    "trial": "Start Free Trial"
   },
-  "Steps": {
-    "title": "Three steps, no chasing",
-    "upload": "Upload",
-    "uploadBody": "Drag in the whole shoot. Uploads resume if your connection drops.",
-    "send": "Send",
-    "sendBody": "Share the link on WhatsApp and send the password separately.",
-    "proof": "Proof",
-    "proofBody": "See when your client opened the gallery and what they downloaded."
+  "Engine": {
+    "title": "Engine",
+    "subtitle": "From client galleries to websites and print sales, PHOTNOO gives photographers everything they need to deliver work professionally and grow their business.",
+    "modules": {
+      "galleries": "Galleries",
+      "websiteBuilder": "Website Builder",
+      "store": "Store",
+      "prints": "Prints"
+    },
+    "soon": "Coming soon",
+    "mockupAlt": "The Photnoo photographer dashboard: quick actions, clients, active galleries, downloads, storage and recent galleries."
+  },
+  "Workflow": {
+    "title": "Workflow",
+    "subtitle": "simplifies every stage of the photographer journey — from booking a client to delivering the final gallery.",
+    "steps": {
+      "booking": {
+        "title": "Booking",
+        "body": "Meet your client and prepare the project."
+      },
+      "shoot": {
+        "title": "Shoot",
+        "body": "Capture every important moment."
+      },
+      "upload": {
+        "title": "Upload",
+        "body": "Upload your photos securely."
+      },
+      "galleryDelivery": {
+        "title": "Gallery Delivery",
+        "body": "Share a professional gallery with your client."
+      },
+      "clientSelection": {
+        "title": "Client Selection",
+        "body": "Clients choose their favorite photos."
+      },
+      "feedback": {
+        "title": "Feedback",
+        "body": "Receive comments and approvals."
+      },
+      "finalDelivery": {
+        "title": "Final Delivery",
+        "body": "Deliver the completed project with confidence."
+      },
+      "growth": {
+        "title": "Business Growth",
+        "body": "Create a memorable client experience."
+      }
+    }
+  },
+  "Plans": {
+    "title": "Pricing",
+    "subtitle": "Start with the plan that fits your workflow and upgrade as your business grows.",
+    "bestOffer": "BEST OFFER",
+    "perMonth": "EGP/M",
+    "cta": "Request access",
+    "features": {
+      "allowance": "{amount} of deliveries a year"
+    },
+    "tiers": {
+      "starter": {
+        "name": "Starter",
+        "description": "Perfect for freelancers starting their photography business.",
+        "f1": "Unlimited galleries",
+        "f2": "Private link and password",
+        "f3": "Proof of every download"
+      },
+      "growth": {
+        "name": "Growth",
+        "description": "Designed for growing photographers with increasing client work.",
+        "f1": "Everything in Starter",
+        "f2": "Email alerts when clients download",
+        "f3": "Priority support"
+      },
+      "studio": {
+        "name": "Studio",
+        "description": "Built for professional studios managing multiple projects.",
+        "f1": "Everything in Growth",
+        "f2": "Download history for every client",
+        "f3": "Onboarding call"
+      }
+    }
+  },
+  "Why": {
+    "title": "Why",
+    "body": "Built around the real needs of modern photographers, PHOTNOO combines professional delivery, secure sharing, and business tools into one seamless platform — helping you impress clients, streamline your workflow, and grow your photography business."
+  },
+  "Footer": {
+    "tagline": "One Workflow, Every Step Covered.",
+    "shortLinks": "Short Links",
+    "contact": "Contact Us",
+    "city": "Cairo, Egypt",
+    "rights": "© {year} PHOTNOO™. All rights reserved.",
+    "social": {
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "tiktok": "TikTok",
+      "x": "X",
+      "snapchat": "Snapchat"
+    }
+  },
+  "AuthShell": {
+    "home": "Home",
+    "contact": "Contact Us",
+    "help": "Help"
+  },
+  "Login": {
+    "title": "Welcome Back",
+    "subtitle": "Enter your email and password to sign in",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot password?",
+    "submit": "Log in",
+    "noAccount": "Don't have an account?",
+    "apply": "Request access"
+  },
+  "Invite": {
+    "title": "Join Photnoo Now!",
+    "subtitle": "Choose a password to get started",
+    "name": "Full name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "At least 10 characters. Avoid common passwords and your email address.",
+    "terms": "I accept the Terms of Service and Privacy Policy.",
+    "contentDeclaration": "I own or have rights to everything I upload, and I have consent from a parent or guardian for any photos of minors.",
+    "mustAccept": "Please accept both to continue.",
+    "submit": "Sign up",
+    "haveAccount": "Already have an account?",
+    "backToLogin": "Back to login",
+    "invalid": "This invite link has expired or was already used. Ask Photnoo for a new invite, or log in if you already have an account."
+  },
+  "Apply": {
+    "title": "Request Access",
+    "subtitle": "Photnoo is invite-only. Tell us about your work.",
+    "name": "Full name",
+    "studio": "Studio name (optional)",
+    "city": "City",
+    "phone": "Mobile number",
+    "email": "Email",
+    "portfolio": "Portfolio or Instagram link",
+    "submit": "Send request",
+    "sent": "Thank you. We review every request and will email you within a few days.",
+    "home": "Back to home",
+    "haveAccount": "Already have an account?",
+    "backToLogin": "Back to login"
+  },
+  "Reset": {
+    "emailTitle": "Forgot Password?",
+    "emailSubtitle": "Write your email",
+    "codeTitle": "We Have Sent You a Code",
+    "codeSubtitle": "Check your email",
+    "passwordTitle": "Create New Password",
+    "passwordSubtitle": "It must be different from your old password",
+    "email": "Email",
+    "sendCode": "Send code",
+    "back": "Back",
+    "codeLabel": "6-digit code",
+    "codeIncomplete": "Enter all 6 digits from the email.",
+    "confirm": "Confirm",
+    "resend": "Send a new code",
+    "resent": "If an account exists for this email, a new code is on its way.",
+    "changeEmail": "Use a different email",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "mismatch": "The passwords do not match.",
+    "signIn": "Sign in"
+  },
+  "Errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "We could not reach Photnoo. Check your connection and try again.",
+    "invalidCredentials": "Email or password is incorrect.",
+    "accountLocked": "Too many attempts. Try again in 15 minutes, or reset your password.",
+    "accountSuspended": "This account is suspended. Contact Photnoo support.",
+    "inviteInvalid": "This invite link has expired or was already used.",
+    "accountExists": "An account already exists for this email. Please log in.",
+    "resetInvalid": "The code is wrong or has expired. Request a new code.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "passwordWeak": "Choose a stronger password: at least 10 characters, not a common one, and not your email.",
+    "field": {
+      "email": "Enter a valid email address.",
+      "password": "Enter your password.",
+      "newPassword": "Use at least 10 characters.",
+      "phone": "Enter a valid mobile number, e.g. 01012345678.",
+      "name": "Enter your full name.",
+      "city": "Enter your city.",
+      "portfolioUrl": "Enter a link to your portfolio or Instagram.",
+      "code": "Enter the 6-digit code.",
+      "generic": "Check this field."
+    }
+  },
+  "Dashboard": {
+    "hello": "Hello, {name}!",
+    "state": {
+      "trial": "Free trial",
+      "pending_payment": "Waiting for payment",
+      "active": "Active plan",
+      "soft_locked": "Plan ended — view only",
+      "dormant": "Plan inactive",
+      "suspended": "Account suspended"
+    },
+    "allowance": "{used} GB of {total} GB used",
+    "until": "Until {date}",
+    "comingSoon": "Galleries and uploads are coming next.",
+    "logout": "Log out"
   }
 }

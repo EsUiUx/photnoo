@@ -25,6 +25,12 @@
   --color-ink-muted: #606060;
   --color-ink-subtle: #898989;
   --color-line: #dedede;
+  --color-ink-body: #3d3f42;
+  --color-field-border: #dfdfdf;
+  --color-field-muted: #f8f8f8;
+  --color-on-primary: #e9f4ff;
+  --color-danger: #b42318;
+  --color-danger-bg: #fef3f2;
 
   --font-sans: var(--font-latin), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
   --radius-card: 1rem;
