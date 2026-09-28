@@ -86,3 +86,15 @@ export const createGallerySchema = z.object({
   clientEmail: emailSchema.optional(),
 });
 export type CreateGalleryInput = z.infer<typeof createGallerySchema>;
+
+export const updateGallerySchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    clientName: z.string().trim().min(1).max(100),
+    clientPhone: phoneSchema,
+    clientEmail: emailSchema.nullable(),
+    coverFileId: z.string().uuid().nullable(),
+  })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
+export type UpdateGalleryInput = z.infer<typeof updateGallerySchema>;

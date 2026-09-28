@@ -14,6 +14,7 @@ export function galleryJson(g: Gallery) {
     activatedAt: g.activatedAt,
     expiresAt: g.expiresAt,
     closedAt: g.closedAt,
+    closedReason: g.closedReason,
     totalBytes: g.totalBytes.toString(),
     capBytes: g.capBytes.toString(),
     servedBytes: g.servedBytes.toString(),

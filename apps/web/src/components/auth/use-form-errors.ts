@@ -17,7 +17,7 @@ export function useFormErrors() {
   const [form, setForm] = useState<string | undefined>();
 
   function fieldMessage(path: string): string {
-    const known = ['email', 'password', 'newPassword', 'phone', 'name', 'city', 'portfolioUrl', 'code'];
+    const known = ['email', 'password', 'newPassword', 'phone', 'name', 'city', 'portfolioUrl', 'code', 'clientName', 'clientPhone'];
     return known.includes(path) ? t(`field.${path}`) : t('field.generic');
   }
 

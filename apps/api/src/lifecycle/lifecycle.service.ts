@@ -58,41 +58,52 @@ export class LifecycleService {
         ],
       },
       take: BATCH,
-      select: { id: true, state: true, photographerId: true },
+      select: { id: true, state: true },
     });
     for (const gallery of galleries) {
-      const uploading = await this.prisma.client.file.findMany({
-        where: { galleryId: gallery.id, status: 'uploading' },
-        select: { originalKey: true, uploadId: true },
-      });
-      for (const file of uploading) {
-        if (file.uploadId) await this.storage.abortMultipartUpload(file.originalKey, file.uploadId).catch(() => undefined);
-      }
-      await this.storage.deletePrefix(objectKeys.gallery(gallery.id));
-      await this.prisma.client.$transaction([
-        this.prisma.client.file.updateMany({ where: { galleryId: gallery.id }, data: { status: 'purged', uploadId: null } }),
-        this.prisma.client.clientSession.deleteMany({ where: { galleryId: gallery.id } }),
-        this.prisma.client.gallery.update({
-          where: { id: gallery.id },
-          data: {
-            state: 'purged',
-            purgedAt: now,
-            closedAt: gallery.state === 'draft' ? now : undefined,
-            closedReason: gallery.state === 'draft' ? 'draft_expired' : undefined,
-            passwordHash: null,
-            linkTokenEnc: null,
-          },
-        }),
-      ]);
-      await this.audit.record({
-        actorType: 'system',
-        action: 'gallery.purged',
-        targetType: 'gallery',
-        targetId: gallery.id,
-        data: { from: gallery.state },
-      });
+      await this.purgeGallery(gallery.id, gallery.state === 'draft' ? 'draft_expired' : undefined, now);
     }
     return galleries.length;
+  }
+
+  /**
+   * Deletes one gallery's files and ends all access. `reason` is recorded when the gallery was
+   * not already closed (draft expiry, deletion by the photographer).
+   */
+  async purgeGallery(galleryId: string, reason?: string, now = new Date()): Promise<void> {
+    const gallery = await this.prisma.client.gallery.findUniqueOrThrow({ where: { id: galleryId }, select: { state: true, photographerId: true } });
+    const uploading = await this.prisma.client.file.findMany({
+      where: { galleryId, status: 'uploading' },
+      select: { originalKey: true, uploadId: true },
+    });
+    for (const file of uploading) {
+      if (file.uploadId) await this.storage.abortMultipartUpload(file.originalKey, file.uploadId).catch(() => undefined);
+    }
+    await this.storage.deletePrefix(objectKeys.gallery(galleryId));
+    const wasOpen = gallery.state === 'draft' || gallery.state === 'active';
+    await this.prisma.client.$transaction([
+      this.prisma.client.file.updateMany({ where: { galleryId }, data: { status: 'purged', uploadId: null } }),
+      this.prisma.client.clientSession.deleteMany({ where: { galleryId } }),
+      this.prisma.client.gallery.update({
+        where: { id: galleryId },
+        data: {
+          state: 'purged',
+          purgedAt: now,
+          closedAt: wasOpen ? now : undefined,
+          closedReason: wasOpen ? (reason ?? 'purged') : undefined,
+          passwordHash: null,
+          linkTokenEnc: null,
+        },
+      }),
+    ]);
+    await this.audit.record({
+      actorType: reason === 'deleted_by_photographer' ? 'photographer' : 'system',
+      actorId: reason === 'deleted_by_photographer' ? gallery.photographerId : null,
+      action: 'gallery.purged',
+      targetType: 'gallery',
+      targetId: galleryId,
+      data: { from: gallery.state, reason: reason ?? null },
+    });
   }
 
   /** Multipart uploads nobody finished within 24 hours. */

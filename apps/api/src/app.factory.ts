@@ -13,7 +13,9 @@ export function configureApp(app: NestExpressApplication): INestApplication {
   app.useLogger(app.get(Logger));
   // Hops of trusted proxies in front of the API (Cloudflare + load balancer), so req.ip is the client.
   app.set('trust proxy', env.TRUST_PROXY_HOPS);
-  app.use(helmet());
+  // same-site (not the default same-origin) so the web app (app.photnoo.com, or :3000 locally)
+  // can show images the API serves; other sites still cannot embed them.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
   app.use(cookieParser());
   // ETag must be readable so the browser uploader can complete multipart uploads.
   app.enableCors({ origin: env.WEB_ORIGIN, credentials: true, exposedHeaders: ['ETag'] });

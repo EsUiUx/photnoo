@@ -22,7 +22,7 @@ export class ApiError extends Error {
   }
 }
 
-type Options = { method?: 'GET' | 'POST'; body?: unknown; retry?: boolean };
+type Options = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; retry?: boolean };
 
 const CSRF_COOKIE = 'pn_csrf';
 

@@ -206,22 +206,235 @@
       "city": "أدخل مدينتك.",
       "portfolioUrl": "أدخل رابط أعمالك أو حساب إنستجرام.",
       "code": "أدخل الرمز المكوّن من 6 أرقام.",
-      "generic": "راجع هذا الحقل."
+      "generic": "راجع هذا الحقل.",
+      "clientName": "أدخل اسم العميل.",
+      "clientPhone": "أدخل رقم موبايل صحيحًا، مثل 01012345678."
     }
   },
-  "Dashboard": {
-    "hello": "مرحبًا، {name}!",
-    "state": {
-      "trial": "فترة تجريبية",
-      "pending_payment": "في انتظار الدفع",
-      "active": "باقة نشطة",
-      "soft_locked": "انتهت الباقة — عرض فقط",
-      "dormant": "الباقة غير نشطة",
-      "suspended": "الحساب موقوف"
+  "App": {
+    "nav": {
+      "label": "القائمة الرئيسية",
+      "sections": {
+        "main": "الرئيسية",
+        "account": "الحساب"
+      },
+      "dashboard": "لوحة التحكم",
+      "galleries": "المعارض",
+      "clients": "العملاء",
+      "billing": "الفواتير",
+      "notifications": "الإشعارات",
+      "settings": "الإعدادات",
+      "soon": "قريبًا",
+      "storage": "المساحة"
     },
-    "allowance": "تم استخدام {used} جيجابايت من {total} جيجابايت",
-    "until": "حتى {date}",
-    "comingSoon": "المعارض والرفع قادمة في الخطوة التالية.",
-    "logout": "تسجيل الخروج"
+    "header": {
+      "hello": "مرحبًا، {name}!",
+      "role": "مصوّر",
+      "otherLanguage": "Eng",
+      "accountMenu": "قائمة الحساب",
+      "editProfile": "تعديل الملف الشخصي",
+      "logout": "تسجيل الخروج",
+      "openMenu": "فتح القائمة"
+    },
+    "status": {
+      "active": "نشط",
+      "draft": "مسودة",
+      "expired": "منتهي",
+      "delivered": "تم التسليم",
+      "attention": "متوقف"
+    },
+    "table": {
+      "no": "م",
+      "cover": "الغلاف",
+      "name": "اسم المعرض",
+      "client": "العميل",
+      "created": "تاريخ الإنشاء",
+      "views": "المشاهدات",
+      "downloads": "التحميلات",
+      "status": "الحالة",
+      "expires": "تاريخ الانتهاء",
+      "link": "الرابط",
+      "action": "إجراء",
+      "view": "عرض",
+      "copyLink": "نسخ رابط {name}",
+      "copyLinkShort": "نسخ الرابط",
+      "copied": "تم النسخ"
+    },
+    "dashboard": {
+      "quickActions": "إجراءات سريعة",
+      "createGallery": "إنشاء معرض جديد",
+      "uploadProject": "رفع مشروع جديد",
+      "overview": "نظرة عامة",
+      "clients": "العملاء",
+      "clientUnit": "عملاء",
+      "activeGalleries": "المعارض النشطة",
+      "galleryUnit": "معارض",
+      "downloads": "التحميلات",
+      "downloadUnit": "تحميلات",
+      "storage": "المساحة المستخدمة",
+      "plan": {
+        "trial": "فترة تجريبية",
+        "active": "باقة نشطة",
+        "pending_payment": "في انتظار الدفع",
+        "soft_locked": "انتهت الباقة — عرض فقط",
+        "dormant": "الباقة غير نشطة",
+        "suspended": "الحساب موقوف"
+      },
+      "recentActivity": "آخر النشاطات",
+      "viewAll": "عرض الكل",
+      "viewDetails": "التفاصيل",
+      "activity": {
+        "viewed": "{client} شاهد {gallery}",
+        "downloaded": "{client} حمّل من {gallery}",
+        "expiring": "ينتهي {gallery} غدًا"
+      },
+      "yourClient": "عميلك",
+      "noActivity": "لا يوجد نشاط بعد. شارك معرضًا لترى النشاط هنا.",
+      "recentGalleries": "أحدث المعارض",
+      "noGalleries": "لا توجد معارض بعد. أنشئ أول معرض من الأعلى."
+    },
+    "galleries": {
+      "title": "كل المعارض",
+      "create": "إنشاء معرض جديد",
+      "search": "ابحث في المعارض…",
+      "emptyTitle": "لا توجد معارض بعد",
+      "empty": "أنشئ معرضًا، وارفع جلسة التصوير، وشاركه مع عميلك.",
+      "noResultsTitle": "لا نتائج",
+      "noResults": "لا يوجد معرض يطابق البحث."
+    },
+    "create": {
+      "title": "إنشاء معرض جديد",
+      "name": "اسم المعرض",
+      "namePlaceholder": "معرض جديد",
+      "client": "اسم العميل",
+      "clientPlaceholder": "اكتب هنا",
+      "phone": "رقم هاتف العميل",
+      "phonePlaceholder": "رقم الهاتف",
+      "expiryNote": "يظل الرابط مفتوحًا 7 أيام من لحظة المشاركة.",
+      "submit": "إنشاء المعرض"
+    },
+    "gallery": {
+      "title": "بيانات المعرض",
+      "back": "العودة للمعارض",
+      "notFound": "هذا المعرض غير موجود.",
+      "name": "اسم المعرض",
+      "client": "اسم العميل",
+      "views": "المشاهدات",
+      "downloads": "التحميلات",
+      "created": "تاريخ الإنشاء",
+      "expires": "تاريخ الانتهاء",
+      "notShared": "لم تتم المشاركة بعد",
+      "share": "مشاركة الرابط",
+      "edit": "تعديل المعرض",
+      "delete": "حذف المعرض",
+      "breadcrumb": "مسار المجلد",
+      "newFolder": "إنشاء مجلد",
+      "upload": "رفع الملفات",
+      "closedNote": "هذا المعرض مغلق؛ لا يمكن رفع المزيد.",
+      "folders": "المجلدات",
+      "media": "الملفات",
+      "emptyTitle": "عذرًا!",
+      "emptyDrop": "لا توجد صور بعد. اسحب الملفات هنا أو استخدم رفع الملفات.",
+      "emptyClosed": "لا توجد ملفات في هذا المعرض.",
+      "fileCount": "{count, plural, one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}",
+      "deleteFolder": "حذف المجلد {name}",
+      "deleteFolderConfirm": "حذف المجلد \"{name}\"؟ ستبقى صوره في المعرض.",
+      "deleteFile": "حذف {name}",
+      "deleteFileConfirm": "حذف \"{name}\"؟ لا يمكن التراجع ولن تُسترد المساحة.",
+      "processing": "جارٍ المعالجة",
+      "uploading": "جارٍ الرفع",
+      "rejected": "ملف غير صالح"
+    },
+    "upload": {
+      "uploading": "{count, plural, one {جارٍ رفع ملف واحد} two {جارٍ رفع ملفين} few {جارٍ رفع # ملفات} many {جارٍ رفع # ملفًا} other {جارٍ رفع # ملف}}",
+      "done": "تم رفع كل الملفات",
+      "someFailed": "{count, plural, one {تعذّر رفع ملف} other {تعذّر رفع # ملف}}",
+      "timeLeft": "متبقٍ حوالي {time}",
+      "resumeNote": "إذا انقطع الاتصال، يستأنف الرفع عند عودته.",
+      "retry": "إعادة المحاولة",
+      "dismiss": "تجاهل",
+      "clear": "مسح القائمة",
+      "errors": {
+        "allowance_exceeded": "تجاوز مساحة الباقة",
+        "subscription_inactive": "الباقة غير نشطة",
+        "unsupported_type": "نوع غير مدعوم",
+        "file_too_large": "أكبر من 2 جيجابايت",
+        "gallery_closed": "المعرض مغلق",
+        "generic": "تعذّر الرفع"
+      }
+    },
+    "share": {
+      "titleDraft": "مشاركة المعرض",
+      "title": "رابط المعرض",
+      "draftIntro": "تبدأ المشاركة فترة {days} أيام. يفتح عميلك الرابط على هاتفه ويدخل كلمة المرور.",
+      "draftPoint1": "ستحصل على رابط وكلمة مرور من 9 خانات.",
+      "draftPoint2": "أرسل الرابط وكلمة المرور في رسالتي واتساب منفصلتين.",
+      "draftPoint3": "يُغلق الرابط بعد 7 أيام أو عند تحميل الصور مرتين.",
+      "shareNow": "شارك الآن",
+      "closed": "هذا المعرض مغلق ولم يعد رابطه يعمل.",
+      "expires": "مفتوح حتى {date}",
+      "link": "الرابط",
+      "sendLink": "إرسال الرابط عبر واتساب",
+      "password": "كلمة المرور",
+      "passwordOnce": "انسخها الآن: حفاظًا على أمان عميلك تظهر مرة واحدة فقط.",
+      "sendPassword": "إرسال كلمة المرور عبر واتساب",
+      "lostPassword": "فقدت كلمة المرور؟ أنشئ واحدة جديدة وستتوقف القديمة.",
+      "newPassword": "كلمة مرور جديدة",
+      "closeNow": "إغلاق المعرض الآن",
+      "closeWarning": "سيتوقف الرابط فورًا وتُحذف الملفات خلال ساعة.",
+      "closeConfirm": "إغلاق المعرض",
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "linkMessage": "أهلًا! صورك من {photographer} جاهزة: {link}\nكلمة المرور في الرسالة التالية.",
+      "passwordMessage": "كلمة مرور معرضك: {password}",
+      "errors": {
+        "uploads_in_progress": "انتظر حتى ينتهي رفع كل الملفات.",
+        "gallery_empty": "أضف صورة واحدة على الأقل أولًا.",
+        "generic": "تعذّرت مشاركة المعرض. حاول مرة أخرى."
+      }
+    },
+    "editGallery": {
+      "title": "تعديل المعرض",
+      "name": "اسم المعرض",
+      "client": "اسم العميل",
+      "phone": "رقم هاتف العميل",
+      "note": "لا يتغير الرابط ولا كلمة المرور.",
+      "save": "حفظ التغييرات"
+    },
+    "deleteGallery": {
+      "title": "حذف هذا المعرض؟",
+      "body": "سيُحذف \"{name}\" وكل ملفاته الآن.",
+      "point1": "يتوقف الرابط عن العمل لعميلك فورًا.",
+      "point2": "لا يمكن استعادة الملفات.",
+      "point3": "لا تُسترد المساحة المستخدمة إلى باقتك.",
+      "cancel": "الإبقاء على المعرض",
+      "confirm": "حذف نهائي"
+    },
+    "newFolder": {
+      "title": "إنشاء مجلد",
+      "name": "اسم المجلد",
+      "create": "إنشاء"
+    },
+    "activity": {
+      "title": "النشاط وإيصالات التحميل",
+      "empty": "لا يوجد نشاط بعد.",
+      "when": "متى",
+      "what": "ماذا",
+      "size": "الحجم",
+      "country": "الدولة",
+      "device": "الجهاز",
+      "events": {
+        "open": "فُتح المعرض",
+        "password_ok": "كلمة مرور صحيحة",
+        "password_fail": "كلمة مرور خاطئة",
+        "download": "تحميل {file}"
+      },
+      "devices": {
+        "mobile": "هاتف",
+        "tablet": "جهاز لوحي",
+        "desktop": "كمبيوتر",
+        "unknown": "غير معروف"
+      }
+    }
   }
 }
