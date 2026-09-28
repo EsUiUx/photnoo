@@ -21,7 +21,10 @@ Product scope and rules live in **Photnoo PRD v1**; architecture and roadmap in 
 
 - Node.js 22 (`.nvmrc`)
 - pnpm 9 via Corepack: `corepack pnpm@9.15.4 <command>` (or `corepack enable` once, then `pnpm`)
-- Docker Desktop, for local Postgres, Redis, MinIO (stand-in for Cloudflare R2) and Mailpit
+- Docker Desktop, for local Postgres, Redis, MinIO (stand-in for Cloudflare R2) and Mailpit.
+  No Docker? Run `pnpm db:local` in its own terminal instead of `pnpm infra:up`: it starts a real
+  PostgreSQL 17 from npm binaries on port 5432 (data in `.local/postgres`). Redis, MinIO and
+  Mailpit still need Docker; without them `/health` reports `degraded` and emails are only logged.
 
 ## First run
 
@@ -47,6 +50,20 @@ pnpm dev
 | `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm build` | What CI runs |
 | `pnpm db:migrate` | Creates a new migration after editing `schema.prisma` |
 | `pnpm db:generate` | Regenerates the Prisma client |
+| `pnpm db:local` | Local Postgres without Docker |
+| `pnpm applications list` | Pending photographer applications (until the admin app exists) |
+| `pnpm applications approve <id> [--trial]` | Approves and emails a single-use invite; prints the link |
+| `pnpm applications reject <id> "<reason>"` | Rejects an application |
+
+API tests (`pnpm --filter @photnoo/api test`) start their own throwaway Postgres; no setup needed.
+
+## Auth in one paragraph
+
+Photographers join by invite only. Login sets three cookies: `pn_at` (15-minute access JWT,
+HttpOnly), `pn_rt` (30-day refresh token, HttpOnly, sent only to `/v1/auth`) and `pn_csrf`
+(readable). Every state-changing request that carries a session must echo `pn_csrf` in the
+`x-csrf-token` header. Refresh tokens rotate on each use; replaying an old one revokes the
+whole login family. Five wrong passwords lock the account for 15 minutes.
 
 ## Rules for contributors
 

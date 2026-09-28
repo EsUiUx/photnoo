@@ -14,7 +14,9 @@
     "db:generate": "pnpm --filter @photnoo/db generate",
     "db:migrate": "pnpm --filter @photnoo/db migrate:dev",
     "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down"
+    "infra:down": "docker compose down",
+    "db:local": "node scripts/local-postgres.mjs",
+    "applications": "pnpm --filter @photnoo/api cli:applications"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

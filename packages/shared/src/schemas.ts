@@ -35,6 +35,16 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const passwordResetRequestSchema = z.object({ email: emailSchema });
+export type PasswordResetRequestInput = z.infer<typeof passwordResetRequestSchema>;
+
+export const passwordResetConfirmSchema = z.object({
+  email: emailSchema,
+  code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
+  newPassword: passwordSchema,
+});
+export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;
+
 export const createGallerySchema = z.object({
   name: z.string().trim().min(1).max(80),
   clientName: z.string().trim().min(1).max(100),

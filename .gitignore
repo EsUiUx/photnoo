@@ -9,3 +9,4 @@ coverage/
 !.env.example
 packages/db/src/generated/
 .DS_Store
+.local/
