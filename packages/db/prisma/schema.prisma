@@ -133,9 +133,12 @@ model Plan {
   activeTo       DateTime?
   createdAt      DateTime     @default(now())
 
-  subscriptions Subscription[]
+  subscriptions     Subscription[] @relation("CurrentPlan")
+  nextSubscriptions Subscription[] @relation("NextPlan")
+  payments          Payment[]
 
   @@index([cycle, activeFrom])
+  @@index([tier, cycle])
 }
 
 enum SubscriptionState {
@@ -152,7 +155,14 @@ model Subscription {
   photographerId String            @db.Uuid
   photographer   Photographer      @relation(fields: [photographerId], references: [id], onDelete: Cascade)
   planId         String?           @db.Uuid
-  plan           Plan?             @relation(fields: [planId], references: [id])
+  plan           Plan?             @relation("CurrentPlan", fields: [planId], references: [id])
+  /// Price paid for this cycle; later price changes never touch a running cycle (PRD A-04).
+  priceEgp       Decimal?          @db.Decimal(12, 2)
+  /// Plan that starts at the next renewal (downgrade or cycle change, PRD B-07).
+  nextPlanId     String?           @db.Uuid
+  nextPlan       Plan?             @relation("NextPlan", fields: [nextPlanId], references: [id])
+  /// Set when the next cycle is already paid; the lifecycle job rolls the cycle over at cycleEnd.
+  renewalPaidAt  DateTime?
   state          SubscriptionState
   cycleStart     DateTime
   cycleEnd       DateTime
@@ -163,6 +173,7 @@ model Subscription {
   updatedAt      DateTime          @updatedAt
 
   payments Payment[]
+  notices  BillingNotice[]
 
   @@index([photographerId, state])
   @@index([state, cycleEnd])
@@ -176,39 +187,79 @@ enum PaymentMethod {
 }
 
 enum PaymentStatus {
+  awaiting_proof
   pending
   approved
   rejected
+  cancelled
 }
 
+/// new: first paid cycle (or after a lapse). renewal: the next cycle. upgrade: bigger tier now, prorated.
+enum PaymentKind {
+  new
+  renewal
+  upgrade
+}
+
+/// Manual payment (PRD B-03): created with a reference, then the photographer uploads proof.
 model Payment {
-  id             String        @id @default(uuid()) @db.Uuid
-  subscriptionId String        @db.Uuid
-  subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
-  method         PaymentMethod
-  amountEgp      Decimal       @db.Decimal(12, 2)
-  reference      String        @unique
-  proofKey       String?
-  status         PaymentStatus @default(pending)
-  rejectReason   String?
-  approvedById   String?       @db.Uuid
-  decidedAt      DateTime?
-  createdAt      DateTime      @default(now())
+  id                String         @id @default(uuid()) @db.Uuid
+  photographerId    String         @db.Uuid
+  subscriptionId    String         @db.Uuid
+  subscription      Subscription   @relation(fields: [subscriptionId], references: [id])
+  planId            String         @db.Uuid
+  plan              Plan           @relation(fields: [planId], references: [id])
+  kind              PaymentKind
+  method            PaymentMethod?
+  /// What Photnoo asks for.
+  amountEgp         Decimal        @db.Decimal(12, 2)
+  /// What the photographer says they sent; admins compare it with the proof.
+  declaredAmountEgp Decimal?       @db.Decimal(12, 2)
+  reference         String         @unique
+  proofKey          String?
+  proofName         String?
+  proofMime         String?
+  submittedAt       DateTime?
+  status            PaymentStatus  @default(awaiting_proof)
+  rejectReason      String?
+  approvedById      String?        @db.Uuid
+  decidedAt         DateTime?
+  createdAt         DateTime       @default(now())
 
   invoice Invoice?
 
   @@index([status, createdAt])
+  @@index([photographerId, createdAt])
 }
 
 model Invoice {
-  id        String   @id @default(uuid()) @db.Uuid
-  number    Int      @unique @default(autoincrement())
-  paymentId String   @unique @db.Uuid
-  payment   Payment  @relation(fields: [paymentId], references: [id])
-  totalEgp  Decimal  @db.Decimal(12, 2)
-  vatEgp    Decimal  @default(0) @db.Decimal(12, 2)
-  pdfKey    String?
-  issuedAt  DateTime @default(now())
+  id             String   @id @default(uuid()) @db.Uuid
+  number         Int      @unique @default(autoincrement())
+  photographerId String   @db.Uuid
+  paymentId      String   @unique @db.Uuid
+  /// Service period the payment covers, printed on the invoice.
+  periodStart    DateTime
+  periodEnd      DateTime
+  payment        Payment  @relation(fields: [paymentId], references: [id])
+  totalEgp       Decimal  @db.Decimal(12, 2)
+  vatEgp         Decimal  @default(0) @db.Decimal(12, 2)
+  pdfKey         String?
+  issuedAt       DateTime @default(now())
+
+  @@index([photographerId, issuedAt])
+}
+
+/// One row per billing email already sent (allowance 80/95 %, renewal reminders), so the
+/// five-minute lifecycle job never sends the same notice twice in a cycle.
+model BillingNotice {
+  id             String       @id @default(uuid()) @db.Uuid
+  subscriptionId String       @db.Uuid
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  kind           String
+  cycleEnd       DateTime
+  createdAt      DateTime     @default(now())
+
+  @@unique([subscriptionId, kind, cycleEnd])
 }
 
 enum UsageEventType {

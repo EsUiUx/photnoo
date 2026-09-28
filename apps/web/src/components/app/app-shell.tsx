@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/navigation';
 import { ApiError } from '@/lib/api';
 import { useMe } from '@/lib/queries';
 import { AppHeader } from './app-header';
+import { RenewalBanner } from './renewal-banner';
 import { Sidebar } from './sidebar';
 
 /** Photographer app frame. Sends the visitor to /login when the session has ended. */
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader me={me.data} onMenu={() => setDrawer(true)} />
+        <RenewalBanner me={me.data} />
         <main className="flex-1 px-4 py-8 sm:px-8 xl:px-12">{children}</main>
       </div>
     </div>

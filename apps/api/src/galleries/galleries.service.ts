@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateFolderInput, CreateGalleryInput, UpdateGalleryInput } from '@photnoo/shared';
 import type { File, Prisma } from '@photnoo/db';
 import { LifecycleService } from '../lifecycle/lifecycle.service';
@@ -21,7 +21,15 @@ export class GalleriesService {
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
-  create(photographerId: string, input: CreateGalleryInput) {
+  /** PRD B-08: a soft-locked, dormant or unpaid account keeps its galleries but cannot start new ones. */
+  async create(photographerId: string, input: CreateGalleryInput) {
+    const subscription = await this.prisma.client.subscription.findFirst({ where: { photographerId }, orderBy: { createdAt: 'desc' } });
+    if (!subscription || !['trial', 'active'].includes(subscription.state) || subscription.cycleEnd <= new Date()) {
+      throw new HttpException(
+        { code: 'subscription_inactive', message: 'Your plan is not active. Renew or choose a plan to create galleries.' },
+        HttpStatus.PAYMENT_REQUIRED,
+      );
+    }
     return this.prisma.client.gallery.create({
       data: {
         photographerId,

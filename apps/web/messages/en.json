@@ -209,7 +209,8 @@
       "generic": "Check this field.",
       "clientName": "Enter the client name.",
       "clientPhone": "Enter a valid mobile number, e.g. 01012345678."
-    }
+    },
+    "subscriptionInactive": "Your plan is not active. Renew or choose a plan in Billing to create galleries."
   },
   "App": {
     "nav": {
@@ -435,6 +436,173 @@
         "desktop": "Computer",
         "unknown": "Unknown"
       }
+    },
+    "billing": {
+      "loading": "Loading billing…",
+      "loadFailed": "We could not load billing. Refresh the page to try again.",
+      "title": "Billing",
+      "currentPlan": "Your Current Plan",
+      "trialTitle": "Free trial",
+      "noPlanTitle": "No plan yet",
+      "planTitle": "{plan} · {cycle}",
+      "started": "Created Date",
+      "expires": "Expiration Date",
+      "renews": "Renews on",
+      "ended": "Ended on",
+      "nextPlanNote": "From your next renewal: {plan} · {cycle}.",
+      "renewalPaidNote": "Your next cycle is paid. It starts automatically.",
+      "softLockedNote": "Uploads and new galleries are paused. Your account becomes dormant on {date} if it is not renewed.",
+      "dormantNote": "Your account is dormant. Choose a plan to start uploading again.",
+      "allowance": "Upload allowance",
+      "allowanceHelp": "Everything you upload this cycle counts, even files you delete later.",
+      "allowanceUsed": "{percent}% used",
+      "state": {
+        "trial": "Trial",
+        "active": "Active",
+        "pending_payment": "Waiting for payment",
+        "soft_locked": "Ended",
+        "dormant": "Dormant",
+        "suspended": "Suspended"
+      },
+      "cycle": {
+        "annual": "Annual",
+        "monthly": "Monthly"
+      },
+      "cycleLabel": "Billing cycle",
+      "save": "Save {percent}%",
+      "choosePlan": "Choose a plan",
+      "changePlan": "Upgrade Plan",
+      "plansIntro": "Prices in EGP. Pay by InstaPay, Vodafone Cash or bank transfer.",
+      "noPlans": "No plans are on sale right now. Please contact us.",
+      "finishPaymentFirst": "Finish or cancel the payment above before choosing another plan.",
+      "yourPlan": "Your plan",
+      "perYear": "EGP/Y",
+      "perMonth": "EGP/M",
+      "allowanceYear": "{amount} of deliveries a year",
+      "allowanceMonth": "{amount} of deliveries each month",
+      "features": {
+        "f1": "Unlimited galleries",
+        "f2": "Private link and password",
+        "f3": "Proof of every download"
+      },
+      "actions": {
+        "subscribe": "Subscribe",
+        "renew": "Renew · {amount} EGP",
+        "upgrade": "Upgrade now · {amount} EGP",
+        "switch": "Switch at renewal",
+        "keep": "Keep this plan",
+        "scheduled": "Starts at renewal",
+        "current": "Current plan",
+        "unavailable": "Not available",
+        "cancelSwitch": "Keep my current plan instead"
+      },
+      "notes": {
+        "upgrade": "You pay only for the days left. Your renewal date stays {date}.",
+        "switch": "No payment now. It starts when your plan renews on {date}.",
+        "renewOpens": "You can pay the renewal from {date}.",
+        "renewalPaid": "Your next cycle is already paid."
+      },
+      "enterprise": {
+        "title": "Enterprise",
+        "body": "More than 2 TB a year, or several photographers in one studio? We will make a plan with you.",
+        "cta": "Contact us",
+        "message": "Hello, I would like to ask about an Enterprise plan on Photnoo."
+      },
+      "errors": {
+        "payment_open": "Finish or cancel your open payment first.",
+        "not_available": "This plan cannot be bought right now. Refresh the page.",
+        "renewal_paid": "Your next cycle is already paid.",
+        "no_active_plan": "Choose a plan first.",
+        "generic": "Something went wrong. Please try again."
+      },
+      "payment": {
+        "title": "Complete your payment",
+        "reviewTitle": "Payment under review",
+        "kind": {
+          "new": "{plan} · {cycle} plan",
+          "renewal": "Renewal: {plan} · {cycle}",
+          "upgrade": "Upgrade to {plan} · {cycle} for the rest of this cycle"
+        },
+        "cycle": {
+          "annual": "Annual",
+          "monthly": "Monthly"
+        },
+        "amount": "Amount to pay",
+        "reference": "Payment reference",
+        "referenceHelp": "Write this reference in the transfer note so we can match your payment.",
+        "sendTo": "Send the money to",
+        "noMethods": "Payment details are not set up yet. Please contact us.",
+        "methods": {
+          "instapay": "InstaPay",
+          "vodafone_cash": "Vodafone Cash",
+          "bank_transfer": "Bank transfer"
+        },
+        "fields": {
+          "handle": "InstaPay address",
+          "number": "Wallet number",
+          "bank": "Bank",
+          "accountName": "Account name",
+          "accountNumber": "Account number",
+          "iban": "IBAN"
+        },
+        "uploadTitle": "Upload your receipt",
+        "amountSent": "Amount you sent (EGP)",
+        "receipt": "Receipt screenshot or PDF",
+        "receiptHelp": "JPG, PNG or PDF, up to 10 MB.",
+        "submit": "Send receipt",
+        "received": "Receipt received",
+        "receivedBody": "You sent {amount} EGP by {method} on {date}. We usually confirm within one working day and email you.",
+        "viewReceipt": "View receipt",
+        "replaceReceipt": "Upload a different receipt",
+        "cancel": "Cancel this payment",
+        "cancelConfirm": "Cancel this payment? If you already sent money, keep it and upload the receipt instead.",
+        "copy": "Copy",
+        "copied": "Copied",
+        "errors": {
+          "method": "Choose how you paid.",
+          "file": "Attach the receipt.",
+          "amount": "Enter the amount you sent.",
+          "proof_too_large": "The receipt must be 10 MB or smaller.",
+          "unsupported_proof": "Upload a JPG, PNG or PDF receipt.",
+          "proof_required": "Attach the receipt.",
+          "payment_decided": "This payment was already reviewed. Refresh the page.",
+          "generic": "We could not send the receipt. Please try again."
+        }
+      },
+      "history": {
+        "title": "Payments and invoices",
+        "columns": {
+          "date": "Date",
+          "reference": "Reference",
+          "plan": "Plan",
+          "amount": "Amount",
+          "status": "Status",
+          "invoice": "Invoice"
+        },
+        "cycle": {
+          "annual": "Annual",
+          "monthly": "Monthly"
+        },
+        "kind": {
+          "new": "New plan",
+          "renewal": "Renewal",
+          "upgrade": "Upgrade"
+        },
+        "status": {
+          "approved": "Paid",
+          "pending": "Under review",
+          "awaiting_proof": "Waiting for receipt",
+          "rejected": "Not confirmed",
+          "cancelled": "Cancelled"
+        }
+      }
+    },
+    "banner": {
+      "ended": "Your plan has ended. Uploads and new galleries are paused; shared galleries keep working.",
+      "noPlan": "Choose a plan to start uploading and sharing galleries.",
+      "renewSoon": "{days, plural, =0 {Your plan ends today} one {Your plan ends in # day} other {Your plan ends in # days}} ({date}). Renew to keep uploading.",
+      "trialEnds": "{days, plural, =0 {Your trial ends today} one {Your trial ends in # day} other {Your trial ends in # days}} ({date}). Choose a plan to keep uploading.",
+      "cta": "Go to billing"
     }
   },
   "Client": {

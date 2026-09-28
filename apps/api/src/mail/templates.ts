@@ -70,4 +70,79 @@ export const templates = {
       text: (locale === 'ar' ? [...ar, '', ...en] : [...en, '', ...ar]).join('\n'),
     };
   },
+
+  paymentApproved(to: string, reference: string, planLabel: string, until: string, invoice: string): Mail {
+    return {
+      to,
+      subject: 'Photnoo — تم تأكيد الدفع / Payment confirmed',
+      text: [
+        `تم تأكيد دفعتك ${reference}. باقة ${planLabel} مفعلة حتى ${until}.`,
+        `الفاتورة ${invoice} متاحة في صفحة الفواتير.`,
+        '',
+        `Your payment ${reference} is confirmed. The ${planLabel} plan is active until ${until}.`,
+        `Invoice ${invoice} is in Billing.`,
+      ].join('\n'),
+    };
+  },
+
+  paymentRejected(to: string, reference: string, reason: string): Mail {
+    return {
+      to,
+      subject: 'Photnoo — لم نتمكن من تأكيد الدفع / Payment not confirmed',
+      text: [
+        `لم نتمكن من تأكيد الدفعة ${reference}.`,
+        `السبب: ${reason}`,
+        'يمكنك رفع إثبات جديد من صفحة الفواتير.',
+        '',
+        `We could not confirm payment ${reference}.`,
+        `Reason: ${reason}`,
+        'You can upload a new proof from Billing.',
+      ].join('\n'),
+    };
+  },
+
+  renewalReminder(to: string, days: number, until: string, trial: boolean): Mail {
+    const when = days === 0 ? 'today' : `in ${days} days`;
+    const whenAr = days === 0 ? 'اليوم' : `خلال ${days} يومًا`;
+    return {
+      to,
+      subject: trial ? 'Photnoo — الفترة التجريبية تنتهي قريبًا / Your trial ends soon' : 'Photnoo — موعد التجديد / Renewal reminder',
+      text: [
+        trial ? `تنتهي فترتك التجريبية ${whenAr} (${until}). اختر باقة لتستمر في الرفع.` : `ينتهي اشتراكك ${whenAr} (${until}). جدده لتستمر في الرفع وإنشاء المعارض.`,
+        'المعارض المفعلة تستمر حتى موعد انتهائها.',
+        '',
+        trial ? `Your trial ends ${when} (${until}). Choose a plan to keep uploading.` : `Your plan ends ${when} (${until}). Renew to keep uploading and creating galleries.`,
+        'Galleries already shared keep working until their own expiry.',
+      ].join('\n'),
+    };
+  },
+
+  softLocked(to: string): Mail {
+    return {
+      to,
+      subject: 'Photnoo — انتهى اشتراكك / Your plan has ended',
+      text: [
+        'انتهى اشتراكك. يمكنك الدخول ورؤية معارضك، لكن الرفع وإنشاء معارض جديدة متوقف حتى التجديد.',
+        '',
+        'Your plan has ended. You can still log in and see your galleries, but uploads and new galleries are paused until you renew.',
+      ].join('\n'),
+    };
+  },
+
+  allowanceWarning(to: string, percent: number, used: string, total: string): Mail {
+    const full = percent >= 100;
+    return {
+      to,
+      subject: full ? 'Photnoo — اكتمل رصيد الرفع / Upload allowance used up' : `Photnoo — استخدمت ${percent}% من الرصيد / ${percent}% of your allowance used`,
+      text: [
+        full
+          ? `استخدمت كل رصيد الرفع (${used} من ${total}). الرفع متوقف حتى الترقية أو التجديد. المعارض المفعلة لا تتأثر.`
+          : `استخدمت ${percent}% من رصيد الرفع (${used} من ${total}).`,
+        '',
+        full
+          ? `You have used all of your upload allowance (${used} of ${total}). Uploads are paused until you upgrade or renew. Shared galleries are not affected.`
+          : `You have used ${percent}% of your upload allowance (${used} of ${total}).`,
+      ].join('\n'),
+    };
+  },
 };

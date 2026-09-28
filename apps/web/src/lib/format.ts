@@ -9,7 +9,15 @@ export function formatBytes(value: string | number, locale: string): string {
     unit += 1;
   }
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: unit >= 3 ? 1 : 0 }).format(size);
-  return `${number} ${units[unit]}`;
+  return isolate(`${number} ${units[unit]}`);
+}
+
+/**
+ * Wraps Latin text such as "500 GB" in a left-to-right isolate so Arabic sentences do not
+ * reorder it into "GB 500".
+ */
+export function isolate(text: string): string {
+  return `⁦${text}⁩`;
 }
 
 /**

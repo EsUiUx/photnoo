@@ -172,8 +172,19 @@ describe('uploads', () => {
 
 describe('allowance', () => {
   it('needs an active plan', async () => {
-    const owner = await signUp(app, prisma, { trial: false });
+    // Without a plan there are no new galleries (PRD B-08) ...
+    const unpaid = await signUp(app, prisma, { trial: false });
+    const blocked = await unpaid.agent
+      .post('/v1/galleries')
+      .set('x-csrf-token', unpaid.csrf)
+      .send({ name: 'Draft', clientName: 'Sara', clientPhone: '+201012345678' })
+      .expect(402);
+    expect(blocked.body.error.code).toBe('subscription_inactive');
+
+    // ... and a gallery made before the plan lapsed takes no more uploads.
+    const owner = await signUp(app, prisma);
     const galleryId = await newGallery(owner);
+    await prisma.subscription.updateMany({ where: { photographerId: owner.photographerId }, data: { state: 'soft_locked' } });
     const res = await owner.agent
       .post(`/v1/galleries/${galleryId}/uploads`)
       .set('x-csrf-token', owner.csrf)

@@ -21,7 +21,7 @@ const SECTIONS: Array<{ key: string; items: Item[] }> = [
   {
     key: 'account',
     items: [
-      { key: 'billing', icon: 'nav-billing' },
+      { key: 'billing', icon: 'nav-billing', href: '/billing' },
       { key: 'notifications', icon: 'nav-notifications' },
       { key: 'settings', icon: 'nav-settings' },
     ],

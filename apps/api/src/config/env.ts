@@ -24,6 +24,19 @@ const envSchema = z
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().int().positive(),
     MAIL_FROM: z.string().min(1),
+    /** Seller details printed on invoices (PRD B-04). */
+    COMPANY_NAME: z.string().default('Photnoo'),
+    COMPANY_ADDRESS: z.string().default('Cairo, Egypt'),
+    COMPANY_EMAIL: z.string().default('billing@photnoo.com'),
+    COMPANY_TAX_ID: z.string().optional(),
+    COMPANY_COMMERCIAL_REGISTER: z.string().optional(),
+    /** Where photographers send manual payments (PRD B-03). A method with no details is hidden. */
+    PAY_INSTAPAY_HANDLE: z.string().optional(),
+    PAY_VODAFONE_CASH_NUMBER: z.string().optional(),
+    PAY_BANK_NAME: z.string().optional(),
+    PAY_BANK_ACCOUNT_NAME: z.string().optional(),
+    PAY_BANK_ACCOUNT_NUMBER: z.string().optional(),
+    PAY_BANK_IBAN: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.STORAGE_DRIVER === 's3') {

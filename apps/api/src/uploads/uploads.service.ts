@@ -17,6 +17,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { GalleriesService } from '../galleries/galleries.service';
 import { JobsService } from '../jobs/jobs.service';
+import { BillingLifecycleService } from '../billing/billing-lifecycle.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { objectKeys, STORAGE, type Storage } from '../storage/storage';
 
@@ -36,6 +37,7 @@ export class UploadsService {
     private readonly prisma: PrismaService,
     private readonly galleries: GalleriesService,
     private readonly jobs: JobsService,
+    private readonly billing: BillingLifecycleService,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
@@ -141,6 +143,7 @@ export class UploadsService {
       throw this.allowanceExceeded(subscription);
     }
     await this.jobs.send('file.process', { fileId: file.id });
+    await this.billing.checkAllowance(subscription.id).catch(() => undefined);
     return { fileId: file.id, status: 'processing' as const };
   }
 

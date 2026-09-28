@@ -3,6 +3,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { CsrfMiddleware } from './auth/csrf.middleware';
 import { ConfigModule } from './config/config.module';
 import { GalleriesModule } from './galleries/galleries.module';
@@ -41,6 +42,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     GalleriesModule,
     SharingModule,
+    BillingModule,
     MediaModule,
     LifecycleModule,
   ],

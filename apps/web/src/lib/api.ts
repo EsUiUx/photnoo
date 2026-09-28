@@ -24,7 +24,7 @@ export class ApiError extends Error {
   }
 }
 
-type Options = { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown; retry?: boolean };
+type Options = { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown; retry?: boolean };
 
 const CSRF_COOKIE = 'pn_csrf';
 
@@ -42,7 +42,9 @@ export function hasSessionHint(): boolean {
 export async function api<T = unknown>(path: string, options: Options = {}): Promise<T> {
   const method = options.method ?? (options.body === undefined ? 'GET' : 'POST');
   const headers: Record<string, string> = { accept: 'application/json' };
-  if (options.body !== undefined) headers['content-type'] = 'application/json';
+  const form = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  // Multipart bodies set their own content type with the boundary.
+  if (options.body !== undefined && !form) headers['content-type'] = 'application/json';
   const csrf = csrfToken();
   if (csrf && method !== 'GET') headers['x-csrf-token'] = csrf;
 
@@ -52,7 +54,7 @@ export async function api<T = unknown>(path: string, options: Options = {}): Pro
       method,
       headers,
       credentials: 'same-origin',
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.body === undefined ? undefined : form ? (options.body as FormData) : JSON.stringify(options.body),
     });
   } catch {
     throw new ApiError(0, 'network_error', 'network_error');

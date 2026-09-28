@@ -98,3 +98,19 @@ export const updateGallerySchema = z
   .partial()
   .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
 export type UpdateGalleryInput = z.infer<typeof updateGallerySchema>;
+
+// ---------- Billing (PRD B-01 to B-07) ----------
+
+export const checkoutSchema = z.object({ planId: z.string().uuid() });
+export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+/** Downgrade or cycle change, applied at the next renewal (B-07). Null cancels it. */
+export const nextPlanSchema = z.object({ planId: z.string().uuid().nullable() });
+export type NextPlanInput = z.infer<typeof nextPlanSchema>;
+
+/** Sent as multipart form fields together with the proof file (B-03). */
+export const paymentProofSchema = z.object({
+  method: z.enum(['instapay', 'vodafone_cash', 'bank_transfer']),
+  declaredAmountEgp: z.coerce.number().positive().max(1_000_000),
+});
+export type PaymentProofInput = z.infer<typeof paymentProofSchema>;

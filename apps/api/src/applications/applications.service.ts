@@ -50,6 +50,21 @@ export class ApplicationsService {
       throw new BadRequestException({ code: 'already_decided', message: 'This application was already decided.' });
     }
 
+    // PRD B-09: one trial per person, matched on email and phone across past applications.
+    if (options.grantTrial) {
+      const earlier = await this.prisma.client.application.count({
+        where: {
+          id: { not: application.id },
+          status: 'approved',
+          grantTrial: true,
+          OR: [{ email: application.email }, { phone: application.phone }],
+        },
+      });
+      if (earlier > 0) {
+        throw new BadRequestException({ code: 'trial_already_used', message: 'This person already had a trial. Approve without one.' });
+      }
+    }
+
     const token = randomToken();
     await this.prisma.client.application.update({
       where: { id: applicationId },

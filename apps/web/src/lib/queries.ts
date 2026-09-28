@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateGalleryInput, UpdateGalleryInput } from '@photnoo/shared';
 import { api } from './api';
-import type { Dashboard, Gallery, GalleryActivity, GalleryDetail, GalleryListItem, Me } from './types';
+import type { BillingOverview, BillingPayment, Dashboard, Gallery, GalleryActivity, GalleryDetail, GalleryListItem, Me } from './types';
 
 export const keys = {
   me: ['me'] as const,
@@ -11,6 +11,7 @@ export const keys = {
   galleries: (q: string) => ['galleries', q] as const,
   gallery: (id: string) => ['gallery', id] as const,
   activity: (id: string) => ['gallery', id, 'activity'] as const,
+  billing: ['billing'] as const,
 };
 
 export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api<Me>('/v1/me') });
@@ -117,3 +118,57 @@ export function useCloseGallery(galleryId: string) {
 }
 
 export const fetchLink = (galleryId: string) => api<{ link: string; expiresAt: string }>(`/v1/galleries/${galleryId}/link`);
+
+// ---------- Billing ----------
+
+export const useBilling = () => useQuery({ queryKey: keys.billing, queryFn: () => api<BillingOverview>('/v1/billing') });
+
+function useInvalidateBilling() {
+  const client = useQueryClient();
+  return () => {
+    void client.invalidateQueries({ queryKey: keys.billing });
+    void client.invalidateQueries({ queryKey: keys.me });
+  };
+}
+
+export function useCheckout() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (planId: string) => api<BillingPayment>('/v1/billing/checkout', { body: { planId } }),
+    onSettled: invalidate,
+  });
+}
+
+export function useNextPlan() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (planId: string | null) => api('/v1/billing/next-plan', { method: 'PUT', body: { planId } }),
+    onSettled: invalidate,
+  });
+}
+
+export function useSubmitProof(paymentId: string) {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (input: { file: File; method: string; declaredAmountEgp: number }) => {
+      const form = new FormData();
+      form.set('method', input.method);
+      form.set('declaredAmountEgp', String(input.declaredAmountEgp));
+      form.set('proof', input.file);
+      return api<BillingPayment>(`/v1/billing/payments/${paymentId}/proof`, { method: 'POST', body: form });
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useCancelPayment() {
+  const invalidate = useInvalidateBilling();
+  return useMutation({
+    mutationFn: (paymentId: string) => api(`/v1/billing/payments/${paymentId}/cancel`, { method: 'POST' }),
+    onSettled: invalidate,
+  });
+}
+
+/** Signed, 5-minute links; fetched when clicked so they are always fresh. */
+export const fetchInvoiceUrl = (invoiceId: string) => api<{ url: string }>(`/v1/billing/invoices/${invoiceId}/pdf`);
+export const fetchProofUrl = (paymentId: string) => api<{ url: string }>(`/v1/billing/payments/${paymentId}/proof`);

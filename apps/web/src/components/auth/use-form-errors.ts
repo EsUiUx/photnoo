@@ -60,6 +60,7 @@ export function useFormErrors() {
       reset_invalid: t('resetInvalid'),
       network_error: t('network'),
       rate_limited: t('rateLimited'),
+      subscription_inactive: t('subscriptionInactive'),
     };
     setForm(byCode[error.code] ?? t('generic'));
   }

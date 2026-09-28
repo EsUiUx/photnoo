@@ -53,13 +53,76 @@ export type Me = {
   email: string;
   phone: string;
   locale: 'ar' | 'en';
-  subscription: {
-    state: string;
-    cycleStart: string;
-    cycleEnd: string;
-    allowanceBytes: string;
-    usedBytes: string;
-  } | null;
+  subscription: Subscription | null;
+};
+
+// ---------- Billing ----------
+
+export type SubscriptionState = 'trial' | 'pending_payment' | 'active' | 'soft_locked' | 'dormant' | 'suspended';
+export type Cycle = 'annual' | 'monthly';
+
+export type Plan = {
+  id: string;
+  tier: string;
+  label: string;
+  cycle: Cycle;
+  priceEgp: number;
+  annualAllowanceBytes: string;
+  cycleAllowanceBytes: string;
+};
+
+export type Subscription = {
+  id: string;
+  state: SubscriptionState;
+  plan: Plan | null;
+  nextPlan: Plan | null;
+  priceEgp: number | null;
+  cycleStart: string;
+  cycleEnd: string;
+  daysLeft: number;
+  renewalPaid: boolean;
+  allowanceBytes: string;
+  usedBytes: string;
+  dormantAt: string | null;
+};
+
+export type OfferAction = 'subscribe' | 'renew' | 'upgrade' | 'switch' | 'scheduled' | 'current' | 'unavailable';
+export type Offer = { action: OfferAction; amountEgp?: number; availableFrom?: string; reason?: string };
+export type CatalogPlan = Plan & { offer: Offer };
+
+export type PaymentMethod = 'instapay' | 'vodafone_cash' | 'bank_transfer';
+export type PaymentStatus = 'awaiting_proof' | 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export type BillingPayment = {
+  id: string;
+  reference: string;
+  kind: 'new' | 'renewal' | 'upgrade';
+  status: PaymentStatus;
+  plan: Plan;
+  amountEgp: number;
+  declaredAmountEgp: number | null;
+  method: PaymentMethod | null;
+  hasProof: boolean;
+  proofName: string | null;
+  rejectReason: string | null;
+  createdAt: string;
+  submittedAt: string | null;
+  decidedAt: string | null;
+  invoice: { id: string; number: string } | null;
+};
+
+export type PaymentDetails = {
+  instapay: { handle: string } | null;
+  vodafone_cash: { number: string } | null;
+  bank_transfer: { bank: string | null; accountName: string | null; accountNumber: string; iban: string | null } | null;
+};
+
+export type BillingOverview = {
+  subscription: Subscription;
+  plans: CatalogPlan[];
+  openPayment: BillingPayment | null;
+  payments: BillingPayment[];
+  paymentDetails: PaymentDetails;
 };
 
 export type ActivityItem = {

@@ -5,6 +5,9 @@ import { Logger, LoggerModule } from 'nestjs-pino';
 import { ConfigModule } from './config/config.module';
 import { JobsModule } from './jobs/jobs.module';
 import { AuditModule } from './audit/audit.module';
+import { BillingLifecycleModule } from './billing/billing-lifecycle.module';
+import { BillingLifecycleService } from './billing/billing-lifecycle.service';
+import { MailModule } from './mail/mail.module';
 import { JobsService } from './jobs/jobs.service';
 import { LifecycleModule } from './lifecycle/lifecycle.module';
 import { LifecycleService } from './lifecycle/lifecycle.service';
@@ -25,6 +28,8 @@ import { StorageModule } from './storage/storage.module';
     JobsModule,
     MediaModule,
     LifecycleModule,
+    MailModule,
+    BillingLifecycleModule,
   ],
 })
 class WorkerModule {}
@@ -38,8 +43,16 @@ async function main(): Promise<void> {
   const jobs = app.get(JobsService);
   const files = app.get(FileProcessorService);
   const lifecycle = app.get(LifecycleService);
+  const billing = app.get(BillingLifecycleService);
   await jobs.work('file.process', ({ fileId }) => files.process(fileId), { concurrency: 2 });
-  await jobs.work('lifecycle.tick', async () => void (await lifecycle.tick()), { concurrency: 1 });
+  await jobs.work(
+    'lifecycle.tick',
+    async () => {
+      await lifecycle.tick();
+      await billing.tick();
+    },
+    { concurrency: 1 },
+  );
   await jobs.schedule('lifecycle.tick', '*/5 * * * *', {});
   app.get(Logger).log('Worker started');
 }
