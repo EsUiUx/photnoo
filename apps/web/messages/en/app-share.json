@@ -1,0 +1,40 @@
+{
+  "App": {
+    "share": {
+      "titleDraft": "Share this gallery",
+      "title": "Link and password",
+      "draftIntro": "Sharing starts a {days}-day window. Your client opens the link on their phone and enters the password.",
+      "draftPoint1": "You get a private link and a 9-character password.",
+      "draftPoint2": "Send the link and the password in two separate WhatsApp messages.",
+      "draftPoint3": "The link closes after 7 days, or once the photos have been downloaded twice over.",
+      "shareNow": "Share now",
+      "closed": "This gallery is closed. Its link no longer works.",
+      "expires": "Open until {date}",
+      "link": "Gallery link",
+      "linkFailed": "Couldn't load the link. Close this window and try again.",
+      "sendLink": "Send link on WhatsApp",
+      "password": "Password",
+      "passwordOnce": "Copy it now. For your client's safety it is shown only once.",
+      "sendPassword": "Send password on WhatsApp",
+      "lostPassword": "The password was shown once when you shared. If it's lost, create a new one.",
+      "newPassword": "Create new password",
+      "newPasswordTitle": "Create a new password?",
+      "newPasswordBody": "The old password stops working immediately. Your client will need the new one to open the gallery.",
+      "newPasswordConfirm": "Create new password",
+      "newPasswordFailed": "Couldn't create a new password. The old one still works. Try again.",
+      "closeHint": "Ends the 7-day window early.",
+      "closeNow": "Close gallery now",
+      "closeTitle": "Close “{name}” now?",
+      "closeWarning": "The link stops working immediately and the files are deleted within the hour. This can't be undone.",
+      "closeConfirm": "Close gallery",
+      "closeFailed": "Couldn't close the gallery. It is still open. Try again.",
+      "linkMessage": "Hello! Your photos from {photographer} are ready: {link}\nThe password comes in the next message.",
+      "passwordMessage": "Password for your gallery: {password}",
+      "errors": {
+        "uploads_in_progress": "Wait for all uploads to finish first.",
+        "gallery_empty": "Add at least one photo first.",
+        "generic": "Couldn't share the gallery. Check your connection and try again."
+      }
+    }
+  }
+}

@@ -1,41 +1,101 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import { IconButton } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import { ApiError } from '@/lib/api';
 import { useMe } from '@/lib/queries';
+import type { Me } from '@/lib/types';
 import { AppHeader } from './app-header';
 import { RenewalBanner } from './renewal-banner';
 import { Sidebar } from './sidebar';
 
-/** Photographer app frame. Sends the visitor to /login when the session has ended. */
+/**
+ * Photographer app frame: light sidebar on lg+, a top bar with a drawer below that, and the one
+ * <main id="main"> every app page renders into. Sends the visitor to /login when the session ends.
+ */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const me = useMe();
   const router = useRouter();
   const [drawer, setDrawer] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (me.error instanceof ApiError && me.error.status === 401) router.replace('/login');
   }, [me.error, router]);
 
   return (
-    <div className="flex min-h-dvh bg-white">
-      <aside className="sticky top-0 hidden h-dvh shrink-0 lg:block">
-        <Sidebar me={me.data} />
+    <div className="min-h-dvh bg-canvas lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <aside className="sticky top-0 hidden h-dvh border-e border-border bg-surface-subtle lg:block">
+        <Sidebar me={me.data} loading={me.isLoading} />
       </aside>
-      {drawer ? (
-        <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
-          <button type="button" aria-label="Close menu" className="absolute inset-0 bg-primary-900/50" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 start-0">
-            <Sidebar me={me.data} onNavigate={() => setDrawer(false)} />
-          </div>
-        </div>
-      ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <AppHeader me={me.data} onMenu={() => setDrawer(true)} />
+      <MobileNav
+        open={drawer}
+        onClose={() => {
+          setDrawer(false);
+          menuButton.current?.focus();
+        }}
+        me={me.data}
+        loading={me.isLoading}
+      />
+      <div className="flex min-h-dvh min-w-0 flex-col">
+        <AppHeader me={me.data} onMenu={() => setDrawer(true)} menuButtonRef={menuButton} />
         <RenewalBanner me={me.data} />
-        <main className="flex-1 px-4 py-8 sm:px-8 xl:px-12">{children}</main>
+        <main id="main" tabIndex={-1} className="flex-1 px-4 pt-8 pb-16 outline-none sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        </main>
       </div>
     </div>
+  );
+}
+
+/**
+ * Navigation drawer on the native modal <dialog>: the browser moves focus in, makes the page
+ * behind inert and routes Escape through onCancel; closing hands focus back to the menu button.
+ */
+function MobileNav({ open, onClose, me, loading }: { open: boolean; onClose: () => void; me?: Me; loading?: boolean }) {
+  const t = useTranslations('App.header');
+  const tNav = useTranslations('App.nav');
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+
+  // A wide window has the sidebar, so a drawer left open there would only trap focus.
+  useEffect(() => {
+    if (!open) return;
+    const query = window.matchMedia('(min-width: 64rem)');
+    const onChange = () => query.matches && onClose();
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, [open, onClose]);
+
+  return (
+    <dialog
+      ref={ref}
+      aria-label={tNav('label')}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onClick={(event) => {
+        if (event.target === ref.current) onClose();
+      }}
+      className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] border-e border-border bg-surface-subtle p-0 text-fg shadow-overlay backdrop:bg-overlay open:animate-[drawer-in_220ms_var(--ease-out-expo)] motion-reduce:open:animate-none lg:hidden"
+    >
+      {open ? (
+        <div className="relative h-full">
+          <IconButton icon={X} label={t('closeMenu')} onClick={onClose} className="absolute end-3 top-3 z-10" />
+          <Sidebar me={me} loading={loading} onNavigate={onClose} />
+        </div>
+      ) : null}
+      <style>{`@keyframes drawer-in { from { opacity: 0; translate: calc(var(--drawer-dir, -1) * 24px) 0; } to { opacity: 1; translate: 0 0; } } [dir="rtl"] dialog { --drawer-dir: 1; }`}</style>
+    </dialog>
   );
 }

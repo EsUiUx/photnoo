@@ -1,0 +1,11 @@
+{
+  "App": {
+    "status": {
+      "active": "Active",
+      "draft": "Draft",
+      "expired": "Expired",
+      "delivered": "Delivered",
+      "attention": "Paused"
+    }
+  }
+}

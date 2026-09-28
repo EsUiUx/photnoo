@@ -1,19 +1,16 @@
 'use client';
 
+import { CalendarClock, KeyRound, LockKeyhole, Link2, MessageCircle, RefreshCw } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Dialog, PillButton } from '@/components/app/dialog';
-import { FormAlert } from '@/components/auth/fields';
+import { Button } from '@/components/ui/button';
+import { Dialog, useConfirm } from '@/components/ui/dialog';
+import { CopyButton } from '@/components/ui/primitives';
+import { Alert, Skeleton, Spinner } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { formatDate } from '@/lib/format';
-import {
-  fetchLink,
-  useActivate,
-  useCloseGallery,
-  useMe,
-  useRegeneratePassword,
-} from '@/lib/queries';
+import { fetchLink, useActivate, useCloseGallery, useMe, useRegeneratePassword } from '@/lib/queries';
 import type { GalleryDetail } from '@/lib/types';
 
 /**
@@ -21,195 +18,223 @@ import type { GalleryDetail } from '@/lib/types';
  * link, make a new password, or close the gallery. The password is shown only right after it
  * is created; it cannot be read back later, only replaced.
  */
-export function ShareDialog({
-  gallery,
-  open,
-  onClose,
-}: {
-  gallery: GalleryDetail;
-  open: boolean;
-  onClose: () => void;
-}) {
+export function ShareDialog({ gallery, open, onClose }: { gallery: GalleryDetail; open: boolean; onClose: () => void }) {
   const t = useTranslations('App.share');
+  const [busy, setBusy] = useState(false);
   // Dialog mounts its children only while open, so a shown password never survives a reopen.
   return (
     <Dialog
       open={open}
       onClose={onClose}
+      dismissible={!busy}
       title={gallery.state === 'draft' ? t('titleDraft') : t('title')}
+      description={gallery.state === 'draft' ? t('draftIntro', { days: 7 }) : undefined}
     >
-      <ShareBody gallery={gallery} onClose={onClose} />
+      <ShareBody gallery={gallery} onClose={onClose} onBusy={setBusy} />
     </Dialog>
   );
 }
 
-function ShareBody({ gallery, onClose }: { gallery: GalleryDetail; onClose: () => void }) {
+function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClose: () => void; onBusy: (busy: boolean) => void }) {
   const t = useTranslations('App.share');
+  const tc = useTranslations('Common');
   const locale = useLocale();
   const me = useMe();
   const activate = useActivate(gallery.id);
   const regenerate = useRegeneratePassword(gallery.id);
   const close = useCloseGallery(gallery.id);
+  const { confirm, dialog } = useConfirm();
   const shared = useQuery({
     queryKey: ['gallery', gallery.id, 'link'],
     queryFn: () => fetchLink(gallery.id),
     enabled: gallery.state === 'active',
   });
-  const [created, setCreated] = useState<{ link: string; password: string } | null>(null);
+  const [created, setCreated] = useState<{ link: string; password: string; expiresAt: string } | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [error, setError] = useState<string | undefined>();
-  const [confirmClose, setConfirmClose] = useState(false);
   const link = created?.link ?? shared.data?.link ?? null;
   const password = created?.password ?? newPassword;
+  const expiresAt = created?.expiresAt ?? gallery.expiresAt ?? shared.data?.expiresAt ?? null;
 
   const photographer = me.data?.studioName ?? me.data?.name ?? '';
   const phone = gallery.clientPhone?.replace(/\D/g, '') ?? '';
   const whatsapp = (text: string) => `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 
-  async function share() {
+  async function run<T>(work: () => Promise<T>): Promise<T | undefined> {
     setError(undefined);
+    onBusy(true);
     try {
-      const result = await activate.mutateAsync();
-      setCreated({ link: result.link, password: result.password });
-    } catch (err) {
-      const code = err instanceof ApiError ? err.code : 'generic';
-      setError(
-        t(`errors.${['uploads_in_progress', 'gallery_empty'].includes(code) ? code : 'generic'}`),
-      );
+      return await work();
+    } finally {
+      onBusy(false);
     }
   }
 
+  async function share() {
+    try {
+      const result = await run(() => activate.mutateAsync());
+      if (result) setCreated(result);
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : 'generic';
+      setError(t(`errors.${['uploads_in_progress', 'gallery_empty'].includes(code) ? code : 'generic'}`));
+    }
+  }
+
+  async function makePassword() {
+    const ok = await confirm({
+      title: t('newPasswordTitle'),
+      body: t('newPasswordBody'),
+      confirmLabel: t('newPasswordConfirm'),
+    });
+    if (!ok) return;
+    try {
+      const result = await run(() => regenerate.mutateAsync());
+      if (result) setNewPassword(result.password);
+    } catch {
+      setError(t('newPasswordFailed'));
+    }
+  }
+
+  async function closeNow() {
+    const ok = await confirm({
+      title: t('closeTitle', { name: gallery.name }),
+      body: t('closeWarning'),
+      confirmLabel: t('closeConfirm'),
+    });
+    if (!ok) return;
+    try {
+      await run(() => close.mutateAsync());
+      onClose();
+    } catch {
+      setError(t('closeFailed'));
+    }
+  }
+
+  if (gallery.state === 'closed' || gallery.state === 'purged' || gallery.state === 'anonymised') {
+    return <p className="text-sm text-fg-secondary">{t('closed')}</p>;
+  }
+
+  if (gallery.state === 'draft' && !created) {
+    const points = [
+      { icon: Link2, text: t('draftPoint1') },
+      { icon: MessageCircle, text: t('draftPoint2') },
+      { icon: CalendarClock, text: t('draftPoint3') },
+    ];
+    return (
+      <div className="flex flex-col gap-5">
+        {error ? <Alert>{error}</Alert> : null}
+        <ul className="flex flex-col gap-3">
+          {points.map(({ icon: Icon, text }) => (
+            <li key={text} className="flex items-start gap-3 text-sm text-fg-secondary">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+                <Icon size={16} strokeWidth={1.75} aria-hidden />
+              </span>
+              <span className="pt-1.5">{text}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-5">
+          <Button variant="secondary" onClick={onClose} disabled={activate.isPending}>
+            {tc('cancel')}
+          </Button>
+          <Button onClick={() => void share()} pending={activate.isPending}>
+            {t('shareNow')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-5">
-      <FormAlert message={error} />
-
-      {gallery.state === 'draft' && !password ? (
-        <>
-          <p className="text-lg text-ink-body">{t('draftIntro', { days: 7 })}</p>
-          <ul className="list-disc space-y-1 ps-6 text-ink-muted">
-            <li>{t('draftPoint1')}</li>
-            <li>{t('draftPoint2')}</li>
-            <li>{t('draftPoint3')}</li>
-          </ul>
-          <div className="flex justify-center">
-            <PillButton onClick={() => void share()} pending={activate.isPending}>
-              {t('shareNow')}
-            </PillButton>
-          </div>
-        </>
+    <div className="flex flex-col gap-6">
+      {error ? <Alert>{error}</Alert> : null}
+      {expiresAt ? (
+        <p className="flex items-center gap-2 text-sm text-fg-secondary">
+          <CalendarClock size={16} strokeWidth={1.75} aria-hidden className="text-fg-muted" />
+          {t('expires', { date: formatDate(expiresAt, locale) })}
+        </p>
       ) : null}
 
-      {gallery.state === 'closed' ? <p className="text-lg text-ink-body">{t('closed')}</p> : null}
+      <section aria-labelledby="share-link-label" className="flex flex-col gap-2">
+        <h3 id="share-link-label" className="text-sm font-medium text-fg">
+          {t('link')}
+        </h3>
+        {link ? (
+          <>
+            <div className="flex items-center gap-2">
+              <output dir="ltr" className="flex h-10 min-w-0 flex-1 items-center truncate rounded-md border border-border bg-surface-subtle px-3.5 text-sm text-fg pointer-coarse:h-11">
+                <span className="truncate">{link}</span>
+              </output>
+              <CopyButton value={link} />
+            </div>
+            <WhatsAppLink href={whatsapp(t('linkMessage', { photographer, gallery: gallery.name, link }))}>{t('sendLink')}</WhatsAppLink>
+          </>
+        ) : shared.isError ? (
+          <Alert>{t('linkFailed')}</Alert>
+        ) : (
+          <Skeleton className="h-10 w-full" />
+        )}
+      </section>
 
-      {(gallery.state === 'active' || password) && link ? (
-        <>
-          {gallery.expiresAt ? (
-            <p className="text-ink-muted">
-              {t('expires', { date: formatDate(gallery.expiresAt, locale) })}
+      <section aria-labelledby="share-password-label" className="flex flex-col gap-2">
+        <h3 id="share-password-label" className="text-sm font-medium text-fg">
+          {t('password')}
+        </h3>
+        {password ? (
+          <div className="rounded-lg border border-brand-soft-strong bg-brand-soft/50 p-4">
+            <div className="flex items-center gap-2">
+              <output dir="ltr" className="flex h-10 min-w-0 flex-1 items-center rounded-md border border-border bg-surface px-3.5 font-mono text-base tracking-widest text-fg pointer-coarse:h-11">
+                {password}
+              </output>
+              <CopyButton value={password} />
+            </div>
+            <p className="mt-2 flex items-start gap-2 text-xs text-fg-secondary">
+              <KeyRound size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-brand" />
+              {t('passwordOnce')}
             </p>
-          ) : null}
-          <CopyRow label={t('link')} value={link} ltr />
-          <a
-            href={whatsapp(t('linkMessage', { photographer, gallery: gallery.name, link }))}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-[42px] items-center justify-center rounded-3xl bg-[#25d366] px-6 text-lg font-semibold text-white hover:bg-[#1fb957]"
-          >
-            {t('sendLink')}
-          </a>
-
-          {password ? (
-            <div className="rounded-xl border border-primary-200 bg-primary-50 p-4">
-              <CopyRow label={t('password')} value={password} ltr mono />
-              <p className="mt-2 text-sm text-ink-muted">{t('passwordOnce')}</p>
-              <a
-                href={whatsapp(t('passwordMessage', { password }))}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex h-[42px] items-center justify-center rounded-3xl border-2 border-[#25d366] px-6 font-semibold text-[#128c4a] hover:bg-[#e9fbef]"
-              >
-                {t('sendPassword')}
-              </a>
+            <div className="mt-3">
+              <WhatsAppLink href={whatsapp(t('passwordMessage', { password }))}>{t('sendPassword')}</WhatsAppLink>
             </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="flex-1 text-sm text-ink-muted">{t('lostPassword')}</p>
-              <PillButton
-                tone="ghost"
-                pending={regenerate.isPending}
-                onClick={() =>
-                  void regenerate.mutateAsync().then((r) => setNewPassword(r.password))
-                }
-              >
-                {t('newPassword')}
-              </PillButton>
-            </div>
-          )}
-
-          <div className="border-t border-line pt-4">
-            {confirmClose ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <p className="flex-1 text-sm text-danger">{t('closeWarning')}</p>
-                <PillButton
-                  tone="danger"
-                  pending={close.isPending}
-                  onClick={() => void close.mutateAsync().then(onClose)}
-                >
-                  {t('closeConfirm')}
-                </PillButton>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmClose(true)}
-                className="text-sm font-semibold text-danger underline"
-              >
-                {t('closeNow')}
-              </button>
-            )}
           </div>
-        </>
-      ) : null}
+        ) : (
+          <div className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center">
+            <p className="flex-1 text-sm text-fg-secondary">{t('lostPassword')}</p>
+            <Button variant="secondary" size="sm" icon={RefreshCw} pending={regenerate.isPending} onClick={() => void makePassword()}>
+              {t('newPassword')}
+            </Button>
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
+        <p className="flex-1 text-sm text-fg-muted">{t('closeHint')}</p>
+        <button
+          type="button"
+          onClick={() => void closeNow()}
+          disabled={close.isPending}
+          aria-busy={close.isPending || undefined}
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 self-start rounded-md px-3 text-sm font-medium text-danger transition-colors duration-150 hover:bg-danger-soft disabled:opacity-50 pointer-coarse:h-11 sm:self-auto"
+        >
+          {close.isPending ? <Spinner size={16} /> : <LockKeyhole size={16} strokeWidth={1.75} aria-hidden />}
+          {t('closeNow')}
+        </button>
+      </div>
+      {dialog}
     </div>
   );
 }
 
-function CopyRow({
-  label,
-  value,
-  ltr,
-  mono,
-}: {
-  label: string;
-  value: string;
-  ltr?: boolean;
-  mono?: boolean;
-}) {
-  const t = useTranslations('App.share');
-  const [copied, setCopied] = useState(false);
+/** WhatsApp brand green as a background with dark text: 6.3:1 contrast. */
+function WhatsAppLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <div>
-      <p className="mb-2 text-sm font-medium text-[#6c757d]">{label}</p>
-      <div className="flex items-center gap-2">
-        <output
-          dir={ltr ? 'ltr' : undefined}
-          className={`h-[53px] min-w-0 flex-1 truncate rounded-[23px] border border-field-border bg-white px-5 leading-[53px] ${mono ? 'font-mono text-xl tracking-wider' : 'text-base'}`}
-        >
-          {value}
-        </output>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard.writeText(value).then(() => {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            });
-          }}
-          className="h-[53px] shrink-0 rounded-[23px] bg-primary-300 px-5 font-semibold text-primary-50 hover:bg-primary-400"
-        >
-          {copied ? t('copied') : t('copy')}
-        </button>
-      </div>
-    </div>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-md bg-[#25d366] px-4 text-sm font-semibold text-[#0b3d1f] shadow-xs transition-[filter] duration-150 hover:brightness-95 pointer-coarse:h-11"
+    >
+      <MessageCircle size={18} strokeWidth={1.75} aria-hidden />
+      {children}
+    </a>
   );
 }

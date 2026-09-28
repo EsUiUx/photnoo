@@ -1,0 +1,13 @@
+{
+  "App": {
+    "editGallery": {
+      "title": "Edit details",
+      "name": "Gallery name",
+      "client": "Client name",
+      "phone": "Client phone number",
+      "phoneHint": "Used for the WhatsApp buttons, e.g. 01012345678.",
+      "note": "The link and password don't change.",
+      "save": "Save changes"
+    }
+  }
+}

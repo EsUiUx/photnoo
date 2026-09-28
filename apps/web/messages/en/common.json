@@ -1,0 +1,29 @@
+{
+  "Common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "loadFailedTitle": "This didn't load",
+    "loadFailedBody": "Check your connection and try again. If it keeps happening, contact Photnoo support.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy",
+    "optional": "optional",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية",
+    "egp": "EGP",
+    "save": "Save",
+    "saving": "Saving…",
+    "back": "Back",
+    "more": "More actions",
+    "search": "Search"
+  }
+}

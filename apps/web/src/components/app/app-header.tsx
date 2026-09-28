@@ -1,107 +1,122 @@
 'use client';
 
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronRight, CreditCard, Languages, LogOut, Menu as MenuIcon } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { forwardRef } from 'react';
+import { IconButton } from '@/components/ui/button';
+import { Menu } from '@/components/ui/menu';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api';
 import type { Me } from '@/lib/types';
+import { isActivePath, NAV_ITEMS } from './sidebar';
 
-/** Figma "Component 73/Frame 16": greeting and date, language switch, profile with menu. */
-export function AppHeader({ me, onMenu }: { me?: Me; onMenu: () => void }) {
+/**
+ * Top bar: where you are on the left, language and account on the right. Below lg it also
+ * carries the menu button and the logo, since the sidebar is hidden there.
+ */
+export function AppHeader({ me, onMenu, menuButtonRef }: { me?: Me; onMenu: () => void; menuButtonRef?: React.Ref<HTMLButtonElement> }) {
   const t = useTranslations('App.header');
-  const locale = useLocale();
-  const format = useFormatter();
+  const tNav = useTranslations('App.nav');
   const pathname = usePathname();
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-    const close = (event: MouseEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [menuOpen]);
+  const section = NAV_ITEMS.find((item) => isActivePath(pathname, item.href));
+  const nested = section ? pathname !== section.href : false;
 
   async function logout() {
     await api('/v1/auth/logout', { method: 'POST' }).catch(() => undefined);
     router.replace('/login');
   }
 
-  const firstName = me?.name.split(' ')[0] ?? '';
-  const initials = (me?.name ?? '')
-    .split(' ')
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join('');
-
   return (
-    <header className="flex h-[88px] items-center gap-4 border-b border-primary-300 bg-[#f6f6f6] px-4 sm:px-8 lg:h-[112px]">
-      <button
-        type="button"
-        onClick={onMenu}
-        className="flex size-11 items-center justify-center rounded-xl border border-field-border bg-white lg:hidden"
-        aria-label={t('openMenu')}
-      >
-        <span aria-hidden="true" className="flex w-5 flex-col gap-1">
-          <span className="h-0.5 bg-ink" />
-          <span className="h-0.5 bg-ink" />
-          <span className="h-0.5 bg-ink" />
-        </span>
-      </button>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xl font-bold text-[#231f20] lg:text-2xl">{me ? t('hello', { name: firstName }) : ' '}</p>
-        {/* The server and the browser may disagree about "today" around midnight. */}
-        <p className="mt-2 text-sm font-medium text-ink-subtle" suppressHydrationWarning>
-          {format.dateTime(new Date(), { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-        </p>
-      </div>
-      <Link
-        href={pathname}
-        locale={locale === 'ar' ? 'en' : 'ar'}
-        className="hidden h-[53px] items-center gap-3 rounded-xl border border-field-border bg-white px-5 text-xl text-[rgba(51,51,51,0.5)] sm:flex"
-      >
-        {t('otherLanguage')}
-        {/* eslint-disable-next-line @next/next/no-img-element -- Figma icon */}
-        <img src="/app/arrow-down.svg" alt="" className="size-6" />
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-surface/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+      <IconButton ref={menuButtonRef} icon={MenuIcon} label={t('openMenu')} onClick={onMenu} className="-ms-2 lg:hidden" />
+      <Link href="/dashboard" aria-label={tNav('home')} className="me-2 inline-flex items-center rounded-md lg:hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element -- brand SVG */}
+        <img src="/brand/logo-green.svg" alt="" width={175} height={32} className="h-5 w-auto" />
       </Link>
-      <span aria-hidden="true" className="hidden h-[61px] w-px bg-line sm:block" />
-      <div ref={menuRef} className="relative flex items-center gap-4">
-        <span className="flex size-[55px] items-center justify-center rounded-full bg-primary-200 text-lg font-semibold text-primary-600" aria-hidden="true">
-          {initials}
-        </span>
-        <div className="hidden md:block">
-          <p className="max-w-[192px] truncate text-xl leading-none font-medium text-[#121212]">{me?.name}</p>
-          <p className="mt-1 text-sm text-ink-subtle">{t('role')}</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setMenuOpen((open) => !open)}
-          aria-expanded={menuOpen}
-          aria-haspopup="menu"
-          aria-label={t('accountMenu')}
-          className="flex size-8 items-center justify-center"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- Figma icon */}
-          <img src="/app/profile-chevron.svg" alt="" className="size-5" />
-        </button>
-        {menuOpen ? (
-          <div role="menu" className="absolute end-0 top-full z-30 mt-2 w-[198px] overflow-hidden rounded-xl bg-white shadow-[0_10px_20px_rgba(0,0,0,0.08)]">
-            <span role="menuitem" aria-disabled="true" className="flex h-[38px] items-center gap-2.5 px-3 text-lg text-[#121212] opacity-50">
-              {/* eslint-disable-next-line @next/next/no-img-element -- Figma icon */}
-              <img src="/app/menu-edit.svg" alt="" className="size-[18px]" />
-              {t('editProfile')}
-            </span>
-            <button type="button" role="menuitem" onClick={logout} className="flex h-[39px] w-full items-center gap-2.5 px-3 text-start text-lg text-[#121212] hover:bg-primary-50">
-              {/* eslint-disable-next-line @next/next/no-img-element -- Figma icon */}
-              <img src="/app/menu-logout.svg" alt="" className="size-[19px]" />
-              {t('logout')}
-            </button>
-          </div>
+
+      <div className="hidden min-w-0 flex-1 items-center gap-1.5 text-sm lg:flex">
+        {section ? (
+          <>
+            <section.icon size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-fg-muted" />
+            {nested ? (
+              <>
+                <Link href={section.href} className="rounded-md font-medium text-fg-secondary hover:text-fg">
+                  {tNav(section.key)}
+                </Link>
+                <ChevronRight size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-fg-muted rtl:-scale-x-100" />
+              </>
+            ) : (
+              <span className="font-medium text-fg-secondary">{tNav(section.key)}</span>
+            )}
+          </>
         ) : null}
       </div>
+      <div className="flex-1 lg:hidden" />
+
+      <LanguageToggle />
+      <span aria-hidden className="mx-1 h-6 w-px bg-border" />
+      <Menu
+        label={me ? t('accountMenu', { name: me.name }) : t('accountMenuFallback')}
+        items={[
+          { type: 'link', label: t('billing'), href: '/billing', icon: CreditCard },
+          { type: 'separator' },
+          { label: t('logout'), icon: LogOut, onSelect: () => void logout() },
+        ]}
+        trigger={(props) => <AccountTrigger me={me} {...props} />}
+      />
     </header>
   );
 }
+
+/** Shows the other language by its own name, marked with its own lang so it is read correctly. */
+function LanguageToggle() {
+  const t = useTranslations('Common');
+  const locale = useLocale();
+  const pathname = usePathname();
+  const other = locale === 'ar' ? 'en' : 'ar';
+  return (
+    <Link
+      href={pathname}
+      locale={other}
+      lang={other}
+      hrefLang={other}
+      className="inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium text-fg-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-fg pointer-coarse:h-11"
+    >
+      <Languages size={18} strokeWidth={1.75} aria-hidden className="text-fg-muted" />
+      {other === 'ar' ? t('arabic') : t('english')}
+    </Link>
+  );
+}
+
+type TriggerProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { me?: Me };
+
+const AccountTrigger = forwardRef<HTMLButtonElement, TriggerProps>(function AccountTrigger({ me, ...props }, ref) {
+  const initials = (me?.name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+  return (
+    <button
+      ref={ref}
+      type="button"
+      {...props}
+      className="flex h-10 items-center gap-2.5 rounded-md ps-1 pe-2 text-start transition-colors duration-150 hover:bg-surface-subtle pointer-coarse:h-11"
+    >
+      <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
+        {initials}
+      </span>
+      <span className="hidden min-w-0 flex-col md:flex">
+        <span className="max-w-44 truncate text-sm leading-tight font-medium text-fg">{me?.name ?? ' '}</span>
+        <span dir="ltr" className="max-w-44 truncate text-xs leading-tight text-fg-muted rtl:text-right">
+          {me?.email ?? ' '}
+        </span>
+      </span>
+      <ChevronDown size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-fg-muted" />
+    </button>
+  );
+});

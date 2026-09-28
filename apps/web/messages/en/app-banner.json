@@ -1,0 +1,11 @@
+{
+  "App": {
+    "banner": {
+      "ended": "Your plan has ended. Uploads and new galleries are paused; shared galleries keep working.",
+      "noPlan": "Choose a plan to start uploading and sharing galleries.",
+      "renewSoon": "{days, plural, =0 {Your plan ends today} one {Your plan ends in # day} other {Your plan ends in # days}} ({date}). Renew to keep uploading.",
+      "trialEnds": "{days, plural, =0 {Your trial ends today} one {Your trial ends in # day} other {Your trial ends in # days}} ({date}). Choose a plan to keep uploading.",
+      "cta": "Go to billing"
+    }
+  }
+}

@@ -1,14 +1,104 @@
 'use client';
 
+import { CircleAlert, CloudUpload, RotateCw, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUploader } from '@/components/app/providers';
+import { Button, IconButton } from '@/components/ui/button';
+import { Card, Meter } from '@/components/ui/primitives';
+import { cn } from '@/lib/cn';
 import { formatBytes, formatDuration, percent } from '@/lib/format';
 import type { UploadSnapshot } from '@/lib/uploader';
 
+const ACCEPT = '.jpg,.jpeg,.png,.tif,.tiff,.psd,.zip,.cr2,.cr3,.nef,.arw,.raf,.dng,.orf,.rw2';
+
+/** Always-available drop target; the whole page also accepts drops, this is where they land visually. */
+export function DropZone({
+  dragging,
+  compact,
+  folderName,
+  onFiles,
+}: {
+  dragging: boolean;
+  compact: boolean;
+  folderName?: string;
+  onFiles: (files: FileList | null) => void;
+}) {
+  const t = useTranslations('App.gallery');
+  const input = useRef<HTMLInputElement>(null);
+
+  return (
+    <div
+      className={cn(
+        'flex rounded-lg border-2 border-dashed transition-colors duration-150',
+        dragging ? 'border-brand bg-brand-soft' : 'border-border-strong bg-surface-subtle',
+        compact ? 'flex-col items-start gap-3 px-5 py-4 sm:flex-row sm:items-center' : 'flex-col items-center px-6 py-10 text-center',
+      )}
+    >
+      <span
+        className={cn(
+          'flex shrink-0 items-center justify-center rounded-full bg-surface text-brand shadow-xs',
+          compact ? 'size-10' : 'mb-4 size-12',
+        )}
+      >
+        <CloudUpload size={compact ? 20 : 22} strokeWidth={1.75} aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={cn('font-medium text-fg', compact ? 'text-sm' : 'text-base')}>
+          {dragging ? (
+            t('dropRelease')
+          ) : (
+            <>
+              {t('dropTitle')}{' '}
+              <button
+                type="button"
+                onClick={() => input.current?.click()}
+                className="rounded-md font-semibold text-brand underline decoration-brand/40 underline-offset-4 hover:decoration-brand"
+              >
+                {t('browse')}
+              </button>
+            </>
+          )}
+        </p>
+        <p className="mt-1 text-xs text-fg-muted">
+          {folderName ? `${t('dropTarget', { folder: folderName })} · ` : ''}
+          {t('dropHint')}
+        </p>
+      </div>
+      {compact ? (
+        <Button variant="secondary" size="sm" onClick={() => input.current?.click()}>
+          {t('upload')}
+        </Button>
+      ) : null}
+      <input
+        ref={input}
+        type="file"
+        multiple
+        hidden
+        accept={ACCEPT}
+        onChange={(event) => {
+          onFiles(event.target.files);
+          event.target.value = '';
+        }}
+      />
+    </div>
+  );
+}
+
+const KNOWN = ['allowance_exceeded', 'subscription_inactive', 'unsupported_type', 'file_too_large', 'gallery_closed'];
+
+function errorKey(code: string | undefined): string {
+  return code && KNOWN.includes(code) ? code : 'generic';
+}
+
+/** Only unknown (network, server) failures can succeed on a retry; the known ones will not. */
+function retryable(code: string | undefined) {
+  return errorKey(code) === 'generic';
+}
+
 /**
- * Upload progress for one gallery (PRD P-06, spec 19 "Client Galleries" left side):
- * overall bar, speed, time left, files remaining, and per-file retry.
+ * Upload progress for one gallery (PRD P-06): overall meter, speed, time left and per-file
+ * errors. The visible numbers tick freely; the live region only speaks when the status changes.
  */
 export function UploadPanel({ galleryId }: { galleryId: string }) {
   const t = useTranslations('App.upload');
@@ -19,69 +109,79 @@ export function UploadPanel({ galleryId }: { galleryId: string }) {
   useEffect(() => uploader.subscribe(setSnapshot), [uploader]);
 
   const items = (snapshot?.items ?? []).filter((item) => item.galleryId === galleryId && item.status !== 'cancelled');
-  if (items.length === 0) return null;
-
   const total = items.reduce((a, i) => a + i.size, 0);
   const uploaded = items.reduce((a, i) => a + i.uploadedBytes, 0);
   const remaining = items.filter((i) => i.status === 'queued' || i.status === 'uploading').length;
   const failed = items.filter((i) => i.status === 'error');
   const active = remaining > 0;
 
+  const status =
+    items.length === 0
+      ? ''
+      : active
+        ? t('uploading', { count: remaining })
+        : failed.length > 0
+          ? t('someFailed', { count: failed.length })
+          : t('done');
+
   return (
-    <section className="rounded-lg border border-primary-200 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)]" aria-live="polite">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-lg font-semibold text-primary-900">
-          {active ? t('uploading', { count: remaining }) : failed.length > 0 ? t('someFailed', { count: failed.length }) : t('done')}
-        </p>
-        <p className="text-sm text-ink-muted" dir="ltr">
-          {formatBytes(uploaded, locale)} / {formatBytes(total, locale)}
-          {active && snapshot && snapshot.bytesPerSecond > 0 ? ` · ${formatBytes(snapshot.bytesPerSecond, locale)}/s` : ''}
-        </p>
-      </div>
-      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-primary-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent(uploaded, total)}>
-        <div className="h-full rounded-full bg-primary-300 transition-[width] duration-300" style={{ width: `${percent(uploaded, total)}%` }} />
-      </div>
-      <div className="mt-2 flex flex-wrap justify-between gap-2 text-sm text-ink-muted">
-        <span>{active && snapshot?.secondsLeft ? t('timeLeft', { time: formatDuration(snapshot.secondsLeft, locale) }) : ' '}</span>
-        <span>{t('resumeNote')}</span>
-      </div>
-
-      {failed.length > 0 ? (
-        <ul className="mt-4 divide-y divide-line border-t border-line">
-          {failed.map((item) => (
-            <li key={item.key} className="flex items-center gap-3 py-2 text-sm">
-              <span className="min-w-0 flex-1 truncate">{item.name}</span>
-              <span className="text-danger">{t(`errors.${errorKey(item.error?.code)}`)}</span>
-              {errorKey(item.error?.code) === 'generic' ? (
-                <button type="button" onClick={() => uploader.retry(item.key)} className="font-semibold text-primary-400 underline">
-                  {t('retry')}
-                </button>
+    <>
+      {/* Always mounted so screen readers hear "Upload finished" even as the panel changes. */}
+      <p aria-live="polite" className="sr-only">
+        {status}
+      </p>
+      {items.length > 0 ? (
+        <Card className="p-5" as="section">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-fg">
+              {!active && failed.length > 0 ? (
+                <CircleAlert size={18} strokeWidth={1.75} aria-hidden className="text-danger" />
               ) : null}
-              <button type="button" onClick={() => uploader.cancel(item.key)} className="text-ink-muted underline">
-                {t('dismiss')}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {!active ? (
-        <button type="button" onClick={() => uploader.clearFinished()} className="mt-3 text-sm font-semibold text-primary-400 underline">
-          {t('clear')}
-        </button>
-      ) : null}
-    </section>
-  );
-}
+              {status}
+            </h2>
+            <p className="tabular text-sm text-fg-muted">
+              {t('bytes', { uploaded: formatBytes(uploaded, locale), total: formatBytes(total, locale) })}
+            </p>
+          </div>
+          <Meter className="mt-3" value={percent(uploaded, total)} label={t('progressLabel')} tone={!active && failed.length > 0 ? 'danger' : 'brand'} />
+          <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-fg-muted">
+            <span className="tabular">
+              {active && snapshot && snapshot.bytesPerSecond > 0 ? t('speed', { speed: formatBytes(snapshot.bytesPerSecond, locale) }) : null}
+              {active && snapshot?.secondsLeft ? ` · ${t('timeLeft', { time: formatDuration(snapshot.secondsLeft, locale) })}` : null}
+            </span>
+            <span>{t('resumeNote')}</span>
+          </div>
 
-function errorKey(code: string | undefined): string {
-  switch (code) {
-    case 'allowance_exceeded':
-    case 'subscription_inactive':
-    case 'unsupported_type':
-    case 'file_too_large':
-    case 'gallery_closed':
-      return code;
-    default:
-      return 'generic';
-  }
+          {failed.length > 0 ? (
+            <ul className="mt-4 divide-y divide-border border-t border-border">
+              {failed.map((item) => {
+                const key = errorKey(item.error?.code);
+                return (
+                  <li key={item.key} className="flex items-center gap-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-fg">{item.name}</p>
+                      <p className="text-xs text-danger">{t(`errors.${key}`)}</p>
+                    </div>
+                    {retryable(item.error?.code) ? (
+                      <Button variant="secondary" size="sm" icon={RotateCw} onClick={() => uploader.retry(item.key)} aria-label={t('retryFile', { name: item.name })}>
+                        {t('retry')}
+                      </Button>
+                    ) : null}
+                    <IconButton icon={X} size="sm" label={t('dismissFile', { name: item.name })} onClick={() => uploader.cancel(item.key)} />
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          {!active ? (
+            <div className="mt-3 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => uploader.clearFinished()}>
+                {t('clear')}
+              </Button>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
+    </>
+  );
 }

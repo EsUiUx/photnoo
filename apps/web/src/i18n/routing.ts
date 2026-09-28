@@ -1,9 +1,9 @@
 import { defineRouting } from 'next-intl/routing';
 
-/** Arabic is the default market language; English is the second (PRD section 10). */
+/** English is the primary language; Arabic is the second, with full RTL (product decision 2026-09-28). */
 export const routing = defineRouting({
-  locales: ['ar', 'en'],
-  defaultLocale: 'ar',
+  locales: ['en', 'ar'],
+  defaultLocale: 'en',
 });
 
 export type AppLocale = (typeof routing.locales)[number];

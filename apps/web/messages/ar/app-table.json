@@ -1,0 +1,16 @@
+{
+  "App": {
+    "table": {
+      "views": "{count, plural, =0 {لا مشاهدات} one {مشاهدة واحدة} two {مشاهدتان} few {# مشاهدات} many {# مشاهدة} other {# مشاهدة}}",
+      "downloads": "{count, plural, =0 {لا تحميلات} one {تحميل واحد} two {تحميلان} few {# تحميلات} many {# تحميلًا} other {# تحميل}}",
+      "daysLeft": "{days, plural, =0 {ينتهي اليوم} one {متبقٍ يوم واحد} two {متبقٍ يومان} few {متبقٍ # أيام} many {متبقٍ # يومًا} other {متبقٍ # يوم}}",
+      "closedOn": "أُغلق في {date}",
+      "noClient": "لم يُضف عميل",
+      "noCover": "لا توجد صور بعد",
+      "copyLink": "نسخ الرابط",
+      "copyLinkFor": "نسخ رابط {name}",
+      "copied": "تم نسخ الرابط",
+      "copyFailed": "تعذّر نسخ الرابط"
+    }
+  }
+}

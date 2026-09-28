@@ -1,0 +1,23 @@
+{
+  "Invite": {
+    "metaTitle": "Create your account",
+    "title": "Create your account",
+    "subtitle": "Your request was approved. Choose a password to start delivering galleries.",
+    "checking": "Checking your invite…",
+    "name": "Full name",
+    "email": "Email",
+    "emailHint": "The address your invite was sent to. You will log in with it.",
+    "password": "Password",
+    "terms": "I accept the Terms of Service and Privacy Policy.",
+    "contentDeclaration": "I own or have rights to everything I upload, and I have consent from a parent or guardian for any photos of minors.",
+    "mustAcceptTerms": "Accept the Terms of Service and Privacy Policy to continue.",
+    "mustAcceptContent": "Confirm the content declaration to continue.",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "invalidTitle": "This invite link no longer works",
+    "invalid": "It has expired or was already used. Ask Photnoo for a new invite, or log in if you already created your account.",
+    "newHere": "Not approved yet?",
+    "requestAccess": "Request access"
+  }
+}

@@ -1,68 +1,67 @@
+import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { contact, social } from '@/content/site';
 import { Link } from '@/i18n/navigation';
+import { LanguageLink } from './site-header';
 
-/** Figma "Frame 1618872853". */
 export function SiteFooter() {
-  const t = useTranslations('Footer');
-  const nav = useTranslations('Nav');
-  const profiles = social.filter((profile) => profile.href);
+  const t = useTranslations('Home.footer');
+  const nav = useTranslations('Home.nav');
+  const whatsapp = social.find((s) => s.key === 'whatsapp')?.href;
+  const link = 'inline-flex min-h-10 items-center text-sm text-fg-muted transition-colors hover:text-fg';
   return (
-    <footer className="relative overflow-hidden bg-primary-500 text-primary-100">
-      {/* eslint-disable @next/next/no-img-element -- Figma brand exports */}
-      <img
-        src="/home/footer-shape.svg"
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute end-[-4.6%] top-[17%] hidden w-[22%] max-w-[424px] lg:block rtl:-scale-x-100"
-      />
-      <div className="relative mx-auto grid max-w-[1920px] gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr] lg:py-[92px] xl:px-[9.6%] xl:pe-[26%]">
+    <footer className="border-t border-border bg-surface-subtle">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr] lg:px-8">
         <div>
-          <img src="/home/footer-logo.svg" alt="Photnoo" width={381} height={70} className="h-auto w-[210px]" />
-          <p className="mt-8 max-w-[382px] text-3xl font-medium text-primary-200 lg:text-[40px] lg:leading-tight">{t('tagline')}</p>
-          {profiles.length > 0 ? (
-            <ul className="mt-10 flex gap-[22px]">
-              {profiles.map((profile) => (
-                <li key={profile.key}>
-                  <a href={profile.href} target="_blank" rel="noopener noreferrer" aria-label={t(`social.${profile.key}`)}>
-                    {/* Figma exports these glyphs upside down and flips them back (except X). */}
-                    <img
-                      src={`/icons/${profile.key}.svg`}
-                      alt=""
-                      className={`size-[38px] ${profile.key === 'x' ? '' : '-scale-y-100'}`}
-                    />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {/* eslint-disable-next-line @next/next/no-img-element -- brand wordmark SVG */}
+          <img src="/brand/logo-green.svg" alt="Photnoo" width={140} height={26} className="h-6 w-auto" />
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-fg-muted">{t('tagline')}</p>
         </div>
         <div>
-          <h2 className="text-[28px] font-medium lg:text-[32px]">{t('shortLinks')}</h2>
-          <ul className="mt-10 grid grid-cols-2 gap-x-10 gap-y-6 text-xl lg:text-2xl">
-            <li><a href="#workflow" className="hover:text-white">{nav('workflow')}</a></li>
-            <li><a href="#plans" className="hover:text-white">{nav('plans')}</a></li>
-            <li><a href="#engine" className="hover:text-white">{nav('engine')}</a></li>
-            <li><Link href="/login" className="hover:text-white">{nav('login')}</Link></li>
+          <h2 className="text-sm font-semibold text-fg">{t('product')}</h2>
+          <ul className="mt-3 flex flex-col">
+            <li><a href="#how" className={link}>{nav('how')}</a></li>
+            <li><a href="#clients" className={link}>{nav('clients')}</a></li>
+            <li><a href="#pricing" className={link}>{nav('pricing')}</a></li>
+            <li><a href="#faq" className={link}>{nav('faq')}</a></li>
+            <li><Link href="/login" className={link}>{nav('login')}</Link></li>
           </ul>
         </div>
         <div>
-          <h2 className="text-[28px] font-medium lg:text-[32px]">{t('contact')}</h2>
-          <ul className="mt-10 flex flex-col gap-[27px] text-xl lg:text-2xl">
-            <li className="flex items-center gap-4">
-              <img src="/icons/call.svg" alt="" className="size-6 shrink-0" />
-              <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phone}</a>
+          <h2 className="text-sm font-semibold text-fg">{t('contact')}</h2>
+          <ul className="mt-3 flex flex-col">
+            <li>
+              <a href={`tel:${contact.phone}`} className={`${link} gap-2.5`}>
+                <Phone size={16} strokeWidth={1.75} aria-hidden />
+                <span dir="ltr">{contact.phone}</span>
+              </a>
             </li>
-            <li className="flex items-center gap-4">
-              <img src="/icons/location.svg" alt="" className="size-6 shrink-0" />
-              <span>{t('city')}</span>
+            {whatsapp ? (
+              <li>
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={`${link} gap-2.5`}>
+                  <MessageCircle size={16} strokeWidth={1.75} aria-hidden />
+                  {t('whatsapp')}
+                </a>
+              </li>
+            ) : null}
+            <li>
+              <a href={`mailto:${contact.email}`} className={`${link} gap-2.5`}>
+                <Mail size={16} strokeWidth={1.75} aria-hidden />
+                <span dir="ltr">{contact.email}</span>
+              </a>
+            </li>
+            <li className={`${link} gap-2.5 hover:text-fg-muted`}>
+              <MapPin size={16} strokeWidth={1.75} aria-hidden />
+              {contact.city}
             </li>
           </ul>
         </div>
       </div>
-      {/* eslint-enable @next/next/no-img-element */}
-      <div className="relative bg-primary-300 py-5 text-center text-lg font-semibold text-primary-50">
-        {t('rights', { year: new Date().getFullYear() })}
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 text-sm text-fg-muted sm:px-6 lg:px-8">
+          <p>{t('rights', { year: new Date().getFullYear() })}</p>
+          <LanguageLink className="-me-3 text-fg-muted hover:bg-surface-sunken hover:text-fg" />
+        </div>
       </div>
     </footer>
   );

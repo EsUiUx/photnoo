@@ -1,0 +1,15 @@
+{
+  "App": {
+    "nav": {
+      "label": "Main menu",
+      "home": "Photnoo, go to dashboard",
+      "dashboard": "Dashboard",
+      "galleries": "Galleries",
+      "billing": "Billing",
+      "storage": "Allowance",
+      "storageUsed": "{used} of {total}",
+      "storageMeter": "Delivery allowance used",
+      "noPlan": "No active plan"
+    }
+  }
+}

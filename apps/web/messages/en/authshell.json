@@ -1,0 +1,16 @@
+{
+  "AuthShell": {
+    "home": "Home",
+    "homeLabel": "Photnoo home",
+    "backHome": "Back to home",
+    "contact": "Contact us",
+    "help": "Help",
+    "copyright": "© Photnoo",
+    "brandLine": "Deliver photos your clients will remember.",
+    "password": {
+      "rule": "At least 10 characters. Avoid common passwords and your email address.",
+      "remaining": "{remaining, plural, one {{n} more character needed} other {{n} more characters needed}}",
+      "ok": "Length looks good. Avoid common passwords and your email address."
+    }
+  }
+}

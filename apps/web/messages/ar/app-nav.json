@@ -1,0 +1,15 @@
+{
+  "App": {
+    "nav": {
+      "label": "القائمة الرئيسية",
+      "home": "Photnoo، الذهاب إلى لوحة التحكم",
+      "dashboard": "لوحة التحكم",
+      "galleries": "المعارض",
+      "billing": "الفواتير",
+      "storage": "الرصيد",
+      "storageUsed": "{used} من {total}",
+      "storageMeter": "المستخدم من رصيد التسليم",
+      "noPlan": "لا توجد باقة نشطة"
+    }
+  }
+}

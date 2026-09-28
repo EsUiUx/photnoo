@@ -1,84 +1,124 @@
 'use client';
 
 import { createGallerySchema } from '@photnoo/shared';
+import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { FormAlert } from '@/components/auth/fields';
 import { useFormErrors } from '@/components/auth/use-form-errors';
+import { Button, ButtonLink } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { TextField } from '@/components/ui/field';
+import { Alert } from '@/components/ui/state';
 import { useRouter } from '@/i18n/navigation';
-import { normalisePhone } from '@/lib/api';
+import { ApiError, normalisePhone } from '@/lib/api';
 import { useCreateGallery } from '@/lib/queries';
-import { Dialog, PillButton } from './dialog';
 
-/** Figma "Creating New Gallery" (PRD P-05). Opens the new gallery so uploads can start. */
+/** New gallery (PRD P-05): gallery and client details, then straight into the gallery to upload. */
 export function CreateGalleryDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations('App.create');
+  const create = useCreateGallery();
+  return (
+    <Dialog open={open} onClose={onClose} title={t('title')} description={t('description')} dismissible={!create.isPending}>
+      {/* Mounted only while open, so every visit starts with an empty form. */}
+      <CreateGalleryForm create={create} onClose={onClose} />
+    </Dialog>
+  );
+}
+
+function CreateGalleryForm({ create, onClose }: { create: ReturnType<typeof useCreateGallery>; onClose: () => void }) {
+  const t = useTranslations('App.create');
+  const tCommon = useTranslations('Common');
+  const tErrors = useTranslations('Errors');
   const router = useRouter();
   const errors = useFormErrors();
-  const create = useCreateGallery();
-  const [values, setValues] = useState({ name: '', clientName: '', clientPhone: '' });
+  const [inactive, setInactive] = useState(false);
+  const [values, setValues] = useState({ name: '', clientName: '', clientPhone: '', clientEmail: '' });
 
   const set = (key: keyof typeof values) => (event: React.ChangeEvent<HTMLInputElement>) =>
     setValues((current) => ({ ...current, [key]: event.target.value }));
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const input = errors.validate(createGallerySchema, { ...values, clientPhone: normalisePhone(values.clientPhone) });
+    setInactive(false);
+    const email = values.clientEmail.trim();
+    const input = errors.validate(createGallerySchema, {
+      name: values.name,
+      clientName: values.clientName,
+      clientPhone: normalisePhone(values.clientPhone),
+      clientEmail: email || undefined,
+    });
     if (!input) return;
     try {
       const gallery = await create.mutateAsync(input);
-      setValues({ name: '', clientName: '', clientPhone: '' });
       onClose();
       router.push(`/galleries/${gallery.id}`);
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'subscription_inactive') {
+        errors.clear();
+        setInactive(true);
+        return;
+      }
       errors.fromError(error);
     }
   }
 
-  return (
-    <Dialog open={open} onClose={onClose} title={t('title')}>
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-        <FormAlert message={errors.form} />
-        <Field label={t('name')} placeholder={t('namePlaceholder')} value={values.name} onChange={set('name')} error={errors.fields.name} />
-        <Field label={t('client')} placeholder={t('clientPlaceholder')} value={values.clientName} onChange={set('clientName')} error={errors.fields.clientName} />
-        <Field
-          label={t('phone')}
-          placeholder={t('phonePlaceholder')}
-          value={values.clientPhone}
-          onChange={set('clientPhone')}
-          error={errors.fields.clientPhone ?? errors.fields.phone}
-          type="tel"
-          ltr
-        />
-        <p className="text-base text-ink-muted">{t('expiryNote')}</p>
-        <div className="flex justify-center">
-          <PillButton type="submit" pending={create.isPending}>
-            {t('submit')}
-          </PillButton>
-        </div>
-      </form>
-    </Dialog>
-  );
-}
+  const f = errors.fields;
 
-function Field({
-  label,
-  error,
-  ltr,
-  ...input
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string; ltr?: boolean }) {
   return (
-    <label className="flex flex-col gap-3">
-      <span className="text-xl font-medium text-[#6c757d]">{label}</span>
-      <input
-        {...input}
-        dir={ltr ? 'ltr' : undefined}
-        aria-invalid={error ? true : undefined}
-        className={`h-[53px] rounded-[23px] border bg-white px-[22px] text-lg text-ink placeholder:text-neutral-500 focus:border-primary-300 focus:ring-2 focus:ring-primary-200 focus:outline-none rtl:text-right ${
-          error ? 'border-danger' : 'border-field-border'
-        }`}
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      {inactive ? (
+        <Alert tone="warning" title={t('inactiveTitle')}>
+          <p>{t('inactiveBody')}</p>
+          <ButtonLink href="/billing" variant="secondary" size="sm" iconEnd={ArrowRight} className="mt-3" onClick={onClose}>
+            {t('goToBilling')}
+          </ButtonLink>
+        </Alert>
+      ) : null}
+      {errors.form ? <Alert tone="danger">{errors.form}</Alert> : null}
+
+      <TextField label={t('name')} placeholder={t('namePlaceholder')} value={values.name} onChange={set('name')} error={f.name} autoFocus maxLength={80} />
+      <TextField
+        label={t('client')}
+        placeholder={t('clientPlaceholder')}
+        value={values.clientName}
+        onChange={set('clientName')}
+        error={f.clientName}
+        autoComplete="off"
+        maxLength={100}
       />
-      {error ? <span className="text-sm text-danger">{error}</span> : null}
-    </label>
+      <TextField
+        label={t('phone')}
+        placeholder={t('phonePlaceholder')}
+        hint={t('phoneHint')}
+        value={values.clientPhone}
+        onChange={set('clientPhone')}
+        error={f.clientPhone ?? f.phone}
+        type="tel"
+        inputMode="tel"
+        autoComplete="off"
+        ltr
+      />
+      <TextField
+        label={t('email')}
+        placeholder={t('emailPlaceholder')}
+        value={values.clientEmail}
+        onChange={set('clientEmail')}
+        error={f.clientEmail || f.email ? tErrors('field.email') : undefined}
+        type="email"
+        inputMode="email"
+        autoComplete="off"
+        optional
+        ltr
+      />
+
+      <div className="-mx-6 mt-1 -mb-6 flex flex-wrap justify-end gap-3 rounded-b-xl border-t border-border bg-surface-subtle px-6 py-4">
+        <Button variant="secondary" onClick={onClose} disabled={create.isPending}>
+          {tCommon('cancel')}
+        </Button>
+        <Button type="submit" pending={create.isPending}>
+          {t('submit')}
+        </Button>
+      </div>
+    </form>
   );
 }

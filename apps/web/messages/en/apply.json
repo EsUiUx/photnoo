@@ -1,0 +1,21 @@
+{
+  "Apply": {
+    "metaTitle": "Request access",
+    "title": "Request access",
+    "subtitle": "Photnoo is invite-only for professional photographers. Tell us about your work and we will review your request.",
+    "name": "Full name",
+    "studio": "Studio name",
+    "city": "City",
+    "phone": "Mobile number",
+    "phoneHint": "We may call or message you on WhatsApp about your request.",
+    "email": "Email",
+    "portfolio": "Portfolio or Instagram link",
+    "portfolioHint": "A website, Instagram profile or any link that shows your recent work.",
+    "submit": "Request access",
+    "sentTitle": "Request received",
+    "sent": "Thank you. We review every request and will email you an invite link within a few days.",
+    "home": "Back to home",
+    "haveAccount": "Already have an account?",
+    "login": "Log in"
+  }
+}

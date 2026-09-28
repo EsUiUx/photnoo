@@ -1,0 +1,77 @@
+[
+  {
+    "file": "couple-bw-laugh.jpg",
+    "unsplashId": "c7MW7mXqYhE",
+    "url": "https://unsplash.com/photos/c7MW7mXqYhE",
+    "photographer": "Lisa Marie Theck",
+    "alt": "Black and white couple laughing",
+    "license": "Unsplash License (free for commercial use)"
+  },
+  {
+    "file": "engagement-citadel-1.jpg",
+    "unsplashId": "1iuFKizvxQo",
+    "url": "https://unsplash.com/photos/1iuFKizvxQo",
+    "photographer": "NADER AYMAN",
+    "alt": "Engagement portrait by a stone wall",
+    "license": "Unsplash License (free for commercial use)"
+  },
+  {
+    "file": "engagement-citadel-2.jpg",
+    "unsplashId": "h1CYHSp4lIY",
+    "url": "https://unsplash.com/photos/h1CYHSp4lIY",
+    "photographer": "NADER AYMAN",
+    "alt": "Engagement portrait, groom lifting bride",
+    "license": "Unsplash License (free for commercial use)"
+  },
+  {
+    "file": "engagement-citadel-3.jpg",
+    "unsplashId": "1OOrZjqnphI",
+    "url": "https://unsplash.com/photos/1OOrZjqnphI",
+    "photographer": "NADER AYMAN",
+    "alt": "Engagement portrait through leaves",
+    "license": "Unsplash License (free for commercial use)"
+  },
+  {
+    "file": "engagement-citadel-4.jpg",
+    "unsplashId": "eKf6tehpuP0",
+    "url": "https://unsplash.com/photos/eKf6tehpuP0",
+    "photographer": "NADER AYMAN",
+    "alt": "Engagement couple, landscape",
+    "license": "Unsplash License (free for commercial use)"
+  },
+  {
+    "file": "hero-rooftop-golden.jpg",
+    "source": "Generated with Higgsfield (gpt_image_2_5, upscaled bytedance_image_upscale)",
+    "jobId": "235b1182-2263-4fa3-9a75-621cf4b4a9c6",
+    "alt": "Bride and groom embracing on a Cairo rooftop at golden hour",
+    "license": "Generated for Photnoo; no third-party photographer"
+  },
+  {
+    "file": "hero-rooftop-golden-portrait.jpg",
+    "source": "Generated with Higgsfield (gpt_image_2_5, upscaled bytedance_image_upscale)",
+    "jobId": "8fb19915-9d58-448b-82f3-891916cc3bcb",
+    "alt": "Portrait crop of the rooftop couple for phones",
+    "license": "Generated for Photnoo; no third-party photographer"
+  },
+  {
+    "file": "family-first-look.jpg",
+    "source": "Generated with Higgsfield (gpt_image_2_5, upscaled bytedance_image_upscale)",
+    "jobId": "5b883955-a125-4d95-8363-2de3e09cbc10",
+    "alt": "Bride and family viewing wedding photos on a phone",
+    "license": "Generated for Photnoo; no third-party photographer"
+  },
+  {
+    "file": "auth-bouquet-villa.jpg",
+    "source": "Generated with Higgsfield (gpt_image_2_5, upscaled bytedance_image_upscale)",
+    "jobId": "9aebb5c0-48a2-46f9-949a-db8cf00ba83a",
+    "alt": "Bride holding white roses in a Cairo villa",
+    "license": "Generated for Photnoo; no third-party photographer"
+  },
+  {
+    "file": "auth-photographer-at-work.jpg",
+    "source": "Generated with Higgsfield (gpt_image_2_5, upscaled bytedance_image_upscale)",
+    "jobId": "67da419c-b4db-487a-92a5-63526d5eea38",
+    "alt": "Photographer shooting a wedding reception",
+    "license": "Generated for Photnoo; no third-party photographer"
+  }
+]

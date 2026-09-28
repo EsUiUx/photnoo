@@ -11,15 +11,35 @@
   --color-primary-700: #263930;
   --color-primary-900: #14201b;
 
-  --color-ink: #141b34;
-  --color-ink-muted: #606060;
-  --color-line: #e3e5e8;
-  --color-surface: #f6f7f6;
+  --color-ink: #14201b;
+  --color-ink-muted: #5c6862;
+  --color-line: #e2e8e3;
+  --color-surface: #f6f8f6;
   --color-danger: #b42318;
   --color-danger-bg: #fef3f2;
   --color-warn-bg: #fff8eb;
 
   --font-sans: var(--font-latin), ui-sans-serif, system-ui, sans-serif;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+::selection {
+  background: var(--color-primary-200);
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+}
+
+[data-surface="dark"] :where(a, button):focus-visible {
+  outline-color: #ffffff;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 :root {

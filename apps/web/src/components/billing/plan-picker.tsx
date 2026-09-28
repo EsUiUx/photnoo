@@ -1,22 +1,38 @@
 'use client';
 
 import { annualSavingPercent } from '@photnoo/shared';
-import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { Check, Mail, MessageCircle } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { contact } from '@/content/site';
+import { Button, buttonClasses } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Badge, Card, DetailList, Segmented } from '@/components/ui/primitives';
+import { Alert } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
+import { cn } from '@/lib/cn';
 import { formatBytes, formatDate, isolate } from '@/lib/format';
 import { useCheckout, useNextPlan } from '@/lib/queries';
 import type { CatalogPlan, Cycle, Subscription } from '@/lib/types';
+import { useMoney, useNumber } from './billing-shared';
+
+type PaidAction = 'subscribe' | 'renew' | 'upgrade';
 
 /**
- * B-01 plan choice: Annual pre-selected with its saving shown, one card per tier (Figma
- * "Growth"/"Studio" cards). The button on each card is whatever the API says is possible now.
+ * Plan choice: Annual pre-selected with its saving shown, one card per tier. The action on each
+ * card is whatever the API offer says is possible now. Paid actions go through a review dialog
+ * before a payment is created.
  */
 export function PlanPicker({ plans, subscription, paymentOpen }: { plans: CatalogPlan[]; subscription: Subscription; paymentOpen: boolean }) {
   const t = useTranslations('App.billing');
+  const number = useNumber();
   const [cycle, setCycle] = useState<Cycle>(subscription.plan?.cycle ?? 'annual');
   const [error, setError] = useState<string>();
+  const [review, setReview] = useState<CatalogPlan | null>(null);
+  const [busyPlan, setBusyPlan] = useState<string | null>(null);
+  const checkout = useCheckout();
+  const nextPlan = useNextPlan();
+
   const visible = plans.filter((p) => p.cycle === cycle);
   const saving = Math.max(
     0,
@@ -29,53 +45,98 @@ export function PlanPicker({ plans, subscription, paymentOpen }: { plans: Catalo
   );
   const paid = subscription.state === 'active' && subscription.plan;
 
+  const message = (err: unknown) => {
+    const code = err instanceof ApiError ? err.code : 'generic';
+    return t.has(`errors.${code}`) ? t(`errors.${code}`) : t('errors.generic');
+  };
+
+  const schedule = (planId: string | null, cardId: string) => {
+    setError(undefined);
+    setBusyPlan(cardId);
+    nextPlan.mutate(planId, { onError: (err) => setError(message(err)), onSettled: () => setBusyPlan(null) });
+  };
+
+  const startPayment = () => {
+    if (!review) return;
+    checkout.mutate(review.id, {
+      onSuccess: () => {
+        setReview(null);
+        setError(undefined);
+        requestAnimationFrame(() => document.getElementById('payment-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      },
+    });
+  };
+
   return (
     <section aria-labelledby="plans-title">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id="plans-title" className="text-2xl font-bold text-primary-900">
+          <h2 id="plans-title" className="text-lg font-semibold text-fg">
             {paid ? t('changePlan') : t('choosePlan')}
           </h2>
-          <p className="mt-1 text-ink-muted">{t('plansIntro')}</p>
+          <p className="mt-1 text-sm text-fg-muted">{t('plansIntro')}</p>
         </div>
-        <div role="radiogroup" aria-label={t('cycleLabel')} className="flex rounded-full bg-primary-100 p-1">
-          {(['annual', 'monthly'] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={cycle === value}
-              onClick={() => setCycle(value)}
-              className={`h-10 rounded-full px-5 text-sm font-semibold ${cycle === value ? 'bg-primary-400 text-white' : 'text-primary-500'}`}
-            >
-              {t(`cycle.${value}`)}
-              {value === 'annual' && saving > 0 ? <span className="ms-2 opacity-80">{t('save', { percent: saving })}</span> : null}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label={t('cycleLabel')}
+          value={cycle}
+          onChange={setCycle}
+          options={(['annual', 'monthly'] as const).map((value) => ({
+            value,
+            label: (
+              <>
+                {t(`cycle.${value}`)}
+                {value === 'annual' && saving > 0 ? (
+                  <Badge tone="brand" className="h-5 px-2">
+                    {t('save', { percent: number(saving) })}
+                  </Badge>
+                ) : null}
+              </>
+            ),
+          }))}
+        />
       </div>
 
-      {paymentOpen ? <p className="mt-4 rounded-xl bg-[#fff8eb] p-3 text-sm text-ink-body">{t('finishPaymentFirst')}</p> : null}
-      {error ? (
-        <p role="alert" className="mt-4 rounded-xl border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
+      <div className="mt-5 flex flex-col gap-3 empty:hidden">
+        {paymentOpen ? <Alert tone="info">{t('finishPaymentFirst')}</Alert> : null}
+        {error ? <Alert>{error}</Alert> : null}
+      </div>
 
       {visible.length === 0 ? (
-        <p className="mt-6 text-ink-muted">{t('noPlans')}</p>
-      ) : (
-        <ul className="mt-6 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-          {visible.map((plan) => (
-            <li key={plan.id}>
-              <PlanCard plan={plan} subscription={subscription} paymentOpen={paymentOpen} onError={setError} />
-            </li>
-          ))}
-          <li>
-            <EnterpriseCard />
+        <Card className="mt-5 p-6">
+          <p className="text-sm text-fg-muted">{t('noPlans')}</p>
+        </Card>
+      ) : null}
+      <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {visible.map((plan) => (
+          <li key={plan.id}>
+            <PlanCard
+              plan={plan}
+              subscription={subscription}
+              paymentOpen={paymentOpen}
+              busy={busyPlan === plan.id}
+              locked={checkout.isPending || nextPlan.isPending}
+              onReview={() => {
+                setError(undefined);
+                checkout.reset();
+                setReview(plan);
+              }}
+              onSchedule={(planId) => schedule(planId, plan.id)}
+            />
           </li>
-        </ul>
-      )}
+        ))}
+        <li>
+          <EnterpriseCard />
+        </li>
+      </ul>
+
+      <ReviewDialog
+        plan={review}
+        subscription={subscription}
+        pending={checkout.isPending}
+        error={checkout.isError ? message(checkout.error) : undefined}
+        onClose={() => setReview(null)}
+        onContinue={startPayment}
+      />
     </section>
   );
 }
@@ -84,160 +145,222 @@ function PlanCard({
   plan,
   subscription,
   paymentOpen,
-  onError,
+  busy,
+  locked,
+  onReview,
+  onSchedule,
 }: {
   plan: CatalogPlan;
   subscription: Subscription;
   paymentOpen: boolean;
-  onError: (message?: string) => void;
+  busy: boolean;
+  locked: boolean;
+  onReview: () => void;
+  onSchedule: (planId: string | null) => void;
 }) {
   const t = useTranslations('App.billing');
   const locale = useLocale();
-  const format = useFormatter();
-  const checkout = useCheckout();
-  const nextPlan = useNextPlan();
+  const money = useMoney();
   const { offer } = plan;
   const current = subscription.plan?.id === plan.id;
-  const pending = checkout.isPending || nextPlan.isPending;
+  const amount = money(offer.amountEgp ?? plan.priceEgp);
+  const renewalDate = formatDate(subscription.cycleEnd, locale);
 
-  const fail = (err: unknown) => {
-    const code = err instanceof ApiError ? err.code : 'generic';
-    onError(t.has(`errors.${code}`) ? t(`errors.${code}`) : t('errors.generic'));
-  };
-  const buy = () => {
-    onError(undefined);
-    checkout.mutate(plan.id, {
-      onSuccess: () => document.getElementById('payment-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-      onError: fail,
-    });
-  };
-  const schedule = (planId: string | null) => {
-    onError(undefined);
-    nextPlan.mutate(planId, { onError: fail });
-  };
-
-  let button: React.ReactNode;
+  let action: React.ReactNode;
   let note: React.ReactNode = null;
-  const amount = offer.amountEgp !== undefined ? format.number(offer.amountEgp) : '';
   switch (offer.action) {
     case 'subscribe':
-      button = <ActionButton onClick={buy} pending={pending} disabled={paymentOpen}>{t('actions.subscribe')}</ActionButton>;
+      action = (
+        <Button block onClick={onReview} disabled={paymentOpen || locked}>
+          {t('actions.subscribe')}
+        </Button>
+      );
       break;
     case 'renew':
-      button = <ActionButton onClick={buy} pending={pending} disabled={paymentOpen}>{t('actions.renew', { amount })}</ActionButton>;
+      action = (
+        <Button block onClick={onReview} disabled={paymentOpen || locked}>
+          {t('actions.renew', { amount })}
+        </Button>
+      );
       break;
     case 'upgrade':
-      button = <ActionButton onClick={buy} pending={pending} disabled={paymentOpen}>{t('actions.upgrade', { amount })}</ActionButton>;
-      note = t('notes.upgrade', { date: formatDate(subscription.cycleEnd, locale) });
-      break;
-    case 'switch':
-      button = (
-        <ActionButton tone="outline" onClick={() => schedule(offer.reason === 'keep_current' ? null : plan.id)} pending={pending}>
-          {offer.reason === 'keep_current' ? t('actions.keep') : t('actions.switch')}
-        </ActionButton>
+      action = (
+        <Button block onClick={onReview} disabled={paymentOpen || locked}>
+          {t('actions.upgrade', { amount })}
+        </Button>
       );
-      note = offer.reason === 'keep_current' ? null : t('notes.switch', { date: formatDate(subscription.cycleEnd, locale) });
+      note = t('notes.upgrade', { date: renewalDate });
       break;
+    case 'switch': {
+      const keep = offer.reason === 'keep_current';
+      action = (
+        <Button block variant="secondary" pending={busy} disabled={locked && !busy} onClick={() => onSchedule(keep ? null : plan.id)}>
+          {keep ? t('actions.keep') : t('actions.switch')}
+        </Button>
+      );
+      note = keep ? null : t('notes.switch', { date: renewalDate });
+      break;
+    }
     case 'scheduled':
-      button = <ActionButton disabled>{t('actions.scheduled')}</ActionButton>;
+      action = (
+        <Button block variant="secondary" disabled>
+          {t('actions.scheduled')}
+        </Button>
+      );
       note = offer.availableFrom ? t('notes.renewOpens', { date: formatDate(offer.availableFrom, locale) }) : t('notes.renewalPaid');
       break;
     case 'current':
-      button = <ActionButton disabled>{t('actions.current')}</ActionButton>;
+      action = (
+        <Button block variant="secondary" disabled>
+          {t('actions.current')}
+        </Button>
+      );
       if (offer.availableFrom) note = t('notes.renewOpens', { date: formatDate(offer.availableFrom, locale) });
       if (offer.reason === 'renewal_paid') note = t('notes.renewalPaid');
       break;
     default:
-      button = <ActionButton disabled>{t('actions.unavailable')}</ActionButton>;
+      action = (
+        <Button block variant="secondary" disabled>
+          {t('actions.unavailable')}
+        </Button>
+      );
       if (offer.reason === 'renewal_paid') note = t('notes.renewalPaid');
   }
 
   return (
-    <article
-      className={`flex h-full flex-col bg-primary-100 p-6 sm:p-8 ${current ? 'outline-2 -outline-offset-2 outline-primary-300' : ''}`}
-      aria-label={plan.label}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-3xl font-semibold text-primary-500 sm:text-[40px]">{isolate(plan.label)}</h3>
-        {current ? <span className="rounded-full bg-primary-300 px-3 py-1 text-xs font-semibold text-white">{t('yourPlan')}</span> : null}
+    <Card as="article" className={cn('flex h-full flex-col p-6', current && 'border-brand ring-1 ring-brand')}>
+      <div className="flex min-h-6 flex-wrap items-center justify-between gap-2">
+        <h3 className="text-base font-semibold text-fg">{isolate(plan.label)}</h3>
+        {current ? (
+          <Badge tone="brand" dot>
+            {t('yourPlan')}
+          </Badge>
+        ) : null}
       </div>
-      <p className="mt-6 text-center font-semibold text-primary-500">
-        <span className="text-6xl leading-none sm:text-[72px]">{format.number(plan.priceEgp)}</span>
-        <span className="ms-1 text-3xl sm:text-4xl">{t(plan.cycle === 'annual' ? 'perYear' : 'perMonth')}</span>
+      <p className="mt-4 flex flex-wrap items-baseline gap-x-1">
+        <span className="text-3xl font-semibold tracking-tight text-fg tabular">{money(plan.priceEgp)}</span>
+        <span className="text-sm text-fg-muted">{t(plan.cycle === 'annual' ? 'perYear' : 'perMonth')}</span>
       </p>
-      <p className="mt-6 text-lg text-[#9da4ab]">
+      <p className="mt-2 text-sm text-fg-secondary">
         {plan.cycle === 'annual'
           ? t('allowanceYear', { amount: formatBytes(plan.cycleAllowanceBytes, locale) })
           : t('allowanceMonth', { amount: formatBytes(plan.cycleAllowanceBytes, locale) })}
       </p>
-      <ul className="mt-5 flex flex-col gap-3">
+      <ul className="mt-5 flex flex-col gap-2.5 border-t border-border pt-5">
         {(['f1', 'f2', 'f3'] as const).map((key) => (
-          <li key={key} className="flex items-center gap-3 text-[#6d747b]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- Figma checkmark */}
-            <img src="/icons/check-dark.svg" alt="" className="size-6" />
+          <li key={key} className="flex items-start gap-2.5 text-sm text-fg-secondary">
+            <Check size={16} strokeWidth={1.75} aria-hidden className="mt-0.5 shrink-0 text-brand" />
             {t(`features.${key}`)}
           </li>
         ))}
       </ul>
-      <div className="mt-auto flex flex-col items-center gap-2 pt-8">
-        {button}
-        {note ? <p className="text-center text-sm text-ink-muted">{note}</p> : null}
+      <div className="mt-auto flex flex-col gap-2 pt-6">
+        {action}
+        {note ? <p className="text-center text-xs text-fg-muted">{note}</p> : null}
         {offer.action === 'scheduled' && subscription.nextPlan?.id === plan.id ? (
-          <button type="button" onClick={() => schedule(null)} className="text-sm font-semibold text-primary-400 underline">
+          <Button variant="ghost" size="sm" pending={busy} disabled={locked && !busy} onClick={() => onSchedule(null)}>
             {t('actions.cancelSwitch')}
-          </button>
+          </Button>
         ) : null}
       </div>
-    </article>
+    </Card>
+  );
+}
+
+function ReviewDialog({
+  plan,
+  subscription,
+  pending,
+  error,
+  onClose,
+  onContinue,
+}: {
+  plan: CatalogPlan | null;
+  subscription: Subscription;
+  pending: boolean;
+  error?: string;
+  onClose: () => void;
+  onContinue: () => void;
+}) {
+  const t = useTranslations('App.billing');
+  const tr = useTranslations('App.billing.review');
+  const tc = useTranslations('Common');
+  const locale = useLocale();
+  const money = useMoney();
+  const action = plan?.offer.action as PaidAction | undefined;
+  const renewalDate = formatDate(subscription.cycleEnd, locale);
+
+  return (
+    <Dialog
+      open={Boolean(plan)}
+      onClose={onClose}
+      dismissible={!pending}
+      title={tr('title')}
+      description={tr('description')}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose} disabled={pending}>
+            {tc('cancel')}
+          </Button>
+          <Button onClick={onContinue} pending={pending} autoFocus>
+            {tr('continue')}
+          </Button>
+        </>
+      }
+    >
+      {plan && action ? (
+        <div className="flex flex-col gap-5">
+          <div className="rounded-lg border border-border bg-surface-subtle p-4">
+            <DetailList
+              items={[
+                { label: tr('plan'), value: isolate(plan.label) },
+                { label: tr('cycle'), value: t(`cycle.${plan.cycle}`) },
+                {
+                  label: tr('allowance'),
+                  value:
+                    plan.cycle === 'annual'
+                      ? t('allowanceYear', { amount: formatBytes(plan.cycleAllowanceBytes, locale) })
+                      : t('allowanceMonth', { amount: formatBytes(plan.cycleAllowanceBytes, locale) }),
+                },
+                {
+                  label: tr('amount'),
+                  value: <span className="text-base font-semibold tabular">{money(plan.offer.amountEgp ?? plan.priceEgp)}</span>,
+                },
+              ]}
+            />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-fg">{tr('whatHappens')}</p>
+            <p className="mt-1 text-sm text-fg-secondary">
+              {action === 'upgrade' ? tr('upgrade', { date: renewalDate }) : action === 'renew' ? tr('renew', { date: renewalDate }) : tr('subscribe')}
+            </p>
+          </div>
+          {error ? <Alert>{error}</Alert> : null}
+        </div>
+      ) : null}
+    </Dialog>
   );
 }
 
 function EnterpriseCard() {
-  const t = useTranslations('App.billing');
+  const t = useTranslations('App.billing.enterprise');
+  const whatsapp = `https://wa.me/${contact.phone.replace(/\D/g, '')}?text=${encodeURIComponent(t('message'))}`;
+  const email = `mailto:${contact.email}?subject=${encodeURIComponent(t('subject'))}`;
   return (
-    <article className="flex h-full flex-col border-2 border-dashed border-primary-200 p-6 sm:p-8" aria-label={t('enterprise.title')}>
-      <h3 className="text-3xl font-semibold text-primary-500 sm:text-[40px]">{t('enterprise.title')}</h3>
-      <p className="mt-6 text-lg text-[#6d747b]">{t('enterprise.body')}</p>
-      <div className="mt-auto flex justify-center pt-8">
-        <a
-          href={`https://wa.me/${contact.phone.replace(/\D/g, '')}?text=${encodeURIComponent(t('enterprise.message'))}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex h-12 w-full max-w-[345px] items-center justify-center rounded-full border-2 border-primary-300 font-bold text-primary-400 hover:bg-primary-50"
-        >
-          {t('enterprise.cta')}
+    <Card as="article" className="flex h-full flex-col bg-surface-subtle p-6">
+      <h3 className="text-base font-semibold text-fg">{t('title')}</h3>
+      <p className="mt-4 text-xl font-semibold tracking-tight text-fg">{t('price')}</p>
+      <p className="mt-2 text-sm text-fg-secondary">{t('body')}</p>
+      <div className="mt-auto flex flex-col gap-2 pt-6">
+        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: 'secondary', block: true })}>
+          <MessageCircle size={18} strokeWidth={1.75} aria-hidden />
+          {t('whatsapp')}
+        </a>
+        <a href={email} className={buttonClasses({ variant: 'ghost', block: true })}>
+          <Mail size={18} strokeWidth={1.75} aria-hidden />
+          {t('email')}
         </a>
       </div>
-    </article>
-  );
-}
-
-function ActionButton({
-  children,
-  onClick,
-  pending,
-  disabled,
-  tone = 'solid',
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  pending?: boolean;
-  disabled?: boolean;
-  tone?: 'solid' | 'outline';
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || pending}
-      aria-busy={pending || undefined}
-      className={`flex h-12 w-full max-w-[345px] items-center justify-center rounded-full px-4 text-lg font-bold disabled:cursor-not-allowed ${
-        tone === 'solid'
-          ? 'bg-primary-300 text-primary-50 hover:bg-primary-400 disabled:bg-neutral-400 disabled:text-white'
-          : 'border-2 border-primary-300 text-primary-400 hover:bg-primary-50 disabled:opacity-60'
-      }`}
-    >
-      {pending ? <span className="size-5 animate-spin rounded-full border-2 border-current/40 border-t-current" /> : children}
-    </button>
+    </Card>
   );
 }

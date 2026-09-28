@@ -1,0 +1,13 @@
+{
+  "Login": {
+    "metaTitle": "Log in",
+    "title": "Welcome back",
+    "subtitle": "Log in to manage your galleries and see what your clients viewed and downloaded.",
+    "email": "Email",
+    "password": "Password",
+    "forgot": "Forgot password?",
+    "submit": "Log in",
+    "noAccount": "New to Photnoo?",
+    "apply": "Request access"
+  }
+}

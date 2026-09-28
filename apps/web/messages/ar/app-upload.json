@@ -1,0 +1,26 @@
+{
+  "App": {
+    "upload": {
+      "uploading": "{count, plural, one {جارٍ رفع ملف واحد} two {جارٍ رفع ملفين} few {جارٍ رفع # ملفات} many {جارٍ رفع # ملفًا} other {جارٍ رفع # ملف}}",
+      "done": "اكتمل الرفع",
+      "someFailed": "{count, plural, one {تعذّر رفع ملف واحد} two {تعذّر رفع ملفين} few {تعذّر رفع # ملفات} many {تعذّر رفع # ملفًا} other {تعذّر رفع # ملف}}",
+      "bytes": "{uploaded} من {total}",
+      "speed": "{speed}/ث",
+      "progressLabel": "تقدّم الرفع",
+      "timeLeft": "متبقٍ حوالي {time}",
+      "resumeNote": "إذا انقطع الاتصال، يستأنف الرفع عند عودته.",
+      "retry": "إعادة المحاولة",
+      "retryFile": "إعادة محاولة رفع {name}",
+      "dismissFile": "تجاهل {name}",
+      "clear": "مسح القائمة",
+      "errors": {
+        "allowance_exceeded": "تجاوزت مساحة الرفع في باقتك. رقِّ باقتك أو احذف بعض الملفات.",
+        "subscription_inactive": "باقتك غير نشطة. جدّدها لمواصلة الرفع.",
+        "unsupported_type": "نوع الملف غير مدعوم. استخدم JPEG أو PNG أو TIFF أو PSD أو RAW أو ZIP.",
+        "file_too_large": "أكبر من 2 جيجابايت. صدّر نسخة أصغر أو ضعه في ملف ZIP مقسّم.",
+        "gallery_closed": "هذا المعرض مغلق ولا يقبل ملفات جديدة.",
+        "generic": "توقف الرفع. تحقق من الاتصال ثم أعد المحاولة."
+      }
+    }
+  }
+}

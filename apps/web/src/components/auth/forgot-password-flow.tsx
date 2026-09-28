@@ -2,25 +2,31 @@
 
 import { emailSchema, passwordSchema } from '@photnoo/shared';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { PasswordField, TextField } from '@/components/ui/field';
+import { Alert } from '@/components/ui/state';
 import { useRouter } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api';
-import { FormAlert, SubmitButton, TextButton, TextField, TextLink } from './fields';
+import { TextButton, TextLink } from './fields';
 import { OtpInput } from './otp-input';
+import { usePasswordHint } from './password-hint';
 import { useFormErrors } from './use-form-errors';
 
-type Step = 'email' | 'code' | 'password';
+export type Step = 'email' | 'code' | 'password';
+
+const RESEND_COOLDOWN = 30;
 
 const passwordsSchema = z
   .object({ newPassword: passwordSchema, confirm: z.string() })
   .refine((v) => v.newPassword === v.confirm, { path: ['confirm'] });
 
 /**
- * Figma "Forgot Password?" → "We Have Sent You OTP" → "Create New Password", as three steps on
- * one page so the email and code never travel in a URL. The last step resets and signs in.
+ * Three steps on one page (email → 6-digit code → new password) so the email and code never
+ * travel in a URL. The last step resets and signs in.
  */
-export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step) => void }) {
+export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step, email: string) => void }) {
   const t = useTranslations('Reset');
   const router = useRouter();
   const errors = useFormErrors();
@@ -30,12 +36,21 @@ export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step
   const [newPassword, setNewPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [pending, setPending] = useState(false);
+  const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const passwordHint = usePasswordHint(newPassword);
 
-  function setStep(next: Step) {
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = window.setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
+  function setStep(next: Step, forEmail = email) {
     errors.clear();
     setStepState(next);
-    onStepChange(next);
+    onStepChange(next, forEmail);
   }
 
   async function sendCode() {
@@ -50,7 +65,9 @@ export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step
     setPending(true);
     try {
       await api('/v1/auth/password-reset/request', { body: parsed });
-      setStep('code');
+      setResent(false);
+      setCooldown(RESEND_COOLDOWN);
+      setStep('code', parsed.email);
     } catch (error) {
       errors.fromError(error);
     } finally {
@@ -58,10 +75,24 @@ export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step
     }
   }
 
+  async function onResend() {
+    setResending(true);
+    setResent(false);
+    try {
+      await sendCode();
+      setResent(true);
+      setCooldown(RESEND_COOLDOWN);
+    } catch (error) {
+      errors.fromError(error);
+    } finally {
+      setResending(false);
+    }
+  }
+
   function onCode(event: React.FormEvent) {
     event.preventDefault();
     if (!/^\d{6}$/.test(code)) {
-      errors.setForm(t('codeIncomplete'));
+      errors.setFieldError('code', t('codeIncomplete'));
       return;
     }
     setStep('password');
@@ -86,79 +117,91 @@ export function ForgotPasswordFlow({ onStepChange }: { onStepChange: (step: Step
     }
   }
 
+  const formAlert = errors.form ? <Alert key={errors.attempt}>{errors.form}</Alert> : null;
+
   if (step === 'email') {
     return (
-      <form onSubmit={onEmail} noValidate className="flex flex-col items-center gap-6">
-        <div className="flex w-full flex-col gap-8">
-          <div className="flex flex-col gap-3">
-            <FormAlert message={errors.form} />
-            <TextField
-              label={t('email')}
-              type="email"
-              autoComplete="email"
-              ltr
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={errors.fields.email}
-            />
-          </div>
-          <SubmitButton pending={pending}>{t('sendCode')}</SubmitButton>
-        </div>
-        <TextLink href="/login">{t('back')}</TextLink>
+      <form onSubmit={onEmail} noValidate className="flex flex-col gap-6">
+        {formAlert}
+        <TextField
+          id={errors.id('email')}
+          label={t('email')}
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          ltr
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.fields.email}
+        />
+        <Button type="submit" size="lg" block pending={pending}>
+          {t('sendCode')}
+        </Button>
+        <p className="text-sm text-fg-muted">
+          {t('remembered')} <TextLink href="/login">{t('backToLogin')}</TextLink>
+        </p>
       </form>
     );
   }
 
   if (step === 'code') {
     return (
-      <form onSubmit={onCode} noValidate className="flex flex-col items-center gap-6">
-        <div className="flex w-full flex-col gap-8">
-          <FormAlert message={errors.form} />
-          <OtpInput value={code} onChange={setCode} label={t('codeLabel')} invalid={Boolean(errors.form)} />
-          <SubmitButton>{t('confirm')}</SubmitButton>
-        </div>
-        <div className="flex flex-col items-center gap-2 text-center">
-          {resent ? (
-            <p className="text-sm text-ink-muted">{t('resent')}</p>
-          ) : (
-            <TextButton
-              onClick={() => {
-                void sendCode().then(() => setResent(true), errors.fromError);
-              }}
-            >
-              {t('resend')}
+      <form onSubmit={onCode} noValidate className="flex flex-col gap-6">
+        {formAlert}
+        <OtpInput
+          id={errors.id('code')}
+          value={code}
+          onChange={setCode}
+          label={t('codeLabel')}
+          hint={t('codeHint')}
+          error={errors.fields.code}
+        />
+        <Button type="submit" size="lg" block>
+          {t('confirm')}
+        </Button>
+        <div className="flex flex-col gap-1 text-sm">
+          <div className="flex flex-wrap items-center gap-x-2 text-fg-muted">
+            <span>{t('noCode')}</span>
+            <TextButton onClick={() => void onResend()} disabled={resending || cooldown > 0}>
+              {resending ? t('resending') : cooldown > 0 ? t('resendIn', { seconds: String(cooldown) }) : t('resend')}
             </TextButton>
-          )}
-          <TextButton onClick={() => setStep('email')}>{t('changeEmail')}</TextButton>
+          </div>
+          <p role="status" className="text-fg-muted">
+            {resent ? t('resent') : ''}
+          </p>
+          <TextButton onClick={() => setStep('email')} className="self-start">
+            {t('changeEmail')}
+          </TextButton>
         </div>
       </form>
     );
   }
 
   return (
-    <form onSubmit={onPassword} noValidate className="flex flex-col gap-8">
-      <div className="flex flex-col gap-3">
-        <FormAlert message={errors.form} />
-        <TextField
+    <form onSubmit={onPassword} noValidate className="flex flex-col gap-6">
+      {formAlert}
+      <div className="flex flex-col gap-5">
+        <PasswordField
+          id={errors.id('newPassword')}
           label={t('newPassword')}
-          type="password"
+          hint={passwordHint}
           autoComplete="new-password"
-          ltr
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           error={errors.fields.newPassword}
         />
-        <TextField
+        <PasswordField
+          id={errors.id('confirm')}
           label={t('confirmPassword')}
-          type="password"
           autoComplete="new-password"
-          ltr
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           error={errors.fields.confirm ? t('mismatch') : undefined}
         />
       </div>
-      <SubmitButton pending={pending}>{t('signIn')}</SubmitButton>
+      <Button type="submit" size="lg" block pending={pending}>
+        {t('signIn')}
+      </Button>
     </form>
   );
 }

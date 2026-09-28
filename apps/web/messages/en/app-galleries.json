@@ -1,0 +1,29 @@
+{
+  "App": {
+    "galleries": {
+      "metaTitle": "Galleries",
+      "title": "Galleries",
+      "create": "New gallery",
+      "search": "Search galleries",
+      "searchPlaceholder": "Search by gallery or client",
+      "filterLabel": "Show galleries",
+      "filter": {
+        "all": "All",
+        "active": "Active",
+        "drafts": "Drafts",
+        "closed": "Closed"
+      },
+      "count": "{count, plural, =0 {No galleries} one {# gallery} other {# galleries}}",
+      "emptyTitle": "No galleries yet",
+      "empty": "Create a gallery, upload the shoot and share it with your client.",
+      "createFirst": "Create your first gallery",
+      "noResultsTitle": "Nothing found",
+      "noResults": "No gallery or client matches “{query}”.",
+      "clearSearch": "Clear search",
+      "noFilterResultsTitle": "Nothing here",
+      "noFilterResults": "No galleries have this status right now.",
+      "showAll": "Show all galleries",
+      "loadMore": "Load more galleries"
+    }
+  }
+}

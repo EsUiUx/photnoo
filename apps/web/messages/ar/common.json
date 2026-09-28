@@ -1,0 +1,29 @@
+{
+  "Common": {
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "loading": "جارٍ التحميل…",
+    "retry": "حاول مرة أخرى",
+    "loadFailedTitle": "تعذر التحميل",
+    "loadFailedBody": "تحقق من الاتصال وحاول مرة أخرى. إذا تكرر ذلك، تواصل مع دعم Photnoo.",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "copyFailed": "تعذر النسخ",
+    "optional": "اختياري",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
+    "menu": "القائمة",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "language": "اللغة",
+    "english": "English",
+    "arabic": "العربية",
+    "egp": "ج.م",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "back": "رجوع",
+    "more": "إجراءات أخرى",
+    "search": "بحث"
+  }
+}

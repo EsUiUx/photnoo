@@ -3,9 +3,12 @@
 import { loginSchema } from '@photnoo/shared';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { PasswordField, TextField } from '@/components/ui/field';
+import { Alert } from '@/components/ui/state';
 import { useRouter } from '@/i18n/navigation';
 import { api } from '@/lib/api';
-import { FormAlert, SubmitButton, TextField, TextLink } from './fields';
+import { TextLink } from './fields';
 import { useFormErrors } from './use-form-errors';
 
 export function LoginForm() {
@@ -32,36 +35,37 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-4">
-          <FormAlert message={errors.form} />
-          <div className="flex flex-col gap-3">
-            <TextField
-              label={t('email')}
-              type="email"
-              autoComplete="email"
-              ltr
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={errors.fields.email}
-            />
-            <TextField
-              label={t('password')}
-              type="password"
-              autoComplete="current-password"
-              ltr
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={errors.fields.password}
-            />
-          </div>
-          <div>
-            <TextLink href="/forgot-password">{t('forgot')}</TextLink>
-          </div>
+      {errors.form ? <Alert key={errors.attempt}>{errors.form}</Alert> : null}
+      <div className="flex flex-col gap-5">
+        <TextField
+          id={errors.id('email')}
+          label={t('email')}
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          ltr
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.fields.email}
+        />
+        <div className="flex flex-col gap-1">
+          <PasswordField
+            id={errors.id('password')}
+            label={t('password')}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.fields.password}
+          />
+          <TextLink href="/forgot-password" className="inline-flex min-h-10 items-center self-end text-sm">
+            {t('forgot')}
+          </TextLink>
         </div>
-        <SubmitButton pending={pending}>{t('submit')}</SubmitButton>
       </div>
-      <p className="text-center text-lg leading-[1.4] text-ink-body">
+      <Button type="submit" size="lg" block pending={pending}>
+        {t('submit')}
+      </Button>
+      <p className="text-sm text-fg-muted">
         {t('noAccount')} <TextLink href="/apply">{t('apply')}</TextLink>
       </p>
     </form>

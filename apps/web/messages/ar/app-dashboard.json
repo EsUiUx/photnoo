@@ -1,0 +1,41 @@
+{
+  "App": {
+    "dashboard": {
+      "metaTitle": "لوحة التحكم",
+      "title": "لوحة التحكم",
+      "hello": "أهلًا بعودتك، {name}",
+      "newGallery": "معرض جديد",
+      "overview": "نظرة عامة",
+      "clients": "العملاء",
+      "activeGalleries": "المعارض النشطة",
+      "downloads": "التحميلات",
+      "allowance": "الرصيد",
+      "allowanceUsed": "{used} من {total}",
+      "allowanceMeter": "المستخدم من رصيد التسليم",
+      "noPlan": "لا توجد باقة نشطة",
+      "plan": {
+        "trial": "فترة تجريبية",
+        "active": "باقة نشطة",
+        "pending_payment": "في انتظار الدفع",
+        "soft_locked": "انتهت الباقة، عرض فقط",
+        "dormant": "الباقة غير نشطة",
+        "suspended": "الحساب موقوف"
+      },
+      "recentGalleries": "أحدث المعارض",
+      "recentActivity": "آخر النشاطات",
+      "viewAll": "عرض الكل",
+      "activity": {
+        "viewed": "{client} شاهد <b>{gallery}</b>",
+        "downloaded": "{client} حمّل من <b>{gallery}</b>",
+        "expiring": "ينتهي <b>{gallery}</b> غدًا"
+      },
+      "yourClient": "عميلك",
+      "noActivityTitle": "لا يوجد نشاط بعد",
+      "noActivity": "عندما يفتح عميلك معرضًا أو يحمّل منه، ستراه هنا.",
+      "emptyTitle": "أنشئ أول معرض لك",
+      "empty": "أضف العميل، وارفع جلسة التصوير، ثم شارك رابطًا خاصًا وكلمة مرور عبر واتساب.",
+      "createFirst": "أنشئ أول معرض",
+      "photos": "{count, plural, =0 {لا توجد صور} one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}"
+    }
+  }
+}

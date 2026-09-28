@@ -1,11 +1,17 @@
 'use client';
 
+import { Clock, LockKeyhole } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useId, useRef, useState } from 'react';
-import { FormAlert } from '@/components/auth/fields';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { PasswordField } from '@/components/ui/field';
+import { Alert } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { type ClientSummary, clientApi, daysLeft } from '@/lib/client-api';
 import { PhotographerMark } from './client-shell';
+
+/** Field-level problems sit under the input; waits and lockouts get an alert above the button. */
+type Problem = { where: 'field'; text: string } | { where: 'alert'; text: string; tone: 'warning' | 'danger' };
 
 /**
  * C-01 password screen. The API enforces the limits (C-02); this page explains them and keeps
@@ -13,14 +19,17 @@ import { PhotographerMark } from './client-shell';
  */
 export function UnlockScreen({ token, summary, onUnlocked }: { token: string; summary: ClientSummary; onUnlocked: () => void }) {
   const t = useTranslations('Client.unlock');
-  const inputId = useId();
+  const fieldId = useId();
+  const alertId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [password, setPassword] = useState('');
-  const [visible, setVisible] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string>();
+  const [problem, setProblem] = useState<Problem>();
   const [waiting, setWaiting] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const days = daysLeft(summary.expiresAt);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   function waitFor(seconds: number) {
     setWaiting(true);
@@ -31,11 +40,12 @@ export function UnlockScreen({ token, summary, onUnlocked }: { token: string; su
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!password.trim()) {
-      setError(t('errors.empty'));
+      setProblem({ where: 'field', text: t('errors.empty') });
+      inputRef.current?.focus();
       return;
     }
     setPending(true);
-    setError(undefined);
+    setProblem(undefined);
     try {
       await clientApi.unlock(token, password.trim());
       onUnlocked();
@@ -46,78 +56,77 @@ export function UnlockScreen({ token, summary, onUnlocked }: { token: string; su
       const minutes = Math.max(1, Math.ceil(retry / 60));
       switch (code) {
         case 'wrong_password':
-          setError(t('errors.wrong'));
+          setProblem({ where: 'field', text: t('errors.wrong') });
+          break;
+        case 'validation_failed':
+          setProblem({ where: 'field', text: t('errors.empty') });
           break;
         case 'slow_down':
-          setError(t('errors.slowDown', { seconds: retry }));
+          setProblem({ where: 'alert', tone: 'warning', text: t('errors.slowDown', { seconds: retry }) });
           break;
         case 'too_many_attempts':
         case 'link_locked':
-          setError(t('errors.locked', { minutes }));
+          setProblem({ where: 'alert', tone: 'warning', text: t('errors.locked', { minutes }) });
           break;
         case 'gallery_unavailable':
-          setError(t('errors.unavailable'));
-          break;
-        case 'validation_failed':
-          setError(t('errors.empty'));
+          setProblem({ where: 'alert', tone: 'danger', text: t('errors.unavailable') });
           break;
         default:
-          setError(t('errors.generic'));
+          setProblem({ where: 'alert', tone: 'danger', text: t('errors.generic') });
       }
+      inputRef.current?.focus();
     } finally {
       setPending(false);
     }
   }
 
-  return (
-    <section className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center px-6 py-12">
-      <div className="flex flex-col items-center text-center">
-        <PhotographerMark name={summary.photographer.name} size="lg" />
-        <p className="mt-4 font-medium text-ink-muted">{summary.photographer.name}</p>
-        <h1 className="mt-1 text-3xl leading-tight font-bold text-primary-900">{summary.name}</h1>
-        {days !== null ? <p className="mt-2 text-sm text-ink-subtle">{t('daysLeft', { days })}</p> : null}
-      </div>
+  const fieldError = problem?.where === 'field' ? problem.text : undefined;
+  const alert = problem?.where === 'alert' ? problem : undefined;
 
-      <form onSubmit={onSubmit} noValidate className="mt-10 flex flex-col gap-4">
-        <p className="text-center text-ink-body">{t('intro', { photographer: summary.photographer.name })}</p>
-        <FormAlert message={error} />
-        <div className="relative">
-          <label htmlFor={inputId} className="sr-only">
-            {t('password')}
-          </label>
-          <input
-            id={inputId}
-            type={visible ? 'text' : 'password'}
+  return (
+    <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
+      <section className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-card sm:p-8">
+        <div className="flex flex-col items-center text-center">
+          <PhotographerMark name={summary.photographer.name} size="lg" />
+          <p className="mt-4 text-sm font-medium text-fg-secondary">{summary.photographer.name}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-fg">{summary.name}</h1>
+          {days !== null ? (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface-sunken px-3 py-1 text-xs font-medium text-fg-secondary">
+              <Clock size={16} strokeWidth={1.75} aria-hidden />
+              {t('daysLeft', { days })}
+            </p>
+          ) : null}
+        </div>
+
+        <form onSubmit={onSubmit} noValidate className="mt-8 flex flex-col gap-5">
+          <p className="text-center text-base text-fg-secondary">{t('intro', { photographer: summary.photographer.name })}</p>
+          <PasswordField
+            ref={inputRef}
+            id={fieldId}
+            label={t('password')}
+            hint={t('help')}
+            error={fieldError}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={t('password')}
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
-            dir="ltr"
-            aria-invalid={error ? true : undefined}
-            className="h-[53px] w-full rounded-full border border-field-border bg-white ps-6 pe-24 font-mono text-xl tracking-wider text-ink placeholder:font-sans placeholder:tracking-normal placeholder:text-[rgba(51,51,51,0.5)] focus:border-primary-300 focus:ring-2 focus:ring-primary-200 focus:outline-none rtl:text-right"
+            enterKeyHint="go"
+            inputClassName="tracking-wide"
+            // A wait or lockout alert is part of this field's description too.
+            {...(alert ? { 'aria-describedby': `${alertId} ${fieldId}-hint` } : {})}
           />
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            aria-pressed={visible}
-            className="absolute inset-y-0 end-2 my-auto h-9 rounded-full px-3 text-sm font-semibold text-primary-400 hover:bg-primary-50"
-          >
-            {visible ? t('hide') : t('show')}
-          </button>
-        </div>
-        <button
-          type="submit"
-          disabled={pending || waiting}
-          aria-busy={pending || undefined}
-          className="flex h-[53px] w-full items-center justify-center rounded-full bg-primary-400 text-xl font-medium text-on-primary transition-colors hover:bg-primary-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-300 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {pending ? <span className="size-5 animate-spin rounded-full border-2 border-on-primary/40 border-t-on-primary" /> : t('open')}
-        </button>
-        <p className="text-center text-sm text-ink-subtle">{t('help')}</p>
-      </form>
-    </section>
+          {alert ? (
+            <div id={alertId}>
+              <Alert tone={alert.tone}>{alert.text}</Alert>
+            </div>
+          ) : null}
+          <Button type="submit" size="lg" block icon={LockKeyhole} pending={pending} disabled={waiting}>
+            {t('open')}
+          </Button>
+        </form>
+      </section>
+    </div>
   );
 }

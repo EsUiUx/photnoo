@@ -1,8 +1,17 @@
-import { setRequestLocale } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { use } from 'react';
 import { ForgotPasswordPage } from '@/components/auth/forgot-password-page';
 
-export default function Page({ params }: { params: Promise<{ locale: string }> }) {
+type Props = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Reset' });
+  return { title: t('metaTitle') };
+}
+
+export default function Page({ params }: Props) {
   setRequestLocale(use(params).locale);
   return <ForgotPasswordPage />;
 }

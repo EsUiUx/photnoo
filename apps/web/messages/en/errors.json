@@ -1,0 +1,28 @@
+{
+  "Errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "We could not reach Photnoo. Check your connection and try again.",
+    "invalidCredentials": "Email or password is incorrect.",
+    "accountLocked": "Too many attempts. Try again in 15 minutes, or reset your password.",
+    "accountSuspended": "This account is suspended. Contact Photnoo support.",
+    "inviteInvalid": "This invite link has expired or was already used.",
+    "accountExists": "An account already exists for this email. Please log in.",
+    "resetInvalid": "The code is wrong or has expired. Request a new code.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "passwordWeak": "Choose a stronger password: at least 10 characters, not a common one, and not your email.",
+    "field": {
+      "email": "Enter a valid email address.",
+      "password": "Enter your password.",
+      "newPassword": "Use at least 10 characters.",
+      "phone": "Enter a valid mobile number, e.g. 01012345678.",
+      "name": "Enter your full name.",
+      "city": "Enter your city.",
+      "portfolioUrl": "Enter a link to your portfolio or Instagram.",
+      "code": "Enter the 6-digit code.",
+      "generic": "Check this field.",
+      "clientName": "Enter the client name.",
+      "clientPhone": "Enter a valid mobile number, e.g. 01012345678."
+    },
+    "subscriptionInactive": "Your plan is not active. Renew or choose a plan in Billing to create galleries."
+  }
+}

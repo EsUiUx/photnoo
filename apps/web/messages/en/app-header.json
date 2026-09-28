@@ -1,0 +1,13 @@
+{
+  "App": {
+    "header": {
+      "role": "Photographer",
+      "accountMenu": "Account menu, {name}",
+      "accountMenuFallback": "Account menu",
+      "billing": "Billing",
+      "logout": "Log out",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    }
+  }
+}

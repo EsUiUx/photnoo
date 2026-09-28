@@ -1,0 +1,118 @@
+{
+  "Client": {
+    "otherLanguage": "العربية",
+    "deliveredWith": "Delivered with",
+    "report": {
+      "link": "Report this gallery",
+      "title": "Report this gallery",
+      "intro": "Tell us what is wrong with this gallery. Our team reviews every report.",
+      "reason": "What is the problem?",
+      "reasonError": "Please describe the problem in a few words.",
+      "email": "Your email",
+      "emailError": "Enter a valid email or leave it empty.",
+      "send": "Send report",
+      "failed": "We could not send the report. Please try again.",
+      "thanks": "Thank you. Your report was sent to our team.",
+      "close": "Close",
+      "emailHint": "Only if you would like us to reply.",
+      "cancel": "Cancel"
+    },
+    "status": {
+      "whatsappText": "Hi, I have a question about the gallery \"{gallery}\".",
+      "messagePhotographer": "Message the photographer",
+      "retry": "Try again",
+      "invalid": {
+        "title": "This link does not work",
+        "body": "Check that you opened the full link your photographer sent you."
+      },
+      "closed": {
+        "title": "This gallery has closed",
+        "body": "The download period for this gallery has ended. Your photographer can share it again."
+      },
+      "unavailable": {
+        "title": "Temporarily unavailable",
+        "body": "This gallery is paused for a short while. Please try again later."
+      },
+      "error": {
+        "title": "Something went wrong",
+        "body": "We could not load this gallery. Check your connection and try again."
+      }
+    },
+    "unlock": {
+      "daysLeft": "{days, plural, =0 {Closes today} one {Open for # more day} other {Open for # more days}}",
+      "intro": "Enter the password {photographer} sent you to see your photos.",
+      "password": "Gallery password",
+      "open": "Open gallery",
+      "help": "The password was sent to you separately on WhatsApp.",
+      "errors": {
+        "empty": "Enter the password.",
+        "wrong": "That password is not right. Check the message from your photographer.",
+        "slowDown": "Too many tries. Wait {seconds} seconds and try again.",
+        "locked": "Too many tries. Try again in {minutes} minutes.",
+        "unavailable": "This gallery is not available right now.",
+        "generic": "We could not check the password. Check your connection and try again."
+      }
+    },
+    "gallery": {
+      "photos": "{count, plural, one {# file} other {# files}}",
+      "daysLeft": "{days, plural, =0 {Closes today} one {# day left} other {# days left}}",
+      "until": "until {date}",
+      "allowance": "Download allowance",
+      "allowanceLeft": "{left} of {total} left",
+      "allowanceHelp": "Each download uses part of the allowance. Downloading the same file again within 10 minutes is free.",
+      "downloadAll": "Download all",
+      "downloadFolder": "Download this folder",
+      "folders": "Folders",
+      "allTab": "All",
+      "otherTab": "Other",
+      "empty": "No files here yet.",
+      "open": "Open {name}",
+      "saved": "Saved",
+      "whatsappText": "Hi, about the gallery \"{gallery}\": ",
+      "messagePhotographer": "Message the photographer",
+      "capPartial": "This file is bigger than the allowance left ({left}). Ask your photographer for more.",
+      "capUsed": "The download allowance for this gallery is used up. Your photographer can help.",
+      "downloadFailed": "The download did not start. Please try again.",
+      "dismiss": "Dismiss",
+      "reasonUsed": "The download allowance is used up.",
+      "reasonEmpty": "There is nothing to download here.",
+      "photosHeading": "All photos"
+    },
+    "viewer": {
+      "label": "Viewing {name}",
+      "close": "Close",
+      "position": "{current} / {total}",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "download": "Download original",
+      "downloadAgain": "Download again",
+      "noPreview": "No preview for this file type. Download it to open it.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    },
+    "downloadAll": {
+      "title": "Download files",
+      "summary": "{count, plural, one {# file} other {# files}}, {size} in total.",
+      "overCap": "Only {left} of allowance is left, so not every file will fit. Downloads stop when it runs out.",
+      "folderHint": "Choose a folder to save everything together, or save to your Downloads folder.",
+      "browserHint": "Files are saved one after another. If your browser asks, allow multiple downloads.",
+      "chooseFolder": "Choose a folder",
+      "toDownloads": "Save to Downloads",
+      "start": "Start downloading",
+      "progress": "Downloading {done} of {total}",
+      "finished": "{count, plural, one {# file downloaded} other {All # files downloaded}}",
+      "stoppedCap": "Stopped after {done} of {total}: the allowance is used up.",
+      "stoppedCancelled": "Stopped after {done} of {total}.",
+      "stoppedError": "Stopped after {done} of {total}: a download failed. Try again.",
+      "messagePhotographer": "Message the photographer",
+      "cancel": "Stop",
+      "close": "Done",
+      "progressLabel": "Download progress",
+      "dismiss": "Not now"
+    },
+    "meta": {
+      "title": "Your gallery"
+    },
+    "loading": "Opening your gallery…"
+  }
+}

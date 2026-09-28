@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { addCycle, cycleAllowanceBytes, DeliveryRules, TrialDefaults } from '@photnoo/shared';
 import sharp from 'sharp';
@@ -78,6 +80,44 @@ async function makePhoto(kind: string, seed: number, portrait: boolean): Promise
   return sharp(Buffer.from(svg)).jpeg({ quality: 88, chromaSubsampling: '4:4:4' }).toBuffer();
 }
 
+/**
+ * Free Unsplash photos per shoot type (Unsplash License). Downloaded once into
+ * .local/demo-photos (git-ignored) so the repository stays small; offline runs fall back to
+ * generated frames.
+ */
+const STOCK: Record<string, string[]> = {
+  wedding: ['JS2sbw2UGAQ', 'c7MW7mXqYhE', 'GpCkjyu00z8', 'habFekYtg34', 'ZjhwmDiROIc', 'noLogqwlFSA', 'y782WPnyaC0', 'htVPuRIErHk', '5BB_atDT4oA', 'JYR7DNdUqo4', '1qH1GOt7Q-E', 'YyvpmN6PB3I'],
+  engagement: ['1iuFKizvxQo', 'h1CYHSp4lIY', '1OOrZjqnphI', 'eKf6tehpuP0', '3qXnZboPoBI', 'dnlluWb1amw', 'htVPuRIErHk', 'c7MW7mXqYhE'],
+  newborn: ['vTknj2OxDVg', '5zp0jym2w9M', 'tCbTGNwrFNM', 'EytWx3BOrwI', 'OUYg0Q3ec-Y', 'WbC9XIlQb4k', 'CSlt2wHuNIk'],
+  corporate: ['pAtA8xe_iVM', 'SJvDxw0azqw', 'mEZ3PoFGs_k', 'YmQ8TrsieE4', 'pq9npYMirk8', '0OczC2-oFsA', 'qpyR0WKV_Cs', '0Zx1bDv5BNY'],
+  family: ['4_mJ1TbMK8A', 'OMl0o6TSQXU', 'vISLDBH5Sic', 'MRWHSKimBJk', 'b0TuKEQc9Ak', '0cmJRW5rOJ8', 'fkGwWLNCuBs'],
+  birthday: ['MD_ha01Bk7c', '-gDHgEcec6Q', 'As8zq82LBpw', 'YYXqBwvdoeI', 'cK6ixOQx1fI', 'AbLybXyktlk'],
+  graduation: ['m7yOJx0ALME', 'iggWDxHTAUQ', 'IK07skiu2QY', 'hpRGrfOIybc', 'yFpnkorlodo', 'LLfRMRT-9AY', '2RouMSg9Rnw', 'bOrjvtn7aY0'],
+  product: ['LMzwJDu6hTE', 'h9Iq22JJlGk', 'ivP3TYdLvw0', 'FzdEbrA3Qj0', 'F-6v14W67Ak', 'obV_LM0KjxY', 'zlwDJoKTuA8', 'PDipEilB0b8'],
+  maternity: ['uGLgY4hjvYk', '-pGlq8NKUto', 'VF-vVfjhU1I', 'Hff5W3b5wPA', 'pYvFcuYFs1E', 'TFARf1kGFLA', 'deAAjXh8JOU', 'uqfwXLOJeQI'],
+};
+const CACHE = join(process.cwd(), '.local', 'demo-photos');
+const unavailable = new Set<string>();
+
+async function stockPhoto(kind: string, index: number): Promise<Buffer | null> {
+  const ids = (STOCK[kind] ?? STOCK.wedding!).filter((id) => !unavailable.has(id));
+  if (ids.length === 0) return null;
+  const id = ids[index % ids.length]!;
+  const file = join(CACHE, `${id}.jpg`);
+  if (existsSync(file)) return readFileSync(file);
+  try {
+    const res = await fetch(`https://unsplash.com/photos/${id}/download?w=2400&q=80&fm=jpg`, { redirect: 'follow' });
+    if (!res.ok || !res.headers.get('content-type')?.startsWith('image/')) throw new Error(String(res.status));
+    const bytes = Buffer.from(await res.arrayBuffer());
+    mkdirSync(CACHE, { recursive: true });
+    writeFileSync(file, bytes);
+    return bytes;
+  } catch {
+    unavailable.add(id);
+    return stockPhoto(kind, index);
+  }
+}
+
 type GallerySpec = {
   name: string;
   client: string;
@@ -152,7 +192,7 @@ async function main(): Promise<void> {
       for (let i = 0; i < spec.photos; i += 1) {
         const id = randomUUID();
         const portrait = i % 3 === 1;
-        const bytes = await makePhoto(spec.kind, index * 1000 + i + 7, portrait);
+        const bytes = (await stockPhoto(spec.kind, i)) ?? (await makePhoto(spec.kind, index * 1000 + i + 7, portrait));
         const key = objectKeys.original(gallery.id, id);
         await storage.putObject(key, bytes, 'image/jpeg');
         await prisma.file.create({

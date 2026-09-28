@@ -1,0 +1,26 @@
+{
+  "App": {
+    "activity": {
+      "title": "Activity",
+      "subtitle": "Every view and download is recorded as proof of delivery.",
+      "emptyTitle": "No activity yet",
+      "emptyBody": "Views and downloads appear here as soon as your client opens the link.",
+      "showAll": "Show all {count}",
+      "showLess": "Show less",
+      "showFiles": "Show files",
+      "events": {
+        "open": "Gallery opened",
+        "password_ok": "Password accepted",
+        "password_fail": "Wrong password entered",
+        "downloadOne": "Downloaded {file}",
+        "downloadMany": "{count, plural, one {Downloaded # file} other {Downloaded # files}}"
+      },
+      "devices": {
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "desktop": "Computer",
+        "unknown": "Unknown device"
+      }
+    }
+  }
+}

@@ -1,103 +1,103 @@
 'use client';
 
+import type { LucideIcon } from 'lucide-react';
+import { CreditCard, Images, LayoutDashboard } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Meter } from '@/components/ui/primitives';
+import { Skeleton } from '@/components/ui/state';
 import { Link, usePathname } from '@/i18n/navigation';
+import { cn } from '@/lib/cn';
 import { formatBytes, percent } from '@/lib/format';
 import type { Me } from '@/lib/types';
 
-type Item = { key: string; icon: string; href?: string };
+export type NavItem = { key: 'dashboard' | 'galleries' | 'billing'; href: string; icon: LucideIcon };
 
-// PRD section 3: Portfolio, Store, Prints and Analytics are hidden in v1; Clients, Notifications
-// and Settings are listed but not built yet.
-const SECTIONS: Array<{ key: string; items: Item[] }> = [
-  {
-    key: 'main',
-    items: [
-      { key: 'dashboard', icon: 'nav-dashboard', href: '/dashboard' },
-      { key: 'galleries', icon: 'nav-galleries', href: '/galleries' },
-      { key: 'clients', icon: 'nav-clients' },
-    ],
-  },
-  {
-    key: 'account',
-    items: [
-      { key: 'billing', icon: 'nav-billing', href: '/billing' },
-      { key: 'notifications', icon: 'nav-notifications' },
-      { key: 'settings', icon: 'nav-settings' },
-    ],
-  },
+// v1 navigation only (PRODUCT.md): unbuilt sections are not listed at all.
+export const NAV_ITEMS: NavItem[] = [
+  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'galleries', href: '/galleries', icon: Images },
+  { key: 'billing', href: '/billing', icon: CreditCard },
 ];
 
-/** Figma "Frame 37760": green sidebar with pill navigation and the storage meter at the bottom. */
-export function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
+export function isActivePath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Light sidebar: logo, three destinations and the delivery allowance, which links to Billing. */
+export function Sidebar({ me, loading, onNavigate }: { me?: Me; loading?: boolean; onNavigate?: () => void }) {
   const t = useTranslations('App.nav');
-  const locale = useLocale();
   const pathname = usePathname();
-  const sub = me?.subscription;
 
   return (
-    <div className="flex h-full w-[280px] flex-col border-e border-primary-300 bg-primary-500 xl:w-[321px]">
-      <div className="flex h-[88px] items-center justify-center lg:h-[112px]">
-        <Link href="/dashboard" aria-label="Photnoo" onClick={onNavigate}>
+    <div className="flex h-full flex-col">
+      <div className="flex h-16 shrink-0 items-center px-5">
+        <Link href="/dashboard" aria-label={t('home')} onClick={onNavigate} className="inline-flex items-center rounded-md">
           {/* eslint-disable-next-line @next/next/no-img-element -- brand SVG */}
-          <img src="/app/sidebar-logo.svg" alt="Photnoo" width={175} height={32} className="h-8 w-auto" />
+          <img src="/brand/logo-green.svg" alt="" width={175} height={32} className="h-6 w-auto" />
         </Link>
       </div>
-      <nav className="flex-1 overflow-y-auto px-3" aria-label={t('label')}>
-        {SECTIONS.map((section) => (
-          <div key={section.key} className="mb-6">
-            <p className="mb-3 px-3 text-base font-medium text-primary-50">{t(`sections.${section.key}`)}</p>
-            <ul className="flex flex-col gap-2">
-              {section.items.map((item) => {
-                const active = item.href && pathname.startsWith(item.href);
-                const body = (
-                  <>
-                    <span className="flex size-[46px] shrink-0 items-center justify-center rounded-full bg-primary-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- Figma icon */}
-                      <img src={`/app/${item.icon}.svg`} alt="" className="size-6" />
-                    </span>
-                    <span className="text-lg">{t(item.key)}</span>
-                    {!item.href ? <span className="ms-auto text-xs font-semibold tracking-wide uppercase opacity-70">{t('soon')}</span> : null}
-                  </>
-                );
-                const classes = `flex h-[60px] items-center gap-3 rounded-[20px] px-3 transition-colors ${
-                  active ? 'bg-primary-200 font-medium text-primary-700' : 'text-primary-50'
-                }`;
-                return (
-                  <li key={item.key}>
-                    {item.href ? (
-                      <Link href={item.href} onClick={onNavigate} aria-current={active ? 'page' : undefined} className={`${classes} hover:bg-primary-400`}>
-                        {body}
-                      </Link>
-                    ) : (
-                      <span aria-disabled="true" className={`${classes} cursor-not-allowed opacity-60`}>
-                        {body}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav aria-label={t('label')} className="flex-1 overflow-y-auto px-3 py-3">
+        <ul className="flex flex-col gap-1">
+          {NAV_ITEMS.map(({ key, href, icon: Icon }) => {
+            const active = isActivePath(pathname, href);
+            return (
+              <li key={key}>
+                <Link
+                  href={href}
+                  onClick={onNavigate}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 pointer-coarse:h-11',
+                    active ? 'bg-brand-soft text-brand' : 'text-fg-secondary hover:bg-surface-sunken hover:text-fg',
+                  )}
+                >
+                  <Icon size={18} strokeWidth={1.75} aria-hidden className={active ? 'text-brand' : 'text-fg-muted'} />
+                  {t(key)}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
-      <div className="flex h-[87px] items-center gap-3 bg-primary-700 px-6">
-        <div className="min-w-0 flex-1 text-[13px] leading-[1.4] font-semibold text-primary-200">
-          <p>{t('storage')}</p>
-          {sub ? (
-            <>
-              <p dir="ltr" className="text-start">
-                {formatBytes(sub.usedBytes, locale)} / {formatBytes(sub.allowanceBytes, locale)}
-              </p>
-              <div className="mt-2 h-[7px] w-full max-w-[168px] overflow-hidden rounded-full bg-primary-200/30" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent(sub.usedBytes, sub.allowanceBytes)}>
-                <div className="h-full rounded-full bg-primary-200" style={{ width: `${percent(sub.usedBytes, sub.allowanceBytes)}%` }} />
-              </div>
-            </>
-          ) : (
-            <p>—</p>
-          )}
-        </div>
+      <div className="shrink-0 p-3">
+        <AllowanceCard me={me} loading={loading} onNavigate={onNavigate} />
       </div>
     </div>
+  );
+}
+
+function AllowanceCard({ me, loading, onNavigate }: { me?: Me; loading?: boolean; onNavigate?: () => void }) {
+  const t = useTranslations('App.nav');
+  const tPlan = useTranslations('App.dashboard.plan');
+  const locale = useLocale();
+  const sub = me?.subscription;
+  const used = sub ? percent(sub.usedBytes, sub.allowanceBytes) : 0;
+
+  return (
+    <Link
+      href="/billing"
+      onClick={onNavigate}
+      className="block rounded-lg border border-border bg-surface p-4 shadow-xs transition-colors duration-150 hover:border-border-strong"
+    >
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-fg-muted">{t('storage')}</span>
+        {sub ? <span className="text-xs text-fg-muted">{tPlan(sub.state)}</span> : null}
+      </span>
+      {loading ? (
+        <>
+          <Skeleton className="mt-2 h-5 w-28" />
+          <Skeleton className="mt-3 h-1.5 w-full" />
+        </>
+      ) : sub ? (
+        <>
+          <span className="tabular mt-1 block text-sm font-medium text-fg">
+            {t('storageUsed', { used: formatBytes(sub.usedBytes, locale), total: formatBytes(sub.allowanceBytes, locale) })}
+          </span>
+          <Meter value={used} label={t('storageMeter')} size="sm" tone={used >= 95 ? 'danger' : used >= 80 ? 'warning' : 'brand'} className="mt-3" />
+        </>
+      ) : (
+        <span className="mt-1 block text-sm font-medium text-fg">{t('noPlan')}</span>
+      )}
+    </Link>
   );
 }

@@ -1,0 +1,14 @@
+{
+  "App": {
+    "deleteGallery": {
+      "title": "Delete “{name}”?",
+      "body": "The gallery and all its files are deleted now.",
+      "point1": "The link stops working for your client immediately.",
+      "point2": "Files can't be recovered.",
+      "point3": "The space used is not refunded to your plan.",
+      "cancel": "Keep gallery",
+      "confirm": "Delete gallery",
+      "failed": "Couldn't delete the gallery. Nothing was removed. Check your connection and try again."
+    }
+  }
+}

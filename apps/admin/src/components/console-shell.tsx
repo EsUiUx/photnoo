@@ -1,6 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
+import { CreditCard, Flag, Gauge, Inbox, LogOut, ScrollText, Tags, ToggleRight, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect } from 'react';
@@ -10,15 +12,15 @@ import { type AdminMe, type AdminRole, can } from '@/lib/types';
 const MeContext = createContext<AdminMe | undefined>(undefined);
 export const useAdmin = () => useContext(MeContext);
 
-const NAV: Array<{ href: string; label: string; role?: AdminRole }> = [
-  { href: '/', label: 'Overview' },
-  { href: '/applications', label: 'Applications' },
-  { href: '/payments', label: 'Payments' },
-  { href: '/photographers', label: 'Photographers' },
-  { href: '/abuse', label: 'Abuse reports' },
-  { href: '/plans', label: 'Plans & prices' },
-  { href: '/switches', label: 'Emergency switches' },
-  { href: '/audit', label: 'Audit log' },
+const NAV: Array<{ href: string; label: string; icon: LucideIcon; role?: AdminRole }> = [
+  { href: '/', label: 'Overview', icon: Gauge },
+  { href: '/applications', label: 'Applications', icon: Inbox },
+  { href: '/payments', label: 'Payments', icon: CreditCard },
+  { href: '/photographers', label: 'Photographers', icon: Users },
+  { href: '/abuse', label: 'Abuse reports', icon: Flag },
+  { href: '/plans', label: 'Plans & prices', icon: Tags },
+  { href: '/switches', label: 'Emergency switches', icon: ToggleRight },
+  { href: '/audit', label: 'Audit log', icon: ScrollText },
 ];
 
 const ROLE_LABEL: Record<AdminRole, string> = { super_admin: 'Super Admin', operations: 'Operations', support: 'Support' };
@@ -40,7 +42,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
   return (
     <MeContext.Provider value={me.data}>
       <div className="flex min-h-dvh">
-        <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-e border-primary-300 bg-primary-500 text-primary-50 max-md:hidden">
+        <aside data-surface="dark" className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-e border-primary-700 bg-primary-500 text-primary-50 max-md:hidden">
           <div className="flex items-center gap-2 px-5 py-5">
             {/* eslint-disable-next-line @next/next/no-img-element -- brand mark */}
             <img src="/logo.svg" alt="Photnoo" className="h-5 w-auto brightness-0 invert" />
@@ -54,8 +56,9 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium ${active ? 'bg-primary-200 text-primary-500' : 'hover:bg-primary-400'}`}
+                  className={`flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${active ? 'bg-primary-200 text-primary-500' : 'text-primary-50/90 hover:bg-primary-400 hover:text-white'}`}
                 >
+                  <item.icon size={18} strokeWidth={1.75} aria-hidden />
                   {item.label}
                 </Link>
               );
@@ -64,7 +67,8 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
           <div className="border-t border-primary-400 p-4 text-sm">
             <p className="truncate font-semibold">{me.data?.name ?? ' '}</p>
             <p className="text-xs text-primary-200">{me.data ? ROLE_LABEL[me.data.role] : ' '}</p>
-            <button type="button" onClick={() => void signOut()} className="mt-3 text-xs font-semibold underline">
+            <button type="button" onClick={() => void signOut()} className="mt-3 inline-flex h-9 items-center gap-2 rounded-md px-2 -ms-2 text-sm font-medium text-primary-100 hover:bg-primary-400 hover:text-white">
+              <LogOut size={16} strokeWidth={1.75} aria-hidden />
               Sign out
             </button>
           </div>
@@ -77,7 +81,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-8">{children}</main>
+          <main id="main" className="mx-auto max-w-[1400px] px-4 py-8 sm:px-8">{children}</main>
         </div>
       </div>
     </MeContext.Provider>

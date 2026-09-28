@@ -4,9 +4,13 @@ import { passwordSchema } from '@photnoo/shared';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { Button, ButtonLink } from '@/components/ui/button';
+import { CheckboxField, PasswordField, TextField } from '@/components/ui/field';
+import { Alert, Skeleton, Spinner } from '@/components/ui/state';
 import { useRouter } from '@/i18n/navigation';
 import { api, ApiError } from '@/lib/api';
-import { Checkbox, FormAlert, FormNotice, SubmitButton, TextField, TextLink } from './fields';
+import { TextLink } from './fields';
+import { usePasswordHint } from './password-hint';
 import { useFormErrors } from './use-form-errors';
 
 type Invite = { name: string; email: string };
@@ -18,8 +22,8 @@ const formSchema = z.object({
 });
 
 /**
- * Figma "Join Photno Now!". Photnoo is invite-only, so name and email come from the approved
- * application and cannot be edited; the photographer only chooses a password and accepts terms.
+ * Accept an invite. Photnoo is invite-only, so name and email come from the approved request
+ * and cannot be edited; the photographer only chooses a password and accepts the terms.
  */
 export function InviteForm({ token }: { token: string }) {
   const t = useTranslations('Invite');
@@ -30,6 +34,7 @@ export function InviteForm({ token }: { token: string }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptContent, setAcceptContent] = useState(false);
   const [pending, setPending] = useState(false);
+  const passwordHint = usePasswordHint(password);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,13 +47,31 @@ export function InviteForm({ token }: { token: string }) {
   }, [token]);
 
   if (invite === 'loading') {
-    return <div className="h-60 animate-pulse bg-field-muted" aria-busy="true" />;
+    return (
+      <div className="flex flex-col gap-5" aria-busy="true">
+        <p className="flex items-center gap-2 text-sm text-fg-muted">
+          <Spinner size={16} label={t('checking')} />
+          <span aria-hidden>{t('checking')}</span>
+        </p>
+        <Skeleton className="h-11" />
+        <Skeleton className="h-11" />
+        <Skeleton className="h-11" />
+        <Skeleton className="h-12" />
+      </div>
+    );
   }
   if (invite === 'invalid') {
     return (
-      <div className="flex flex-col items-center gap-6 text-center">
-        <FormNotice>{t('invalid')}</FormNotice>
-        <TextLink href="/login">{t('backToLogin')}</TextLink>
+      <div className="flex flex-col gap-6">
+        <Alert tone="warning" title={t('invalidTitle')}>
+          {t('invalid')}
+        </Alert>
+        <ButtonLink href="/login" variant="secondary" size="lg" block>
+          {t('login')}
+        </ButtonLink>
+        <p className="text-sm text-fg-muted">
+          {t('newHere')} <TextLink href="/apply">{t('requestAccess')}</TextLink>
+        </p>
       </div>
     );
   }
@@ -72,40 +95,43 @@ export function InviteForm({ token }: { token: string }) {
     }
   }
 
-  const termsError = Boolean(errors.fields.acceptTerms || errors.fields.acceptContentDeclaration);
-
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-3">
-          <FormAlert message={errors.form} />
-          <TextField label={t('name')} value={invite.name} disabled readOnly />
-          <TextField label={t('email')} value={invite.email} disabled readOnly ltr />
-          <TextField
-            label={t('password')}
-            type="password"
-            autoComplete="new-password"
-            ltr
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.fields.password}
+      {errors.form ? <Alert key={errors.attempt}>{errors.form}</Alert> : null}
+      <div className="flex flex-col gap-5">
+        <TextField label={t('name')} value={invite.name} disabled readOnly />
+        <TextField label={t('email')} hint={t('emailHint')} value={invite.email} disabled readOnly ltr />
+        <PasswordField
+          id={errors.id('password')}
+          label={t('password')}
+          hint={passwordHint}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errors.fields.password}
+        />
+        <div className="flex flex-col gap-1">
+          <CheckboxField
+            id={errors.id('acceptTerms')}
+            label={t('terms')}
+            checked={acceptTerms}
+            onChange={(e) => setAcceptTerms(e.target.checked)}
+            error={errors.fields.acceptTerms ? t('mustAcceptTerms') : undefined}
           />
-          <p className="text-sm text-ink-muted">{t('passwordHint')}</p>
-          <div className="mt-2 flex flex-col gap-3">
-            <Checkbox checked={acceptTerms} onChange={setAcceptTerms} error={termsError} label={t('terms')} />
-            <Checkbox
-              checked={acceptContent}
-              onChange={setAcceptContent}
-              error={termsError}
-              label={t('contentDeclaration')}
-            />
-            {termsError ? <p className="text-sm text-danger">{t('mustAccept')}</p> : null}
-          </div>
+          <CheckboxField
+            id={errors.id('acceptContentDeclaration')}
+            label={t('contentDeclaration')}
+            checked={acceptContent}
+            onChange={(e) => setAcceptContent(e.target.checked)}
+            error={errors.fields.acceptContentDeclaration ? t('mustAcceptContent') : undefined}
+          />
         </div>
-        <SubmitButton pending={pending}>{t('submit')}</SubmitButton>
       </div>
-      <p className="text-center text-lg leading-[1.4] text-ink-body">
-        {t('haveAccount')} <TextLink href="/login">{t('backToLogin')}</TextLink>
+      <Button type="submit" size="lg" block pending={pending}>
+        {t('submit')}
+      </Button>
+      <p className="text-sm text-fg-muted">
+        {t('haveAccount')} <TextLink href="/login">{t('login')}</TextLink>
       </p>
     </form>
   );

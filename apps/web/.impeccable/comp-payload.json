@@ -1,0 +1,39 @@
+{
+  "title": "Approve the homepage composition",
+  "question": "Same clean Pixieset-level look, three ways to open the page. Pick the one to build (you can say what to borrow from the others in the steer box).",
+  "options": [
+    {
+      "id": "split",
+      "label": "A · Split: headline + product",
+      "kicker": "YOUR PICK",
+      "thesis": "Headline and actions on the left, the real product (laptop gallery + phone password screen) on the right.",
+      "palette": ["#ffffff", "#14201b", "#3a5a40", "#c7dcc9"],
+      "materials": ["white ground", "product mockups", "feature cards"],
+      "viewport": "Left: headline, one line, two buttons. Right: laptop client gallery overlapped by a phone password screen. Three feature cards below.",
+      "risk": "The most familiar SaaS layout; photos are small inside the mockups.",
+      "comp": ".impeccable/mocks/home-a-split.png"
+    },
+    {
+      "id": "image-led",
+      "label": "B · Image-led: full-bleed photo",
+      "thesis": "One big editorial photograph owns the first screen; a floating card shows the proof of views and downloads.",
+      "palette": ["#14201b", "#ffffff", "#3a5a40", "#c7dcc9"],
+      "materials": ["full-bleed photography", "floating white activity card"],
+      "viewport": "Full-bleed Cairo rooftop wedding photo, white headline bottom-left with two buttons, activity card bottom-right.",
+      "risk": "Depends on one excellent photo; less of the product visible above the fold.",
+      "comp": ".impeccable/mocks/home-b-image-led.png"
+    },
+    {
+      "id": "centered",
+      "label": "C · Centered: dashboard showcase",
+      "thesis": "Centered headline, then a wide screenshot of the photographer dashboard full of real-looking galleries.",
+      "palette": ["#ffffff", "#14201b", "#3a5a40", "#f4f8f5"],
+      "materials": ["centered type", "browser-framed dashboard"],
+      "viewport": "Pill label, centered headline and buttons, wide browser window showing the galleries grid with status and counts.",
+      "risk": "Speaks to photographers' workflow more than to the emotion of the photos.",
+      "comp": ".impeccable/mocks/home-c-centered.png"
+    }
+  ],
+  "buildPath": { "value": "comp", "toggle": false },
+  "steer": true
+}

@@ -1,0 +1,156 @@
+{
+  "Home": {
+    "meta": {
+      "title": "Photnoo — Private photo delivery for photographers",
+      "description": "Deliver every shoot in a private gallery with a link and password, a 7-day window and proof of every download. Built for photographers in Egypt."
+    },
+    "nav": {
+      "label": "Main",
+      "how": "How it works",
+      "clients": "For clients",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "login": "Log in",
+      "cta": "Request access"
+    },
+    "hero": {
+      "title": "Deliver photos your clients will remember.",
+      "subtitle": "Private galleries with a link and password, a 7-day window, and proof of every download.",
+      "primary": "Request access",
+      "secondary": "See what clients get",
+      "imageAlt": "A bride and groom embracing on a Cairo rooftop at golden hour, the Nile and minarets behind them."
+    },
+    "card": {
+      "label": "Example of a delivered gallery",
+      "title": "Nour & Karim — Engagement",
+      "photos": "38 photos",
+      "viewed": "Opened on iPhone · 2 min ago",
+      "downloaded": "Downloaded 12 photos",
+      "allowance": "Download allowance",
+      "allowanceLeft": "{value} left",
+      "open": "Open for 5 more days"
+    },
+    "features": {
+      "title": "Delivery that protects your work",
+      "private": {
+        "title": "Private by default",
+        "body": "Every gallery opens only with its link and a password you send separately."
+      },
+      "window": {
+        "title": "Open for 7 days",
+        "body": "Clients get a clear window to download. After it closes, the files are deleted."
+      },
+      "proof": {
+        "title": "Proof of every download",
+        "body": "See who opened the gallery, on which device, and every photo they downloaded."
+      }
+    },
+    "how": {
+      "title": "From memory card to client in three steps",
+      "subtitle": "No folders to zip, no drive links to chase. Upload once and let Photnoo handle delivery.",
+      "upload": {
+        "title": "Upload the shoot",
+        "body": "Drag in JPG, RAW, TIFF or PSD files up to 2 GB each. Uploads resume if the connection drops."
+      },
+      "share": {
+        "title": "Share on WhatsApp",
+        "body": "Send the private link and the password as two separate messages, straight from the gallery."
+      },
+      "proof": {
+        "title": "See every download",
+        "body": "Every view and download is recorded, so \"I never got the photos\" is settled in seconds."
+      },
+      "demo": {
+        "uploading": "Uploading 3 of 38",
+        "left": "About 2 min left",
+        "linkMessage": "Your gallery from Mona Adel Photography is ready",
+        "passwordMessage": "Password: 9ed7T7NUC",
+        "sent": "Sent",
+        "opened": "Opened the gallery",
+        "downloadedAll": "Downloaded 38 photos",
+        "downloadedOne": "Downloaded DSC_4128.jpg",
+        "iphone": "iPhone · Cairo",
+        "desktop": "Desktop · Giza",
+        "today": "Today"
+      }
+    },
+    "clients": {
+      "title": "A gallery your client opens in one tap",
+      "body": "Your clients never make an account or install an app. They open the link on their phone, enter the password, and see your work at its best.",
+      "points": {
+        "noApp": "No app, no account, works on any phone",
+        "fullscreen": "Full-screen viewer with swipe and zoom",
+        "download": "Download one photo or the whole shoot",
+        "languages": "In English and Arabic"
+      },
+      "demoGallery": "Nour & Karim",
+      "demoMeta": "38 photos · 5 days left",
+      "downloadAll": "Download all",
+      "phoneAlt": "A phone showing a client gallery with engagement photos."
+    },
+    "pricing": {
+      "title": "Simple plans, priced in EGP",
+      "subtitle": "Every plan includes every feature. Choose how much you deliver in a year.",
+      "annual": "Annual",
+      "monthly": "Monthly",
+      "save": "2 months free",
+      "cycleLabel": "Billing cycle",
+      "perYear": "/ year",
+      "perMonth": "/ month",
+      "allowance": "{amount} of deliveries a year",
+      "f1": "Unlimited galleries and clients",
+      "f2": "Private link and password",
+      "f3": "Proof of every view and download",
+      "f4": "Pay by InstaPay, Vodafone Cash or bank transfer",
+      "cta": "Request access",
+      "more": "Also available: {sizes}.",
+      "enterprise": "Delivering more than 2 TB a year?",
+      "enterpriseCta": "Talk to us",
+      "note": "Photnoo is invite-only while we onboard photographers in Egypt. Request access and we'll reply within two working days."
+    },
+    "faq": {
+      "title": "Questions photographers ask",
+      "items": {
+        "client": {
+          "q": "What does my client need to open the gallery?",
+          "a": "Only the link and the password you send them. There is no account and no app; it works in any phone or computer browser."
+        },
+        "expiry": {
+          "q": "What happens after 7 days?",
+          "a": "The link closes and the files are deleted from our servers. You can see everything the client did before it closed."
+        },
+        "allowance": {
+          "q": "Why is there a download allowance?",
+          "a": "Each gallery can be downloaded up to twice its size. It stops a link from being passed around while giving your client room to download again."
+        },
+        "files": {
+          "q": "Which files can I deliver?",
+          "a": "JPG, PNG, TIFF, PSD, ZIP and the common RAW formats (CR2, CR3, NEF, ARW, RAF, DNG, ORF, RW2), up to 2 GB per file."
+        },
+        "pay": {
+          "q": "How do I pay?",
+          "a": "Pick a plan, send the amount by InstaPay, Vodafone Cash or bank transfer with your payment reference, and upload the receipt. We confirm it and email your invoice."
+        },
+        "privacy": {
+          "q": "Can Photnoo staff see my photos?",
+          "a": "No. Our team sees gallery names, sizes and dates only. Photos are opened only for a logged abuse report."
+        }
+      }
+    },
+    "cta": {
+      "title": "Deliver your next shoot with Photnoo",
+      "body": "Join the photographers in Egypt who deliver privately, on time, with proof.",
+      "button": "Request access",
+      "imageAlt": "A bride and her family smiling at her wedding photos on a phone in a sunlit Cairo living room."
+    },
+    "footer": {
+      "tagline": "Private photo delivery for professional photographers.",
+      "product": "Product",
+      "contact": "Contact",
+      "language": "Language",
+      "rights": "© {year} Photnoo. All rights reserved.",
+      "whatsapp": "WhatsApp",
+      "email": "Email"
+    }
+  }
+}

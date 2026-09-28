@@ -1,0 +1,29 @@
+{
+  "Reset": {
+    "metaTitle": "Reset password",
+    "emailTitle": "Reset your password",
+    "emailSubtitle": "Enter the email you use for Photnoo and we will send you a 6-digit code.",
+    "codeTitle": "Check your email",
+    "codeSubtitle": "If an account exists for {email}, we sent it a 6-digit code.",
+    "passwordTitle": "Choose a new password",
+    "passwordSubtitle": "Use a password you have not used before. You will be logged in right after.",
+    "email": "Email",
+    "sendCode": "Send code",
+    "remembered": "Remembered it?",
+    "backToLogin": "Back to login",
+    "codeLabel": "6-digit code",
+    "codeHint": "The code expires after a short time. Check your spam folder if you cannot find it.",
+    "codeIncomplete": "Enter all 6 digits from the email.",
+    "confirm": "Continue",
+    "noCode": "Didn't get it?",
+    "resend": "Send a new code",
+    "resending": "Sending…",
+    "resendIn": "Send a new code in {seconds}s",
+    "resent": "A new code is on its way.",
+    "changeEmail": "Use a different email",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "mismatch": "The passwords do not match.",
+    "signIn": "Save and log in"
+  }
+}

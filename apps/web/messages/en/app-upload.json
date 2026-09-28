@@ -1,0 +1,26 @@
+{
+  "App": {
+    "upload": {
+      "uploading": "{count, plural, one {Uploading # file} other {Uploading # files}}",
+      "done": "Upload finished",
+      "someFailed": "{count, plural, one {# file didn't upload} other {# files didn't upload}}",
+      "bytes": "{uploaded} of {total}",
+      "speed": "{speed}/s",
+      "progressLabel": "Upload progress",
+      "timeLeft": "About {time} left",
+      "resumeNote": "If your connection drops, uploads continue when it is back.",
+      "retry": "Retry",
+      "retryFile": "Retry {name}",
+      "dismissFile": "Dismiss {name}",
+      "clear": "Clear list",
+      "errors": {
+        "allowance_exceeded": "Over your plan's upload allowance. Upgrade your plan or remove files.",
+        "subscription_inactive": "Your plan isn't active. Renew it to keep uploading.",
+        "unsupported_type": "This file type isn't supported. Use JPEG, PNG, TIFF, PSD, RAW or ZIP.",
+        "file_too_large": "Larger than 2 GB. Export a smaller copy or split it into a ZIP.",
+        "gallery_closed": "This gallery is closed, so it can't take new files.",
+        "generic": "The upload stopped. Check your connection and retry."
+      }
+    }
+  }
+}

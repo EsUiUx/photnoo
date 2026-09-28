@@ -1,10 +1,15 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { AlertTriangle, Clock, Download, FileImage, Images, Info } from 'lucide-react';
+import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { useMemo, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge, Meter } from '@/components/ui/primitives';
+import { EmptyState } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { type ClientContent, type ClientFile, daysLeft, whatsappLink } from '@/lib/client-api';
 import { downloadFile } from '@/lib/client-downloads';
+import { cn } from '@/lib/cn';
 import { formatBytes, formatDate, percent } from '@/lib/format';
 import { PhotographerMark, WhatsAppButton } from './client-shell';
 import { DownloadAllDialog } from './download-all-dialog';
@@ -14,10 +19,11 @@ export type Notice = { kind: 'cap'; remainingBytes: string } | { kind: 'error' }
 
 type Tab = 'all' | 'root' | string;
 
-/** C-04 header, C-05 grid with folder tabs, C-07 single downloads, C-09 cap messages. */
+/** C-04 cover and header, C-05 grid with folder filter, C-07 single downloads, C-09 cap messages. */
 export function GalleryView({ token, content, onGone }: { token: string; content: ClientContent; onGone: () => void }) {
   const t = useTranslations('Client.gallery');
   const locale = useLocale();
+  const format = useFormatter();
   const [tab, setTab] = useState<Tab>('all');
   const [viewing, setViewing] = useState<number | null>(null);
   const [downloaded, setDownloaded] = useState<Set<string>>(() => new Set());
@@ -25,6 +31,7 @@ export function GalleryView({ token, content, onGone }: { token: string; content
   const [remaining, setRemaining] = useState(content.allowance.remainingBytes);
   const [notice, setNotice] = useState<Notice>(null);
   const [batchOpen, setBatchOpen] = useState(false);
+  const tileRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const cover = content.files.find((f) => f.id === content.coverFileId) ?? content.files.find((f) => f.previewUrl);
   const days = daysLeft(content.expiresAt);
@@ -35,7 +42,7 @@ export function GalleryView({ token, content, onGone }: { token: string; content
       ...content.folders.map((f) => ({ id: f.id, name: f.name, count: count(f.id) })).filter((f) => f.count > 0),
       ...(hasRoot ? [{ id: 'root', name: t('otherTab'), count: count(null) }] : []),
     ];
-    // Tabs only help when the photos are split into two or more groups.
+    // A filter only helps when the photos are split into two or more groups.
     return groups.length < 2 ? [] : [{ id: 'all', name: t('allTab'), count: content.files.length }, ...groups];
   }, [content.files, content.folders, hasRoot, t]);
   const files = useMemo(
@@ -47,6 +54,10 @@ export function GalleryView({ token, content, onGone }: { token: string; content
   const remainingPercent = percent(remaining, capBytes);
   const used = Number(remaining) <= 0;
   const message = whatsappLink(content.photographer.whatsapp, t('whatsappText', { gallery: content.name }));
+  const activeTab = tabs.find((item) => item.id === tab);
+  const blocked = used ? t('reasonUsed') : files.length === 0 ? t('reasonEmpty') : null;
+  const reasonId = 'download-all-reason';
+  const meterTone = used ? 'danger' : remainingPercent <= 15 ? 'warning' : 'brand';
 
   function markDone(file: ClientFile, remainingBytes: string) {
     setRemaining(remainingBytes);
@@ -81,116 +92,152 @@ export function GalleryView({ token, content, onGone }: { token: string; content
     }
   }
 
+  function closeViewer() {
+    const id = viewing !== null ? files[viewing]?.id : undefined;
+    setViewing(null);
+    // Back to the tile of the photo the client was last looking at, not the one they opened.
+    if (id) requestAnimationFrame(() => tileRefs.current.get(id)?.focus());
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-8">
-      <header className="mt-4 overflow-hidden rounded-[24px] bg-primary-900 text-white">
-        <div className="relative">
-          {cover?.previewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+    <div className="w-full">
+      <header
+        data-surface="dark"
+        className={cn(
+          'relative isolate flex flex-col justify-end overflow-hidden text-white',
+          cover?.previewUrl ? 'h-[64svh] max-h-[760px] min-h-[380px] bg-fg' : 'min-h-80 bg-brand',
+        )}
+      >
+        {cover?.previewUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
             <img
               src={cover.previewUrl}
               alt=""
               fetchPriority="high"
-              className="h-[46vh] max-h-[520px] min-h-[260px] w-full object-cover"
+              className="absolute inset-0 -z-10 size-full object-cover"
               style={cover.blurDataUrl ? { backgroundImage: `url(${cover.blurDataUrl})`, backgroundSize: 'cover' } : undefined}
             />
-          ) : (
-            <div className="h-[200px] w-full bg-primary-500" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-primary-900 via-primary-900/30 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
-            <div className="flex items-center gap-3">
-              <PhotographerMark name={content.photographer.name} />
-              <p className="font-medium text-primary-100">{content.photographer.name}</p>
-            </div>
-            <h1 className="mt-3 text-3xl leading-tight font-bold sm:text-5xl">{content.name}</h1>
+            {/* Two washes: one keeps the language toggle legible, the other carries the title. */}
+            <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-32 bg-linear-to-b from-black/45 to-transparent" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-3/4 bg-linear-to-t from-black/85 via-black/45 to-transparent" />
+          </>
+        ) : null}
+        <div className="mx-auto w-full max-w-screen-2xl px-4 pt-24 pb-8 sm:px-6 sm:pb-12 lg:px-8">
+          <div className="flex items-center gap-3">
+            <PhotographerMark name={content.photographer.name} size="sm" className="ring-2 ring-white/70" />
+            <p className="text-sm font-medium text-white/90">{content.photographer.name}</p>
           </div>
-        </div>
-
-        <div className="grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-end sm:p-8 sm:pt-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-primary-100">
-              <span>{t('photos', { count: content.files.length })}</span>
-              {days !== null ? (
-                <span>
-                  {t('daysLeft', { days })} · {t('until', { date: formatDate(content.expiresAt, locale) })}
+          <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">{content.name}</h1>
+          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/85">
+            <span>{t('photos', { count: content.files.length })}</span>
+            {days !== null ? (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock size={16} strokeWidth={1.75} aria-hidden />
+                  {t('daysLeft', { days })} {t('until', { date: formatDate(content.expiresAt, locale) })}
                 </span>
-              ) : null}
-            </div>
-            <div className="mt-4 max-w-[520px]">
-              <div className="flex justify-between gap-3 text-sm">
-                <span className="font-medium">{t('allowance')}</span>
-                <span className="text-primary-100">
-                  {t('allowanceLeft', { left: formatBytes(remaining, locale), total: formatBytes(capBytes, locale) })}
-                </span>
-              </div>
-              <div
-                className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/15"
-                role="progressbar"
-                aria-label={t('allowance')}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={remainingPercent}
-              >
-                <div className="h-full rounded-full bg-primary-200 transition-[width]" style={{ width: `${remainingPercent}%` }} />
-              </div>
-              <p className="mt-2 text-xs text-primary-100/80">{t('allowanceHelp')}</p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-3 sm:items-end">
-            <button
-              type="button"
-              onClick={() => setBatchOpen(true)}
-              disabled={used || files.length === 0}
-              className="h-12 rounded-full bg-white px-8 text-lg font-semibold text-primary-900 hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {tab === 'all' ? t('downloadAll') : t('downloadFolder')}
-            </button>
-          </div>
+              </>
+            ) : null}
+          </p>
         </div>
       </header>
 
-      {notice ? <NoticeBar notice={notice} message={message} onClose={() => setNotice(null)} /> : null}
+      <div className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-screen-2xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-6 lg:px-8">
+          {tabs.length > 0 ? (
+            <div
+              role="group"
+              aria-label={t('folders')}
+              className="-mx-4 min-w-0 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:flex-1 lg:px-0"
+            >
+              <div className="flex w-max gap-1.5">
+                {tabs.map((item) => {
+                  const pressed = tab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setTab(item.id)}
+                      aria-pressed={pressed}
+                      className={cn(
+                        'inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors duration-150 pointer-coarse:h-11',
+                        pressed ? 'bg-brand text-brand-fg' : 'bg-surface-sunken text-fg-secondary hover:bg-brand-soft hover:text-fg',
+                      )}
+                    >
+                      {item.name}
+                      <span className={cn('tabular text-xs', pressed ? 'text-brand-fg/80' : 'text-fg-muted')}>{format.number(item.count)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-4 lg:ms-auto">
+            <div className="min-w-0 flex-1 lg:w-64 lg:flex-none">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-xs">
+                <span className="font-medium text-fg">{t('allowance')}</span>
+                <span className="tabular text-fg-muted">
+                  {t('allowanceLeft', { left: formatBytes(remaining, locale), total: formatBytes(capBytes, locale) })}
+                </span>
+              </div>
+              <Meter value={remainingPercent} label={t('allowance')} tone={meterTone} size="sm" className="mt-1.5" />
+            </div>
+            <Button icon={Download} onClick={() => setBatchOpen(true)} disabled={Boolean(blocked)} aria-describedby={blocked ? reasonId : undefined}>
+              {tab === 'all' ? t('downloadAll') : t('downloadFolder')}
+            </Button>
+          </div>
+        </div>
+        {blocked ? (
+          <p id={reasonId} className="mx-auto flex max-w-screen-2xl items-center gap-1.5 px-4 pb-3 text-xs font-medium text-fg-secondary sm:px-6 lg:justify-end lg:px-8">
+            <Info size={16} strokeWidth={1.75} aria-hidden className="shrink-0" />
+            {blocked}
+          </p>
+        ) : null}
+      </div>
 
-      {tabs.length > 0 ? (
-        <nav className="-mx-4 mt-6 overflow-x-auto px-4" aria-label={t('folders')}>
-          <ul className="flex w-max gap-2">
-            {tabs.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => setTab(item.id)}
-                  aria-current={tab === item.id ? 'true' : undefined}
-                  className={`h-10 rounded-full border px-5 text-sm font-semibold whitespace-nowrap ${
-                    tab === item.id ? 'border-primary-400 bg-primary-400 text-white' : 'border-field-border bg-white text-ink-body hover:border-primary-300'
-                  }`}
-                >
-                  {item.name} <span className="opacity-70">{item.count}</span>
-                </button>
+      {notice ? (
+        <div className="mx-auto max-w-screen-2xl px-4 pt-4 sm:px-6 lg:px-8">
+          <NoticeBar notice={notice} message={message} onClose={() => setNotice(null)} />
+        </div>
+      ) : null}
+
+      <section aria-labelledby="photos-heading" className="mx-auto max-w-screen-2xl px-4 pt-6 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h2 id="photos-heading" className="text-lg font-semibold text-fg">
+            {activeTab && tab !== 'all' ? activeTab.name : t('photosHeading')}
+          </h2>
+          <p className="text-xs text-fg-muted">{t('allowanceHelp')}</p>
+        </div>
+
+        {files.length === 0 ? (
+          <EmptyState icon={Images} title={t('empty')} />
+        ) : (
+          <ul className="mt-4 columns-2 gap-2 sm:columns-3 sm:gap-3 lg:columns-4 2xl:columns-5">
+            {files.map((file, index) => (
+              <li key={file.id} className="mb-2 break-inside-avoid sm:mb-3">
+                <Tile
+                  ref={(el) => {
+                    if (el) tileRefs.current.set(file.id, el);
+                    else tileRefs.current.delete(file.id);
+                  }}
+                  file={file}
+                  done={downloaded.has(file.id)}
+                  onOpen={() => setViewing(index)}
+                />
               </li>
             ))}
           </ul>
-        </nav>
-      ) : null}
-
-      {files.length === 0 ? (
-        <p className="py-20 text-center text-ink-muted">{t('empty')}</p>
-      ) : (
-        <ul className="mt-6 columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4">
-          {files.map((file, index) => (
-            <li key={file.id} className="mb-3 break-inside-avoid sm:mb-4">
-              <Tile file={file} done={downloaded.has(file.id)} onOpen={() => setViewing(index)} />
-            </li>
-          ))}
-        </ul>
-      )}
+        )}
+      </section>
 
       {viewing !== null ? (
         <Viewer
           files={files}
           index={viewing}
           onIndex={setViewing}
-          onClose={() => setViewing(null)}
+          onClose={closeViewer}
           onDownload={(file) => void downloadOne(file)}
           busy={busy}
           downloaded={downloaded}
@@ -217,16 +264,17 @@ export function GalleryView({ token, content, onGone }: { token: string; content
   );
 }
 
-function Tile({ file, done, onOpen }: { file: ClientFile; done: boolean; onOpen: () => void }) {
+function Tile({ file, done, onOpen, ref }: { file: ClientFile; done: boolean; onOpen: () => void; ref: React.Ref<HTMLButtonElement> }) {
   const t = useTranslations('Client.gallery');
   const locale = useLocale();
   const ratio = file.width && file.height ? `${file.width} / ${file.height}` : '1 / 1';
   return (
     <button
+      ref={ref}
       type="button"
       onClick={onOpen}
-      className="group relative block w-full overflow-hidden rounded-xl bg-primary-100 text-start focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary-300"
-      aria-label={t('open', { name: file.name })}
+      className="group relative block w-full overflow-hidden rounded-md bg-surface-sunken text-start focus-visible:outline-offset-3"
+      aria-label={done ? `${t('open', { name: file.name })}, ${t('saved')}` : t('open', { name: file.name })}
     >
       {file.previewUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
@@ -235,7 +283,7 @@ function Tile({ file, done, onOpen }: { file: ClientFile; done: boolean; onOpen:
           alt=""
           loading="lazy"
           decoding="async"
-          className="block w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className="block w-full object-cover"
           style={{
             aspectRatio: ratio,
             ...(file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})`, backgroundSize: 'cover' } : {}),
@@ -243,16 +291,18 @@ function Tile({ file, done, onOpen }: { file: ClientFile; done: boolean; onOpen:
         />
       ) : (
         <span className="flex aspect-square flex-col items-center justify-center gap-2 p-4 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element -- Figma placeholder */}
-          <img src="/app/media-placeholder.svg" alt="" className="size-16" />
-          <span className="line-clamp-2 text-sm font-medium break-all text-primary-400">{file.name}</span>
-          <span className="text-xs text-ink-muted" dir="ltr">
+          <FileImage size={22} strokeWidth={1.75} aria-hidden className="text-fg-muted" />
+          <span className="line-clamp-2 text-sm font-medium break-all text-fg-secondary">{file.name}</span>
+          <span className="tabular text-xs text-fg-muted" dir="ltr">
             {formatBytes(file.sizeBytes, locale)}
           </span>
         </span>
       )}
+      <span aria-hidden className="absolute inset-0 bg-black/0 transition-colors duration-150 group-hover:bg-black/10" />
       {done ? (
-        <span className="absolute end-2 top-2 rounded-full bg-primary-400 px-2 py-0.5 text-xs font-semibold text-white">{t('saved')}</span>
+        <Badge tone="success" dot className="absolute end-2 top-2 shadow-xs">
+          {t('saved')}
+        </Badge>
       ) : null}
     </button>
   );
@@ -266,18 +316,28 @@ function noticeText(notice: NonNullable<Notice>, t: ReturnType<typeof useTransla
 function NoticeBar({ notice, message, onClose }: { notice: NonNullable<Notice>; message: string | null; onClose: () => void }) {
   const t = useTranslations('Client.gallery');
   const locale = useLocale();
+  const cap = notice.kind === 'cap';
   return (
-    <div role="alert" className="mt-4 flex flex-col gap-3 rounded-2xl border border-[#f5c77e] bg-[#fff8eb] p-4 sm:flex-row sm:items-center">
-      <p className="flex-1 text-ink-body">{noticeText(notice, t, locale)}</p>
-      <div className="flex items-center gap-3">
-        {notice.kind === 'cap' && message ? (
-          <WhatsAppButton href={message} tone="outline">
+    <div
+      role="alert"
+      className={cn(
+        'flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center',
+        cap ? 'border-warning/25 bg-warning-soft' : 'border-danger/25 bg-danger-soft',
+      )}
+    >
+      <p className={cn('flex flex-1 items-start gap-2 text-sm font-medium', cap ? 'text-warning' : 'text-danger')}>
+        <AlertTriangle size={18} strokeWidth={1.75} aria-hidden className="mt-px shrink-0" />
+        {noticeText(notice, t, locale)}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {cap && message ? (
+          <WhatsAppButton href={message} size="sm">
             {t('messagePhotographer')}
           </WhatsAppButton>
         ) : null}
-        <button type="button" onClick={onClose} className="text-sm font-semibold text-ink-muted underline">
+        <Button variant="ghost" size="sm" onClick={onClose}>
           {t('dismiss')}
-        </button>
+        </Button>
       </div>
     </div>
   );

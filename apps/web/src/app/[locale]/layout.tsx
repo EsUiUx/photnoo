@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { Albert_Sans, IBM_Plex_Sans_Arabic } from 'next/font/google';
+import { Geist, Readex_Pro } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { direction, routing } from '@/i18n/routing';
+import { SkipLink } from '@/components/ui/skip-link';
 import '../globals.css';
 
-// Albert Sans is the Figma typeface. IBM Plex Sans Arabic is a stand-in until Arabic designs exist.
-const latin = Albert_Sans({
+// Geist: a precise, neutral grotesk that lets the photographs lead. Readex Pro: a matching
+// geometric Arabic with the same x-height feel, so mixed ar/en lines sit on one rhythm.
+const latin = Geist({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   variable: '--font-latin',
   display: 'swap',
 });
-const arabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
+const arabic = Readex_Pro({
+  subsets: ['arabic', 'latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-arabic',
   display: 'swap',
@@ -29,7 +30,8 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Meta' });
-  return { title: t('title'), description: t('description') };
+  // Pages set their own title; the template keeps the brand on every tab (WCAG 2.4.2).
+  return { title: { default: t('title'), template: `%s · Photnoo` }, description: t('description') };
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
@@ -40,7 +42,11 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} dir={direction(locale)} className={`${latin.variable} ${arabic.variable}`}>
       <body className="min-h-dvh">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <div hidden dangerouslySetInnerHTML={{ __html: '<!-- DIRECTION CONTRACT. THESIS: photographs lead, the product frames them; refuses the SaaS hero of gradient blobs and dashboard screenshots. OWN-WORLD: forest green brand (#3a5a40) on warm off-white canvas, Geist and Readex Pro, lucide icons at 1.75 stroke, 10-14px radii, quiet hairline borders, soft card shadows. STORY: an Egyptian photographer sees their work delivered beautifully, trusts the proofing and download flow, and requests access. FIRST VIEWPORT: full-bleed Cairo rooftop couple photo, headline and two CTAs on the leading side, live activity card floating trailing-bottom, transparent header over the image. FORM: canon category standard (Pixieset, Pic-Time), image-led composition B, seed 39ff7672. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->' }} />
+        <NextIntlClientProvider>
+          <SkipLink />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

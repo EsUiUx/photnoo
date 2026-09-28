@@ -1,77 +1,92 @@
+import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { LanguageSwitch } from './language-switch';
+
+const PHOTOS = {
+  bouquet: { src: '/photos/auth-bouquet-villa.jpg', position: 'object-[30%_50%]' },
+  photographer: { src: '/photos/auth-photographer-at-work.jpg', position: 'object-[40%_40%]' },
+} as const;
+
+export type AuthPhoto = keyof typeof PHOTOS;
 
 type Props = {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   children: React.ReactNode;
+  photo?: AuthPhoto;
+  /** Lets a multi-step flow move focus to the heading when the step changes. */
+  titleRef?: React.Ref<HTMLHeadingElement>;
 };
 
 /**
- * Two-column auth layout from Figma (frames "Welcome Back", "Join Photno Now!", "Forgot Password?"):
- * form on the start side, brand panel on the end side. Below lg the brand panel is hidden.
+ * Split auth layout. The form column sits on the start side; on lg+ a full-height photograph
+ * fills the end side (sticky, so long forms scroll past it). Below lg only the form shows, with
+ * the green logo on top. Every auth page renders its single <main id="main"> and <h1> here.
  */
-export function AuthShell({ title, subtitle, children }: Props) {
+export function AuthShell({ title, subtitle, children, photo = 'bouquet', titleRef }: Props) {
+  const t = useTranslations('AuthShell');
   return (
-    <div className="flex min-h-dvh bg-white">
-      <div className="relative flex w-full flex-col lg:w-1/2">
-        <header className="px-4 pt-6 sm:px-8 lg:ps-[9.9%] lg:pt-[34px]">
-          <Link href="/" aria-label="Photnoo">
+    <div className="flex min-h-dvh items-start bg-canvas">
+      <div className="flex min-h-dvh w-full flex-col lg:w-1/2">
+        <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-10 lg:py-6">
+          <Link href="/" aria-label={t('homeLabel')} className="-ms-1 inline-flex min-h-10 items-center rounded-md px-1 lg:hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
-            <img src="/brand/logo-green.svg" alt="Photnoo" width={175} height={32} className="h-8 w-auto" />
+            <img src="/brand/logo-green.svg" alt="" width={175} height={32} className="h-7 w-auto" />
           </Link>
+          <Link
+            href="/"
+            className="-ms-2 hidden h-10 items-center gap-2 rounded-md px-2 text-sm font-medium text-fg-secondary transition-colors duration-150 hover:bg-surface-subtle hover:text-fg lg:inline-flex"
+          >
+            <ArrowLeft size={16} strokeWidth={1.75} aria-hidden className="rtl:-scale-x-100" />
+            {t('backHome')}
+          </Link>
+          <LanguageSwitch className="-me-2" />
         </header>
-        <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-8">
-          <div className="w-full max-w-[418.5px]">
-            <div className="mb-10 text-center">
-              <h1 className="text-[34px] leading-[1.3] font-medium text-primary-500 sm:text-[45px]">{title}</h1>
-              {subtitle ? <p className="mt-3 text-lg leading-[1.4] text-ink-body">{subtitle}</p> : null}
+
+        <main id="main" className="flex flex-1 items-center justify-center px-4 pt-6 pb-12 sm:px-6 lg:px-10">
+          <div className="w-full max-w-sm">
+            <div className="mb-8">
+              <h1 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="text-2xl font-semibold tracking-tight text-fg outline-none sm:text-3xl">
+                {title}
+              </h1>
+              {subtitle ? <p className="mt-2 text-base leading-relaxed text-fg-muted">{subtitle}</p> : null}
             </div>
             {children}
           </div>
         </main>
+
+        <footer className="flex flex-wrap items-center gap-x-5 gap-y-1 px-4 pb-6 text-sm text-fg-muted sm:px-6 lg:px-10">
+          <span>{t('copyright')}</span>
+          <a href="mailto:hello@photnoo.com" className="inline-flex min-h-10 items-center hover:text-fg">
+            {t('contact')}
+          </a>
+          <a href="mailto:support@photnoo.com" className="inline-flex min-h-10 items-center hover:text-fg">
+            {t('help')}
+          </a>
+        </footer>
       </div>
-      <BrandPanel />
+
+      <PhotoPanel photo={photo} />
     </div>
   );
 }
 
-function BrandPanel() {
+function PhotoPanel({ photo }: { photo: AuthPhoto }) {
   const t = useTranslations('AuthShell');
+  const { src, position } = PHOTOS[photo];
   return (
-    <aside
-      className="relative hidden w-1/2 overflow-hidden lg:block"
-      style={{ backgroundImage: 'linear-gradient(131.9deg, #263930 45.6%, #344e41 76.4%)' }}
-    >
-      {/* Decorative art exported from Figma; positions are percentages of the 960x1080 panel. */}
-      {/* eslint-disable @next/next/no-img-element */}
-      <img src="/brand/pattern.svg" alt="" className="absolute inset-x-0 top-0 h-[133.9%] w-full opacity-[0.04]" />
-      <Shape src="/brand/shape-4.svg" box="left-[-1.83%] top-[-4.54%] w-[36.64%] h-[31.26%]" size="78%" rotate={-24.78} />
-      <Shape src="/brand/shape-2.svg" box="left-[-5.6%] top-[-3.85%] w-[39.6%] h-[35.3%]" size="73.8%" rotate={-27.9} />
-      <Shape src="/brand/shape-1.svg" box="left-[64.7%] top-[72.96%] w-[35.05%] h-[31.29%]" size="83.5%" rotate={12.8} />
-      <Shape src="/brand/shape-3.svg" box="left-[68.82%] top-[73.57%] w-[34.47%] h-[28.8%]" size="82.8%" rotate={15.92} />
-      <img src="/brand/logo-white.svg" alt="" className="absolute top-[46.76%] left-[30.21%] w-[39.6%]" />
-      {/* eslint-enable @next/next/no-img-element */}
-      <nav className="absolute end-[4.5%] top-0 flex gap-6 text-lg font-bold text-white">
-        <Link href="/" className="flex size-[100px] items-center justify-center">
-          {t('home')}
-        </Link>
-        <a href="mailto:hello@photnoo.com" className="flex size-[100px] items-center justify-center">
-          {t('contact')}
-        </a>
-        <a href="mailto:support@photnoo.com" className="flex size-[100px] items-center justify-center">
-          {t('help')}
-        </a>
-      </nav>
+    <aside aria-hidden className="sticky top-0 hidden h-dvh overflow-hidden bg-surface-sunken lg:block lg:w-1/2">
+      <Image src={src} alt="" fill priority sizes="50vw" className={`object-cover ${position}`} />
+      <div className="absolute inset-0 bg-linear-to-t from-fg/80 via-fg/15 to-fg/35" />
+      <div className="absolute inset-0 flex flex-col justify-between p-10 xl:p-12">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}
+        <img src="/brand/logo-white.svg" alt="" width={175} height={32} className="h-8 w-auto self-start" />
+        <div className="max-w-md">
+          <p className="text-3xl leading-tight font-semibold tracking-tight text-balance text-white">{t('brandLine')}</p>
+        </div>
+      </div>
     </aside>
-  );
-}
-
-function Shape({ src, box, size, rotate }: { src: string; box: string; size: string; rotate: number }) {
-  return (
-    <div className={`absolute flex items-center justify-center ${box}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- decorative brand SVG */}
-      <img src={src} alt="" style={{ width: size, transform: `rotate(${rotate}deg)` }} />
-    </div>
   );
 }

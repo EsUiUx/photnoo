@@ -1,0 +1,16 @@
+{
+  "App": {
+    "table": {
+      "views": "{count, plural, one {# view} other {# views}}",
+      "downloads": "{count, plural, one {# download} other {# downloads}}",
+      "daysLeft": "{days, plural, =0 {Ends today} one {# day left} other {# days left}}",
+      "closedOn": "Closed {date}",
+      "noClient": "No client added",
+      "noCover": "No photos yet",
+      "copyLink": "Copy link",
+      "copyLinkFor": "Copy the link of {name}",
+      "copied": "Link copied",
+      "copyFailed": "Couldn't copy the link"
+    }
+  }
+}

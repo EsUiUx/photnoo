@@ -1,15 +1,16 @@
 import { useTranslations } from 'next-intl';
+import { Badge, type Tone } from '@/components/ui/primitives';
 import type { Gallery } from '@/lib/types';
 
 export type BadgeKind = 'active' | 'draft' | 'expired' | 'delivered' | 'attention';
 
-// Figma "Component 97" variants.
-const STYLES: Record<BadgeKind, string> = {
-  active: 'bg-[#dfffd7] text-[#368605]',
-  draft: 'bg-[#ffe2c8] text-[#904704]',
-  expired: 'bg-[#ffc2c3] text-[#820002]',
-  delivered: 'bg-[#c8d4ff] text-[#000276]',
-  attention: 'bg-[#c9c9c9] text-[#404040]',
+// One mapping for every surface that shows a gallery's state; the text carries the meaning.
+const TONES: Record<BadgeKind, { tone: Tone; dot?: boolean }> = {
+  draft: { tone: 'neutral' },
+  active: { tone: 'success', dot: true },
+  delivered: { tone: 'info' },
+  expired: { tone: 'neutral' },
+  attention: { tone: 'warning', dot: true },
 };
 
 export function galleryBadge(gallery: Pick<Gallery, 'state' | 'suspended' | 'closedReason'>): BadgeKind {
@@ -18,11 +19,12 @@ export function galleryBadge(gallery: Pick<Gallery, 'state' | 'suspended' | 'clo
   return gallery.closedReason === 'cap_used' ? 'delivered' : 'expired';
 }
 
-export function StatusBadge({ kind }: { kind: BadgeKind }) {
+export function StatusBadge({ kind, className }: { kind: BadgeKind; className?: string }) {
   const t = useTranslations('App.status');
+  const { tone, dot } = TONES[kind];
   return (
-    <span className={`inline-flex h-8 min-w-[98px] items-center justify-center rounded-[7px] px-2 text-xs ${STYLES[kind]}`}>
+    <Badge tone={tone} dot={dot} className={className}>
       {t(kind)}
-    </span>
+    </Badge>
   );
 }

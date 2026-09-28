@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateGalleryInput, UpdateGalleryInput } from '@photnoo/shared';
 import { api } from './api';
 import type { BillingOverview, BillingPayment, Dashboard, Gallery, GalleryActivity, GalleryDetail, GalleryListItem, Me } from './types';
@@ -18,11 +18,20 @@ export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api<Me>(
 
 export const useDashboard = () => useQuery({ queryKey: keys.dashboard, queryFn: () => api<Dashboard>('/v1/dashboard') });
 
+/** Cursor-paged gallery list (20 per page); `data.pages` holds each loaded page. */
 export const useGalleries = (q: string) =>
-  useQuery({
+  useInfiniteQuery({
     queryKey: keys.galleries(q),
-    queryFn: () => api<{ items: GalleryListItem[]; nextCursor: string | null }>(`/v1/galleries${q ? `?q=${encodeURIComponent(q)}` : ''}`),
-    placeholderData: (previous) => previous,
+    initialPageParam: '',
+    queryFn: ({ pageParam }) => {
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (pageParam) params.set('cursor', pageParam);
+      const query = params.toString();
+      return api<{ items: GalleryListItem[]; nextCursor: string | null }>(`/v1/galleries${query ? `?${query}` : ''}`);
+    },
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
   });
 
 /** Polls every 3 s while any file is still uploading or being processed. */

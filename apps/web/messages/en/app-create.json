@@ -1,0 +1,21 @@
+{
+  "App": {
+    "create": {
+      "title": "New gallery",
+      "description": "The link stays open for 7 days from the moment you share it.",
+      "name": "Gallery name",
+      "namePlaceholder": "Noura & Karim, Wedding",
+      "client": "Client name",
+      "clientPlaceholder": "Noura Ahmed",
+      "phone": "Client mobile number",
+      "phonePlaceholder": "010 1234 5678",
+      "phoneHint": "Egyptian numbers work as typed. For other countries, start with + and the country code.",
+      "email": "Client email",
+      "emailPlaceholder": "client@example.com",
+      "submit": "Create gallery",
+      "inactiveTitle": "Your plan isn't active",
+      "inactiveBody": "Renew or choose a plan in Billing, then create the gallery.",
+      "goToBilling": "Go to Billing"
+    }
+  }
+}

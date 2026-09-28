@@ -1,0 +1,11 @@
+{
+  "App": {
+    "status": {
+      "active": "نشط",
+      "draft": "مسودة",
+      "expired": "منتهي",
+      "delivered": "تم التسليم",
+      "attention": "متوقف"
+    }
+  }
+}

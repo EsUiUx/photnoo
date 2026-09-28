@@ -1,0 +1,41 @@
+{
+  "App": {
+    "dashboard": {
+      "metaTitle": "Dashboard",
+      "title": "Dashboard",
+      "hello": "Welcome back, {name}",
+      "newGallery": "New gallery",
+      "overview": "Overview",
+      "clients": "Clients",
+      "activeGalleries": "Active galleries",
+      "downloads": "Downloads",
+      "allowance": "Allowance",
+      "allowanceUsed": "{used} of {total}",
+      "allowanceMeter": "Delivery allowance used",
+      "noPlan": "No active plan",
+      "plan": {
+        "trial": "Free trial",
+        "active": "Active plan",
+        "pending_payment": "Waiting for payment",
+        "soft_locked": "Plan ended, view only",
+        "dormant": "Plan inactive",
+        "suspended": "Account suspended"
+      },
+      "recentGalleries": "Recent galleries",
+      "recentActivity": "Recent activity",
+      "viewAll": "View all",
+      "activity": {
+        "viewed": "{client} viewed <b>{gallery}</b>",
+        "downloaded": "{client} downloaded from <b>{gallery}</b>",
+        "expiring": "<b>{gallery}</b> expires tomorrow"
+      },
+      "yourClient": "Your client",
+      "noActivityTitle": "No activity yet",
+      "noActivity": "When a client opens or downloads a gallery, it shows up here.",
+      "emptyTitle": "Create your first gallery",
+      "empty": "Add the client, upload the shoot, then share a private link and password on WhatsApp.",
+      "createFirst": "Create your first gallery",
+      "photos": "{count, plural, =0 {No photos} one {# photo} other {# photos}}"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "App": {
+    "newFolder": {
+      "title": "New folder",
+      "description": "Group photos by moment, such as Ceremony or Reception. Your client sees the folders as tabs.",
+      "name": "Folder name",
+      "placeholder": "Ceremony",
+      "create": "Create folder"
+    }
+  }
+}

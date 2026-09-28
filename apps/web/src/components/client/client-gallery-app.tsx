@@ -1,7 +1,9 @@
 'use client';
 
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { Spinner } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { clientApi } from '@/lib/client-api';
 import { ClientShell } from './client-shell';
@@ -88,16 +90,21 @@ function ClientGallery({ token }: { token: string }) {
   }
 
   return (
-    <ClientShell token={token} wide>
+    <ClientShell token={token} variant="gallery">
       <GalleryView token={token} content={content.data} onGone={refresh} />
     </ClientShell>
   );
 }
 
+/** Spoken and visible loading state, so a slow 4G connection never looks like a blank page. */
 function Loading() {
+  const t = useTranslations('Client');
   return (
-    <div className="flex flex-1 items-center justify-center py-24" role="status">
-      <span className="size-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-400" />
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-24 text-center" role="status">
+      <span className="flex size-14 items-center justify-center rounded-full bg-surface text-brand shadow-card">
+        <Spinner size={22} />
+      </span>
+      <h1 className="text-base font-medium text-fg-secondary">{t('loading')}</h1>
     </div>
   );
 }

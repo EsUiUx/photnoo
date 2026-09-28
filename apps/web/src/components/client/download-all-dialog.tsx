@@ -1,8 +1,12 @@
 'use client';
 
+import { Download, FolderDown } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
-import { Dialog, PillButton } from '@/components/app/dialog';
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Meter } from '@/components/ui/primitives';
+import { Alert } from '@/components/ui/state';
 import type { ClientFile } from '@/lib/client-api';
 import { type BatchProgress, canPickFolder, downloadAll, pickFolder } from '@/lib/client-downloads';
 import { formatBytes, percent } from '@/lib/format';
@@ -22,13 +26,14 @@ type Props = {
 /**
  * C-08: downloads the files one after another with progress. On desktop Chrome and Edge the
  * client can pick a folder so the photos land together; elsewhere they go to Downloads.
+ * While it runs the dialog cannot be dismissed (Escape, backdrop): the client stops it first,
+ * so React state and the native dialog never fall out of sync.
  */
 export function DownloadAllDialog(props: Props) {
   const t = useTranslations('Client.downloadAll');
   const [running, setRunning] = useState(false);
-  // Closing while running would hide progress; the client cancels first.
   return (
-    <Dialog open={props.open} onClose={() => !running && props.onClose()} title={t('title')} width="max-w-[560px]">
+    <Dialog open={props.open} onClose={props.onClose} title={t('title')} dismissible={!running}>
       <DownloadAllBody {...props} onRunning={setRunning} />
     </Dialog>
   );
@@ -53,6 +58,15 @@ function DownloadAllBody({
   const totalBytes = files.reduce((sum, f) => sum + Number(f.sizeBytes), 0);
   const fits = totalBytes <= Number(remainingBytes);
   const folderSupported = canPickFolder();
+
+  // If the gallery closes underneath us, stop the queue instead of downloading into nowhere.
+  useEffect(
+    () => () => {
+      abort.current?.abort();
+      onRunning(false);
+    },
+    [onRunning],
+  );
 
   async function start(useFolder: boolean) {
     const folder = useFolder ? await pickFolder() : null;
@@ -80,26 +94,29 @@ function DownloadAllBody({
 
   if (!progress) {
     return (
-      <div className="flex flex-col gap-5">
-        <p className="text-lg text-ink-body">
+      <div className="flex flex-col gap-4">
+        <p className="text-base text-fg">
           {t('summary', { count: files.length, size: formatBytes(totalBytes, locale) })}
         </p>
-        {!fits ? (
-          <p className="rounded-xl border border-[#f5c77e] bg-[#fff8eb] p-3 text-ink-body">
-            {t('overCap', { left: formatBytes(remainingBytes, locale) })}
-          </p>
-        ) : null}
-        <p className="text-sm text-ink-muted">{folderSupported ? t('folderHint') : t('browserHint')}</p>
-        <div className="flex flex-wrap justify-center gap-3">
+        {!fits ? <Alert tone="warning">{t('overCap', { left: formatBytes(remainingBytes, locale) })}</Alert> : null}
+        <p className="text-sm text-fg-muted">{folderSupported ? t('folderHint') : t('browserHint')}</p>
+        <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {t('dismiss')}
+          </Button>
           {folderSupported ? (
             <>
-              <PillButton onClick={() => void start(true)}>{t('chooseFolder')}</PillButton>
-              <PillButton tone="ghost" onClick={() => void start(false)}>
+              <Button variant="secondary" icon={Download} onClick={() => void start(false)}>
                 {t('toDownloads')}
-              </PillButton>
+              </Button>
+              <Button icon={FolderDown} onClick={() => void start(true)} autoFocus>
+                {t('chooseFolder')}
+              </Button>
             </>
           ) : (
-            <PillButton onClick={() => void start(false)}>{t('start')}</PillButton>
+            <Button icon={Download} onClick={() => void start(false)} autoFocus>
+              {t('start')}
+            </Button>
           )}
         </div>
       </div>
@@ -107,50 +124,43 @@ function DownloadAllBody({
   }
 
   const stopped = progress.stoppedBy;
+  const value = percent(progress.bytesDone, progress.bytesTotal);
+  const headline = finished
+    ? stopped === 'cap_reached'
+      ? t('stoppedCap', { done: progress.done, total: progress.total })
+      : stopped === 'cancelled'
+        ? t('stoppedCancelled', { done: progress.done, total: progress.total })
+        : stopped
+          ? t('stoppedError', { done: progress.done, total: progress.total })
+          : t('finished', { count: progress.done })
+    : t('progress', { done: progress.done, total: progress.total });
+
   return (
-    <div className="flex flex-col gap-4" aria-live="polite">
-      <p className="text-lg font-semibold text-primary-900">
-        {finished
-          ? stopped === 'cap_reached'
-            ? t('stoppedCap', { done: progress.done, total: progress.total })
-            : stopped === 'cancelled'
-              ? t('stoppedCancelled', { done: progress.done, total: progress.total })
-              : stopped
-                ? t('stoppedError', { done: progress.done, total: progress.total })
-                : t('finished', { count: progress.done })
-          : t('progress', { done: progress.done, total: progress.total })}
+    <div className="flex flex-col gap-4">
+      <p className="text-base font-semibold text-fg" aria-live="polite">
+        {headline}
       </p>
-      <div
-        className="h-2.5 overflow-hidden rounded-full bg-primary-100"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent(progress.bytesDone, progress.bytesTotal)}
-      >
-        <div className="h-full rounded-full bg-primary-300 transition-[width]" style={{ width: `${percent(progress.bytesDone, progress.bytesTotal)}%` }} />
-      </div>
-      <p className="flex justify-between gap-3 text-sm text-ink-muted">
+      <Meter value={value} label={t('progressLabel')} tone={finished && stopped && stopped !== 'cancelled' ? 'warning' : 'brand'} />
+      <p className="flex justify-between gap-3 text-sm text-fg-muted">
         <span className="min-w-0 truncate" dir="ltr">
-          {progress.current ?? ' '}
+          {finished ? ' ' : (progress.current ?? ' ')}
         </span>
-        <span dir="ltr">
+        <span className="tabular shrink-0" dir="ltr">
           {formatBytes(progress.bytesDone, locale)} / {formatBytes(progress.bytesTotal, locale)}
         </span>
       </p>
-      {finished && stopped === 'cap_reached' && message ? (
-        <div className="flex justify-center">
-          <WhatsAppButton href={message} tone="outline">
-            {t('messagePhotographer')}
-          </WhatsAppButton>
-        </div>
-      ) : null}
-      <div className="flex justify-center">
+      <div className="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        {finished && stopped === 'cap_reached' && message ? (
+          <WhatsAppButton href={message}>{t('messagePhotographer')}</WhatsAppButton>
+        ) : null}
         {finished ? (
-          <PillButton onClick={onClose}>{t('close')}</PillButton>
+          <Button onClick={onClose} autoFocus>
+            {t('close')}
+          </Button>
         ) : (
-          <PillButton tone="ghost" onClick={() => abort.current?.abort()}>
+          <Button variant="secondary" onClick={() => abort.current?.abort()} autoFocus>
             {t('cancel')}
-          </PillButton>
+          </Button>
         )}
       </div>
     </div>

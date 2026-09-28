@@ -1,0 +1,26 @@
+{
+  "App": {
+    "activity": {
+      "title": "النشاط",
+      "subtitle": "تُسجَّل كل مشاهدة وكل تحميل كإثبات للتسليم.",
+      "emptyTitle": "لا يوجد نشاط بعد",
+      "emptyBody": "تظهر المشاهدات والتحميلات هنا فور فتح عميلك للرابط.",
+      "showAll": "عرض الكل ({count})",
+      "showLess": "عرض أقل",
+      "showFiles": "عرض الملفات",
+      "events": {
+        "open": "فُتح المعرض",
+        "password_ok": "قُبلت كلمة المرور",
+        "password_fail": "أُدخلت كلمة مرور خاطئة",
+        "downloadOne": "تحميل {file}",
+        "downloadMany": "{count, plural, one {تحميل ملف واحد} two {تحميل ملفين} few {تحميل # ملفات} many {تحميل # ملفًا} other {تحميل # ملف}}"
+      },
+      "devices": {
+        "mobile": "هاتف",
+        "tablet": "جهاز لوحي",
+        "desktop": "كمبيوتر",
+        "unknown": "جهاز غير معروف"
+      }
+    }
+  }
+}
