@@ -2,10 +2,10 @@ import type { INestApplication } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import sharp from 'sharp';
 import request from 'supertest';
-import type TestAgent from 'supertest/lib/agent';
 import { FileProcessorService } from '../src/media/file-processor.service';
 import { STORAGE, type Storage } from '../src/storage/storage';
 import { createTestApp, type FakeJobs } from './app';
+import { complete, newGallery, photo, upload as uploadFile } from './gallery-helpers';
 import { localPath, signUp } from './helpers';
 
 type Prisma = Awaited<ReturnType<typeof createTestApp>>['prisma'];
@@ -25,60 +25,13 @@ afterAll(async () => {
   await app.close();
 });
 
-async function newGallery(session: Session, name = 'Sara & Omar wedding') {
-  const res = await session.agent
-    .post('/v1/galleries')
-    .set('x-csrf-token', session.csrf)
-    .send({ name, clientName: 'Sara', clientPhone: '+201012345678' })
-    .expect(201);
-  return res.body.id as string;
-}
-
-/** Runs the whole browser side of a multipart upload: start, sign, PUT each part, complete. */
-async function upload(
+const upload = (
   session: Session,
   galleryId: string,
   name: string,
   body: Buffer,
-  options: { stopAfterParts?: number; folderId?: string } = {},
-) {
-  const started = await session.agent
-    .post(`/v1/galleries/${galleryId}/uploads`)
-    .set('x-csrf-token', session.csrf)
-    .send({ name, size: body.length, folderId: options.folderId })
-    .expect(201);
-  const { fileId, partSize, partCount } = started.body as { fileId: string; partSize: number; partCount: number };
-  const numbers = Array.from({ length: partCount }, (_, i) => i + 1);
-  const signed = await session.agent
-    .post(`/v1/uploads/${fileId}/parts`)
-    .set('x-csrf-token', session.csrf)
-    .send({ partNumbers: numbers })
-    .expect(200);
-
-  const parts: Array<{ partNumber: number; etag: string }> = [];
-  for (const { partNumber, url } of signed.body.parts as Array<{ partNumber: number; url: string }>) {
-    if (options.stopAfterParts !== undefined && parts.length >= options.stopAfterParts) break;
-    const slice = body.subarray((partNumber - 1) * partSize, partNumber * partSize);
-    const put = await request(app.getHttpServer())
-      .put(localPath(url))
-      .set('content-type', 'application/octet-stream')
-      .send(slice)
-      .expect(200);
-    parts.push({ partNumber, etag: put.headers.etag as string });
-  }
-  return { fileId, parts, partCount };
-}
-
-function complete(agent: TestAgent, csrf: string, fileId: string, parts: Array<{ partNumber: number; etag: string }>) {
-  return agent.post(`/v1/uploads/${fileId}/complete`).set('x-csrf-token', csrf).send({ parts });
-}
-
-async function photo(width: number, height: number, orientation = 1) {
-  return sharp({ create: { width, height, channels: 3, background: '#6a8f6b' } })
-    .jpeg({ quality: 90 })
-    .withMetadata({ orientation, exif: { IFD0: { Artist: 'Private Artist Name', Copyright: 'Secret' } } })
-    .toBuffer();
-}
+  options?: { stopAfterParts?: number; folderId?: string },
+) => uploadFile(app, session, galleryId, name, body, options);
 
 async function readObject(key: string): Promise<Buffer> {
   const chunks: Buffer[] = [];

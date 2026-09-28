@@ -5,12 +5,15 @@ import { ENV, type Env } from '../config/env';
 /** Background job names and their payloads. */
 export type JobPayloads = {
   'file.process': { fileId: string };
+  'lifecycle.tick': Record<string, never>;
 };
 export type JobName = keyof JobPayloads;
 
 const QUEUES: Record<JobName, { retryLimit: number; retryDelay: number; expireInSeconds: number }> = {
   // Transient storage errors retry with backoff; bad files fail fast inside the handler (PRD 7).
   'file.process': { retryLimit: 5, retryDelay: 10, expireInSeconds: 15 * 60 },
+  // Runs on a schedule; a failed run is simply picked up by the next one.
+  'lifecycle.tick': { retryLimit: 0, retryDelay: 0, expireInSeconds: 30 * 60 },
 };
 
 /**
@@ -51,6 +54,11 @@ export class JobsService implements OnModuleDestroy {
     await boss.work<JobPayloads[N]>(name, { localConcurrency: options.concurrency ?? 2 }, async (jobs) => {
       for (const job of jobs) await handler(job.data);
     });
+  }
+
+  /** Cron schedule, stored in Postgres, so only one worker runs each tick even with several. */
+  async schedule<N extends JobName>(name: N, cron: string, data: JobPayloads[N]): Promise<void> {
+    await (await this.start()).schedule(name, cron, data, { tz: 'Africa/Cairo' });
   }
 
   async onModuleDestroy(): Promise<void> {

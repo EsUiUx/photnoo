@@ -4,7 +4,10 @@ import { NestFactory } from '@nestjs/core';
 import { Logger, LoggerModule } from 'nestjs-pino';
 import { ConfigModule } from './config/config.module';
 import { JobsModule } from './jobs/jobs.module';
+import { AuditModule } from './audit/audit.module';
 import { JobsService } from './jobs/jobs.service';
+import { LifecycleModule } from './lifecycle/lifecycle.module';
+import { LifecycleService } from './lifecycle/lifecycle.service';
 import { FileProcessorService } from './media/file-processor.service';
 import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -18,8 +21,10 @@ import { StorageModule } from './storage/storage.module';
     }),
     PrismaModule,
     StorageModule,
+    AuditModule,
     JobsModule,
     MediaModule,
+    LifecycleModule,
   ],
 })
 class WorkerModule {}
@@ -32,7 +37,10 @@ async function main(): Promise<void> {
 
   const jobs = app.get(JobsService);
   const files = app.get(FileProcessorService);
+  const lifecycle = app.get(LifecycleService);
   await jobs.work('file.process', ({ fileId }) => files.process(fileId), { concurrency: 2 });
+  await jobs.work('lifecycle.tick', async () => void (await lifecycle.tick()), { concurrency: 1 });
+  await jobs.schedule('lifecycle.tick', '*/5 * * * *', {});
   app.get(Logger).log('Worker started');
 }
 

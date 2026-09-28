@@ -240,39 +240,45 @@ enum GalleryState {
 }
 
 model Gallery {
-  id             String       @id @default(uuid()) @db.Uuid
-  photographerId String       @db.Uuid
-  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
-  name           String
-  clientName     String?
-  clientPhone    String?
-  clientEmail    String?
-  state          GalleryState @default(draft)
-  suspended      Boolean      @default(false)
-  suspendedUntil DateTime?
-  linkTokenHash  String?      @unique
-  passwordHash   String?
-  coverFileId    String?      @db.Uuid
-  activatedAt    DateTime?
-  expiresAt      DateTime?
-  extendedAt     DateTime?
-  closedAt       DateTime?
-  closedReason   String? // expired | cap_used | closed_by_photographer | account_deleted
-  purgedAt       DateTime?
-  totalBytes     BigInt       @default(0)
-  capBytes       BigInt       @default(0)
+  id              String       @id @default(uuid()) @db.Uuid
+  photographerId  String       @db.Uuid
+  photographer    Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  name            String
+  clientName      String?
+  clientPhone     String?
+  clientEmail     String?
+  state           GalleryState @default(draft)
+  suspended       Boolean      @default(false)
+  suspendedUntil  DateTime?
+  linkTokenHash   String?      @unique
+  passwordHash    String?
+  coverFileId     String?      @db.Uuid
+  activatedAt     DateTime?
+  expiresAt       DateTime?
+  extendedAt      DateTime?
+  closedAt        DateTime?
+  closedReason    String? // expired | cap_used | closed_by_photographer | account_deleted
+  purgedAt        DateTime?
+  /// The link token, AES-256-GCM encrypted, so the photographer can copy the link again.
+  /// Lookups use linkTokenHash; this column is only ever decrypted for the owner.
+  linkTokenEnc    String?
+  /// Set after 30 failed passwords in an hour (PRD C-02); the link refuses logins until then.
+  linkLockedUntil DateTime?
+  totalBytes      BigInt       @default(0)
+  capBytes        BigInt       @default(0)
   /// Counter cache of bytes served to the client.
-  servedBytes    BigInt       @default(0)
-  fileCount      Int          @default(0)
-  lastUploadAt   DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  servedBytes     BigInt       @default(0)
+  fileCount       Int          @default(0)
+  lastUploadAt    DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   folders  Folder[]
   files    File[]
   accesses AccessEvent[]
   receipts DownloadReceipt[]
   reports  AbuseReport[]
+  sessions ClientSession[]
 
   @@index([photographerId, state, createdAt])
   @@index([state, expiresAt])
@@ -348,6 +354,22 @@ model AccessEvent {
   createdAt  DateTime        @default(now())
 
   @@index([galleryId, createdAt])
+  @@index([galleryId, type, ip, createdAt])
+}
+
+/// A client who entered the right password (PRD C-03). No account: one cookie, one gallery.
+model ClientSession {
+  id         String   @id @default(uuid()) @db.Uuid
+  galleryId  String   @db.Uuid
+  gallery    Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  ip         String?
+  country    String?
+  deviceType String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([galleryId])
 }
 
 /// Immutable proof of one download (PRD C-07). Never updated after insert.

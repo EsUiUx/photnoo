@@ -8,6 +8,8 @@ import { ConfigModule } from './config/config.module';
 import { GalleriesModule } from './galleries/galleries.module';
 import { HealthController } from './health/health.controller';
 import { JobsModule } from './jobs/jobs.module';
+import { LifecycleModule } from './lifecycle/lifecycle.module';
+import { SharingModule } from './sharing/sharing.module';
 import { MediaModule } from './media/media.module';
 import { StorageModule } from './storage/storage.module';
 import { MailModule } from './mail/mail.module';
@@ -38,7 +40,9 @@ import { RedisModule } from './redis/redis.module';
     JobsModule,
     AuthModule,
     GalleriesModule,
+    SharingModule,
     MediaModule,
+    LifecycleModule,
   ],
   controllers: [HealthController],
 })

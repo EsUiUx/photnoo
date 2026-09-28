@@ -70,6 +70,15 @@ export const completeUploadSchema = z.object({
 });
 export type CompleteUploadInput = z.infer<typeof completeUploadSchema>;
 
+export const unlockGallerySchema = z.object({ password: z.string().min(1).max(64) });
+export type UnlockGalleryInput = z.infer<typeof unlockGallerySchema>;
+
+export const reportGallerySchema = z.object({
+  reason: z.string().trim().min(5).max(1000),
+  email: emailSchema.optional(),
+});
+export type ReportGalleryInput = z.infer<typeof reportGallerySchema>;
+
 export const createGallerySchema = z.object({
   name: z.string().trim().min(1).max(80),
   clientName: z.string().trim().min(1).max(100),
