@@ -123,7 +123,7 @@ describe('client access', () => {
 
 describe('brute-force protection', () => {
   it('slows down after 5 failures and locks an IP after 10, even with the right password', async () => {
-    const { token, password } = await sharedGallery();
+    const { token, password, galleryId } = await sharedGallery();
     const server = app.getHttpServer();
     for (let i = 1; i <= 5; i += 1) {
       const res = await request(server).post(`/v1/g/${token}/session`).send({ password: `Wrong000${i}` }).expect(401);
@@ -132,10 +132,10 @@ describe('brute-force protection', () => {
     const slow = await request(server).post(`/v1/g/${token}/session`).send({ password }).expect(429);
     expect(slow.body.error.code).toBe('slow_down');
 
-    const gallery = await prisma.gallery.findFirstOrThrow({ where: { accesses: { some: {} } }, orderBy: { createdAt: 'desc' } });
-    const ip = (await prisma.accessEvent.findFirstOrThrow({ where: { galleryId: gallery.id } })).ip;
+    // Scoped to this test's gallery: other spec files write access events in parallel.
+    const ip = (await prisma.accessEvent.findFirstOrThrow({ where: { galleryId } })).ip;
     await prisma.accessEvent.createMany({
-      data: Array.from({ length: 5 }, () => ({ galleryId: gallery.id, type: 'password_fail' as const, ip })),
+      data: Array.from({ length: 5 }, () => ({ galleryId, type: 'password_fail' as const, ip })),
     });
     const locked = await request(server).post(`/v1/g/${token}/session`).send({ password }).expect(429);
     expect(locked.body.error.code).toBe('too_many_attempts');

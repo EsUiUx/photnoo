@@ -10,7 +10,24 @@
       "copyLink": "Copy link",
       "copyLinkFor": "Copy the link of {name}",
       "copied": "Link copied",
-      "copyFailed": "Couldn't copy the link"
+      "copyFailed": "Couldn't copy the link",
+      "notShared": "Not shared",
+      "cover": "Cover",
+      "name": "Gallery",
+      "client": "Client",
+      "created": "Created",
+      "viewsHeader": "Views",
+      "downloadsHeader": "Downloads",
+      "status": "Status",
+      "expiry": "Expires",
+      "actions": "Actions",
+      "view": "View",
+      "viewGallery": "View {name}",
+      "clearSearch": "Clear search",
+      "createdRange": "Created between",
+      "createdFrom": "Created from",
+      "createdTo": "Created to",
+      "clearDates": "Clear dates"
     }
   }
 }

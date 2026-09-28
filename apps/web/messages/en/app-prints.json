@@ -1,0 +1,67 @@
+{
+  "App": {
+    "prints": {
+      "metaTitle": "Prints",
+      "title": "Prints",
+      "intro": "Your print catalog: albums, frames, canvas and more. Clients order a print of any photo from their gallery.",
+      "addPrint": "Add print",
+      "statsTitle": "Prints at a glance",
+      "stats": {
+        "pending": "Pending",
+        "inProduction": "In production",
+        "delivered": "Delivered",
+        "revenue": "Revenue",
+        "revenueHint": "Paid orders, cancellations excluded"
+      },
+      "overview": "Overview",
+      "tabs": { "catalog": "Catalog", "orders": "Orders" },
+      "offer": "Offer prints in client galleries",
+      "offerOn": "Clients see “Order a print” on each photo in their gallery. You can switch it off for a single gallery from its settings.",
+      "offerOff": "Clients can't order prints. Turn this on when your catalog is ready.",
+      "offerNoItems": "Add at least one available print option, or clients won't see the button.",
+      "optedOut": "{count, plural, one {# gallery doesn't offer prints.} other {# galleries don't offer prints.}}",
+      "saveFailed": "That change wasn't saved. Check your connection and try again.",
+      "emptyTitle": "Your print catalog is empty",
+      "empty": "Add the prints you offer, like an A4 album or a 30x40 frame, with a price for each size.",
+      "addFirst": "Add your first print",
+      "add": "Add",
+      "addTo": "Add to {type}",
+      "unavailable": "Unavailable",
+      "editNamed": "Edit {name}",
+      "deleteNamed": "Delete {name}",
+      "delete": "Delete",
+      "deleteTitle": "Delete {name}?",
+      "deleteBody": "Clients can no longer order it. Existing orders keep their details.",
+      "types": {
+        "album": "Albums",
+        "frame": "Frames",
+        "canvas": "Canvas",
+        "magazine": "Magazines",
+        "wooden": "Wooden portraits",
+        "other": "Other"
+      },
+      "drawer": {
+        "addTitle": "Add print",
+        "editTitle": "Edit print",
+        "type": "Type",
+        "name": "Print name",
+        "namePlaceholder": "e.g. Wooden frame",
+        "size": "Size",
+        "sizePlaceholder": "e.g. 30x40 cm",
+        "price": "Price",
+        "currency": "EGP",
+        "picture": "Picture",
+        "availability": "Availability",
+        "availabilityHint": "Unavailable prints are hidden from clients.",
+        "available": "Available",
+        "unavailable": "Unavailable",
+        "nameRequired": "Enter a print name.",
+        "sizeRequired": "Enter a size, e.g. A4 or 30x40 cm.",
+        "priceInvalid": "Enter a price in EGP, e.g. 650.",
+        "imageFailed": "The print was saved, but the picture wasn't. Use a JPEG or PNG up to 15 MB and try again.",
+        "add": "Add print",
+        "save": "Save changes"
+      }
+    }
+  }
+}

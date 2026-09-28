@@ -14,6 +14,7 @@ import { LifecycleModule } from './lifecycle/lifecycle.module';
 import { LifecycleService } from './lifecycle/lifecycle.service';
 import { FileProcessorService } from './media/file-processor.service';
 import { MediaModule } from './media/media.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
 
@@ -32,6 +33,7 @@ import { StorageModule } from './storage/storage.module';
     MailModule,
     FlagsModule,
     BillingLifecycleModule,
+    NotificationsModule,
   ],
 })
 class WorkerModule {}

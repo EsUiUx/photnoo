@@ -5,7 +5,10 @@
       "description": "Group photos by moment, such as Ceremony or Reception. Your client sees the folders as tabs.",
       "name": "Folder name",
       "placeholder": "Ceremony",
-      "create": "Create folder"
+      "create": "Create folder",
+      "renameTitle": "Rename folder",
+      "rename": "Save name",
+      "exists": "A folder with this name already exists in this gallery."
     }
   }
 }

@@ -79,17 +79,30 @@ export const reportGallerySchema = z.object({
 });
 export type ReportGalleryInput = z.infer<typeof reportGallerySchema>;
 
-export const createGallerySchema = z.object({
-  name: z.string().trim().min(1).max(80),
-  clientName: z.string().trim().min(1).max(100),
-  clientPhone: phoneSchema,
-  clientEmail: emailSchema.optional(),
-});
+/**
+ * A gallery belongs to a managed client: pick an existing one (clientId), or give a name and
+ * phone and the client is found or created by phone.
+ */
+export const createGallerySchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+    clientId: z.string().uuid().optional(),
+    clientName: z.string().trim().min(1).max(100).optional(),
+    clientPhone: phoneSchema.optional(),
+    clientEmail: emailSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.clientId) return;
+    if (!value.clientName) ctx.addIssue({ code: 'custom', path: ['clientName'], message: 'Enter the client name' });
+    if (!value.clientPhone) ctx.addIssue({ code: 'custom', path: ['clientPhone'], message: 'Enter the client phone' });
+  });
 export type CreateGalleryInput = z.infer<typeof createGallerySchema>;
 
 export const updateGallerySchema = z
   .object({
     name: z.string().trim().min(1).max(80),
+    /** Switches the gallery to another managed client; the client fields follow it. */
+    clientId: z.string().uuid(),
     clientName: z.string().trim().min(1).max(100),
     clientPhone: phoneSchema,
     clientEmail: emailSchema.nullable(),

@@ -10,7 +10,24 @@
       "copyLink": "نسخ الرابط",
       "copyLinkFor": "نسخ رابط {name}",
       "copied": "تم نسخ الرابط",
-      "copyFailed": "تعذّر نسخ الرابط"
+      "copyFailed": "تعذّر نسخ الرابط",
+      "notShared": "لم يُشارَك",
+      "cover": "الغلاف",
+      "name": "المعرض",
+      "client": "العميل",
+      "created": "تاريخ الإنشاء",
+      "viewsHeader": "المشاهدات",
+      "downloadsHeader": "التحميلات",
+      "status": "الحالة",
+      "expiry": "ينتهي",
+      "actions": "الإجراءات",
+      "view": "عرض",
+      "viewGallery": "عرض {name}",
+      "clearSearch": "مسح البحث",
+      "createdRange": "أُنشئ بين",
+      "createdFrom": "من تاريخ",
+      "createdTo": "إلى تاريخ",
+      "clearDates": "مسح التواريخ"
     }
   }
 }

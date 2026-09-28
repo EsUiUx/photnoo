@@ -23,7 +23,22 @@
       "noFilterResultsTitle": "لا يوجد شيء هنا",
       "noFilterResults": "لا توجد معارض بهذه الحالة الآن.",
       "showAll": "عرض كل المعارض",
-      "loadMore": "تحميل المزيد من المعارض"
+      "loadMore": "تحميل المزيد من المعارض",
+      "countMore": "{count, plural, one {يُعرض معرض واحد} two {يُعرض معرضان} few {يُعرض # معارض} many {يُعرض # معرضًا} other {يُعرض # معرض}}",
+      "noResultsDates": "لم يُنشأ أي معرض في هذه التواريخ.",
+      "clearFilters": "مسح عوامل التصفية",
+      "sortLabel": "الترتيب",
+      "sort": {
+        "newest": "الأحدث أولًا",
+        "oldest": "الأقدم أولًا",
+        "expiring": "الأقرب انتهاءً",
+        "views": "الأكثر مشاهدة"
+      },
+      "viewLabel": "طريقة العرض",
+      "view": {
+        "grid": "بطاقات",
+        "table": "جدول"
+      }
     }
   }
 }

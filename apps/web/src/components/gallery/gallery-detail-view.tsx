@@ -1,8 +1,8 @@
 'use client';
 
-import { ArrowLeft, CalendarClock, Ellipsis, FolderPlus, ImageOff, Pencil, Phone, Share2, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, CalendarClock, ChevronRight, Ellipsis, FolderPlus, GripVertical, ImageOff, Pencil, Phone, Share2, Trash2 } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { galleryBadge, StatusBadge } from '@/components/app/status-badge';
 import { useUploader } from '@/components/app/providers';
 import { Button, ButtonLink, IconButton } from '@/components/ui/button';
@@ -15,9 +15,11 @@ import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { formatBytes, formatDate, percent } from '@/lib/format';
 import { useDeleteFolder, useGallery } from '@/lib/queries';
+import { useReorderFolders } from '@/lib/queries-galleries';
 import type { GalleryDetail } from '@/lib/types';
 import { ActivityPanel } from './activity-panel';
-import { DeleteGalleryDialog, EditGalleryDialog, NewFolderDialog } from './gallery-dialogs';
+import { EditGalleryDrawer } from './edit-gallery-drawer';
+import { DeleteGalleryDialog, NewFolderDialog, RenameFolderDialog } from './gallery-dialogs';
 import { MediaGrid } from './media-grid';
 import { ShareDialog } from './share-dialog';
 import { DropZone, UploadPanel } from './upload-panel';
@@ -34,7 +36,25 @@ export function GalleryDetailView({ id }: { id: string }) {
   const [dialog, setDialog] = useState<DialogName>(null);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploadFocus, setUploadFocus] = useState(false);
+  const uploadRef = useRef<HTMLDivElement>(null);
   const data = gallery.data;
+  const loaded = Boolean(data);
+
+  // "Upload new project" lands here with ?upload=1: bring the upload area into view and focus it.
+  useEffect(() => {
+    if (!loaded || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('upload') !== '1') return;
+    params.delete('upload');
+    const query = params.toString();
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+    const area = uploadRef.current;
+    area?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    area?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time highlight after arriving from "Upload new project"
+    setUploadFocus(true);
+  }, [loaded]);
 
   const files = useMemo(
     () => (data?.files ?? []).filter((file) => (folderId ? file.folderId === folderId : true)),
@@ -95,7 +115,9 @@ export function GalleryDetailView({ id }: { id: string }) {
           />
 
           {open ? (
-            <DropZone dragging={dragging} compact={data.files.length > 0} folderName={folder?.name} onFiles={addFiles} />
+            <div ref={uploadRef} className={cn('rounded-lg transition-shadow duration-200', uploadFocus && 'ring-2 ring-brand ring-offset-2 ring-offset-canvas')}>
+              <DropZone dragging={dragging} compact={data.files.length > 0} folderName={folder?.name} onFiles={addFiles} />
+            </div>
           ) : (
             <Alert tone="info">{t('closedNote')}</Alert>
           )}
@@ -104,16 +126,36 @@ export function GalleryDetailView({ id }: { id: string }) {
 
           <section aria-labelledby="gallery-photos-heading" className="flex flex-col gap-4">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 id="gallery-photos-heading" className="text-lg font-semibold text-fg">
-                {folder ? folder.name : t('photos')}
-              </h2>
+              {folder ? (
+                <nav aria-label={t('breadcrumb')} className="min-w-0">
+                  <ol className="flex min-w-0 items-center gap-1.5 text-lg font-semibold">
+                    <li className="min-w-0">
+                      <button type="button" onClick={() => setFolderId(null)} className="max-w-full truncate rounded-md text-fg-secondary hover:text-fg">
+                        {data.name}
+                      </button>
+                    </li>
+                    <li aria-hidden className="text-fg-muted">
+                      <ChevronRight size={18} strokeWidth={1.75} className="rtl:-scale-x-100" />
+                    </li>
+                    <li className="min-w-0">
+                      <h2 id="gallery-photos-heading" aria-current="page" className="truncate text-fg">
+                        {folder.name}
+                      </h2>
+                    </li>
+                  </ol>
+                </nav>
+              ) : (
+                <h2 id="gallery-photos-heading" className="text-lg font-semibold text-fg">
+                  {t('photos')}
+                </h2>
+              )}
               <p className="tabular text-sm text-fg-muted">{t('fileCount', { count: files.length })}</p>
             </div>
             <MediaGrid
+              key={folder?.id ?? 'all'}
+              gallery={data}
               files={files}
-              galleryId={id}
-              canDelete={open}
-              coverFileId={data.coverFileId}
+              canEdit={open}
               empty={
                 folder
                   ? { title: t('emptyFolder'), body: open ? t('emptyFolderBody') : undefined }
@@ -131,7 +173,7 @@ export function GalleryDetailView({ id }: { id: string }) {
       </div>
 
       <ShareDialog gallery={data} open={dialog === 'share'} onClose={() => setDialog(null)} />
-      <EditGalleryDialog gallery={data} open={dialog === 'edit'} onClose={() => setDialog(null)} />
+      <EditGalleryDrawer gallery={data} open={dialog === 'edit'} onClose={() => setDialog(null)} />
       <DeleteGalleryDialog gallery={data} open={dialog === 'delete'} onClose={() => setDialog(null)} />
       <NewFolderDialog galleryId={id} open={dialog === 'folder'} onClose={() => setDialog(null)} />
     </div>
@@ -265,6 +307,10 @@ function Summary({ gallery }: { gallery: GalleryDetail }) {
   );
 }
 
+/**
+ * Folder tabs (PRD P-09). Each folder can be renamed, deleted, and reordered by dragging or
+ * with "Move earlier / later" in its menu, so the order also works from the keyboard.
+ */
 function Folders({
   gallery,
   selected,
@@ -279,12 +325,48 @@ function Folders({
   onNewFolder: () => void;
 }) {
   const t = useTranslations('App.gallery');
+  const tc = useTranslations('Common');
   const format = useFormatter();
   const remove = useDeleteFolder(gallery.id);
+  const reorder = useReorderFolders(gallery.id);
   const { confirm, dialog } = useConfirm();
   const [error, setError] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [pending, setPending] = useState<string[] | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+
+  // While a new order saves, show it; the refetch then confirms it.
+  const byId = new Map(gallery.folders.map((f) => [f.id, f]));
+  const folders =
+    pending && pending.length === gallery.folders.length && pending.every((id) => byId.has(id))
+      ? pending.map((id) => byId.get(id)!)
+      : gallery.folders;
 
   if (gallery.folders.length === 0 && !canEdit) return null;
+
+  async function save(order: string[], moved: { name: string }, index: number) {
+    setError(null);
+    setPending(order);
+    try {
+      await reorder.mutateAsync(order);
+      setAnnouncement(t('folderMoved', { name: moved.name, position: index + 1, total: order.length }));
+    } catch {
+      setError(t('reorderFailed'));
+    } finally {
+      setPending(null);
+    }
+  }
+
+  function move(folderId: string, to: number) {
+    const current = folders.map((f) => f.id);
+    const order = current.filter((id) => id !== folderId);
+    const index = Math.max(0, Math.min(to, order.length));
+    order.splice(index, 0, folderId);
+    if (order.join() === current.join()) return;
+    void save(order, byId.get(folderId)!, index);
+  }
 
   async function onDelete(folder: { id: string; name: string }, count: number) {
     const ok = await confirm({
@@ -315,31 +397,67 @@ function Folders({
             <span className="tabular text-xs text-fg-muted">{format.number(gallery.files.length)}</span>
           </button>
         </li>
-        {gallery.folders.map((folder) => {
+        {folders.map((folder, index) => {
           const count = gallery.files.filter((file) => file.folderId === folder.id).length;
           const active = selected === folder.id;
           return (
             <li
               key={folder.id}
-              className={cn('inline-flex items-center rounded-md transition-colors duration-150', active ? 'bg-brand-soft' : 'hover:bg-surface-subtle')}
+              draggable={canEdit}
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', folder.id);
+                setDragId(folder.id);
+              }}
+              onDragOver={(event) => {
+                if (!dragId || dragId === folder.id) return;
+                event.preventDefault();
+                event.stopPropagation();
+                setOverId(folder.id);
+              }}
+              onDragLeave={() => setOverId((current) => (current === folder.id ? null : current))}
+              onDrop={(event) => {
+                if (!dragId) return;
+                event.preventDefault();
+                event.stopPropagation();
+                move(dragId, folders.findIndex((f) => f.id === folder.id));
+                setDragId(null);
+                setOverId(null);
+              }}
+              onDragEnd={() => {
+                setDragId(null);
+                setOverId(null);
+              }}
+              className={cn(
+                'inline-flex items-center rounded-md transition-colors duration-150',
+                active ? 'bg-brand-soft' : 'hover:bg-surface-subtle',
+                dragId === folder.id && 'opacity-50',
+                overId === folder.id && 'ring-2 ring-brand',
+              )}
             >
+              {canEdit ? <GripVertical size={16} strokeWidth={1.75} aria-hidden className="ms-1.5 cursor-grab text-fg-muted" /> : null}
               <button
                 type="button"
                 aria-pressed={active}
                 onClick={() => onSelect(folder.id)}
-                className={cn(chipBase, canEdit ? 'ps-3.5 pe-1' : 'px-3.5', active ? 'text-brand' : 'text-fg-secondary hover:text-fg')}
+                className={cn(chipBase, canEdit ? 'ps-1.5 pe-1' : 'px-3.5', active ? 'text-brand' : 'text-fg-secondary hover:text-fg')}
               >
                 {folder.name}
                 <span className="tabular text-xs text-fg-muted">{format.number(count)}</span>
               </button>
               {canEdit ? (
-                <IconButton
-                  icon={X}
-                  size="sm"
-                  variant="danger-ghost"
-                  label={t('deleteFolder', { name: folder.name })}
-                  onClick={() => void onDelete(folder, count)}
-                  disabled={remove.isPending}
+                <Menu
+                  label={t('folderActions', { name: folder.name })}
+                  items={[
+                    { label: t('renameFolder'), icon: Pencil, onSelect: () => setRenaming(folder) },
+                    { label: t('moveEarlier'), icon: ArrowUp, onSelect: () => move(folder.id, index - 1), disabled: index === 0 },
+                    { label: t('moveLater'), icon: ArrowDown, onSelect: () => move(folder.id, index + 1), disabled: index === folders.length - 1 },
+                    { type: 'separator' },
+                    { label: t('deleteFolderAction'), icon: Trash2, tone: 'danger', onSelect: () => void onDelete(folder, count) },
+                  ]}
+                  trigger={(props) => (
+                    <IconButton {...props} icon={Ellipsis} size="sm" label={tc('more')} disabled={remove.isPending || reorder.isPending} />
+                  )}
                 />
               ) : null}
             </li>
@@ -353,7 +471,12 @@ function Folders({
           </li>
         ) : null}
       </ul>
+      {canEdit && folders.length > 1 ? <p className="text-xs text-fg-muted">{t('reorderHint')}</p> : null}
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       {error ? <Alert>{error}</Alert> : null}
+      <RenameFolderDialog galleryId={gallery.id} folder={renaming} onClose={() => setRenaming(null)} />
       {dialog}
     </nav>
   );

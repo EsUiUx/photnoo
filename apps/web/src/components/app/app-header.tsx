@@ -1,8 +1,9 @@
 'use client';
 
-import { ChevronDown, ChevronRight, CreditCard, Languages, LogOut, Menu as MenuIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, CreditCard, Languages, LogOut, Menu as MenuIcon, UserRoundPen } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { forwardRef } from 'react';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { IconButton } from '@/components/ui/button';
 import { Menu } from '@/components/ui/menu';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
@@ -56,10 +57,12 @@ export function AppHeader({ me, onMenu, menuButtonRef }: { me?: Me; onMenu: () =
       <div className="flex-1 lg:hidden" />
 
       <LanguageToggle />
+      <NotificationBell initialUnread={me?.unreadNotifications} />
       <span aria-hidden className="mx-1 h-6 w-px bg-border" />
       <Menu
         label={me ? t('accountMenu', { name: me.name }) : t('accountMenuFallback')}
         items={[
+          { type: 'link', label: t('editProfile'), href: '/settings', icon: UserRoundPen },
           { type: 'link', label: t('billing'), href: '/billing', icon: CreditCard },
           { type: 'separator' },
           { label: t('logout'), icon: LogOut, onSelect: () => void logout() },
@@ -93,6 +96,7 @@ function LanguageToggle() {
 type TriggerProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { me?: Me };
 
 const AccountTrigger = forwardRef<HTMLButtonElement, TriggerProps>(function AccountTrigger({ me, ...props }, ref) {
+  const t = useTranslations('App.header');
   const initials = (me?.name ?? '')
     .split(/\s+/)
     .filter(Boolean)
@@ -107,14 +111,17 @@ const AccountTrigger = forwardRef<HTMLButtonElement, TriggerProps>(function Acco
       {...props}
       className="flex h-10 items-center gap-2.5 rounded-md ps-1 pe-2 text-start transition-colors duration-150 hover:bg-surface-subtle pointer-coarse:h-11"
     >
-      <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
-        {initials}
-      </span>
+      {me?.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+        <img src={me.avatarUrl} alt="" className="size-8 shrink-0 rounded-full object-cover" />
+      ) : (
+        <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">
+          {initials}
+        </span>
+      )}
       <span className="hidden min-w-0 flex-col md:flex">
         <span className="max-w-44 truncate text-sm leading-tight font-medium text-fg">{me?.name ?? ' '}</span>
-        <span dir="ltr" className="max-w-44 truncate text-xs leading-tight text-fg-muted rtl:text-right">
-          {me?.email ?? ' '}
-        </span>
+        <span className="max-w-44 truncate text-xs leading-tight text-fg-muted">{t('role')}</span>
       </span>
       <ChevronDown size={16} strokeWidth={1.75} aria-hidden className="shrink-0 text-fg-muted" />
     </button>

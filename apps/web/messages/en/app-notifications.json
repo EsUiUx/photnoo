@@ -1,0 +1,74 @@
+{
+  "App": {
+    "notifications": {
+      "metaTitle": "Notifications",
+      "title": "Notifications",
+      "intro": "Client activity, finished uploads, payments and reminders about your plan.",
+      "filterLabel": "Show",
+      "all": "All",
+      "unread": "Unread",
+      "new": "New",
+      "markAllRead": "Mark all as read",
+      "markRead": "Mark as read",
+      "markedAllRead": "All notifications are marked as read.",
+      "loadMore": "Show older notifications",
+      "loadFailedTitle": "Notifications didn't load",
+      "loadFailed": "Check your connection and try again.",
+      "actionFailed": "That didn't go through. Try again.",
+      "emptyTitle": "No notifications yet",
+      "emptyBody": "When a client opens or downloads a gallery, or an upload finishes, you'll see it here.",
+      "emptyUnreadTitle": "You're all caught up",
+      "emptyUnreadBody": "There are no unread notifications.",
+      "bell": "Notifications",
+      "bellUnread": "Notifications, {count, plural, one {# unread} other {# unread}}",
+      "latest": "Latest notifications",
+      "seeAll": "See all notifications",
+      "loading": "Loading notifications…",
+      "yourClient": "Your client",
+      "aCustomer": "A customer",
+      "types": {
+        "gallery_opened": {
+          "title": "Gallery opened",
+          "body": "{client} opened “{gallery}” for the first time."
+        },
+        "gallery_downloaded": {
+          "title": "Gallery fully downloaded",
+          "bodyAll": "{client} downloaded every photo in “{gallery}”.",
+          "bodyCap": "{client} used the whole download allowance of “{gallery}”. The link is now closed."
+        },
+        "gallery_expiring": {
+          "title": "Gallery closes soon",
+          "body": "The link to “{gallery}” closes on {date}. Extend it from the gallery if your client needs more time."
+        },
+        "gallery_closed": {
+          "title": "Gallery closed",
+          "body": "The link to “{gallery}” reached its end date and is now closed."
+        },
+        "gallery_ready": {
+          "title": "Gallery ready to share",
+          "body": "{files, plural, one {# photo is} other {# photos are}} processed in “{gallery}”."
+        },
+        "order_placed": {
+          "title": "New order #{number}",
+          "body": "{customer} placed an order for {total}."
+        },
+        "payment_approved": {
+          "title": "Payment approved",
+          "body": "Payment {reference} was approved. Your plan runs until {date}."
+        },
+        "payment_rejected": {
+          "title": "Payment not accepted",
+          "body": "Payment {reference} was not accepted: {reason}"
+        },
+        "allowance_warning": {
+          "title": "{percent, select, 100 {Delivery allowance used up} other {{percent}% of your allowance used}}",
+          "body": "You have used {used} of {allowance} this cycle."
+        },
+        "renewal_due": {
+          "title": "{trial, select, yes {Trial ending} other {Renewal due}}",
+          "body": "{days, plural, =0 {Your plan ends today.} one {Your plan ends in # day, on {date}.} other {Your plan ends in # days, on {date}.}} Renew to keep uploading."
+        }
+      }
+    }
+  }
+}

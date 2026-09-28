@@ -8,10 +8,14 @@ export type Gallery = {
   clientName: string | null;
   clientPhone: string | null;
   clientEmail: string | null;
+  /** The managed client; the client fields above are a snapshot of it. */
+  clientId: string | null;
   state: GalleryState;
   suspended: boolean;
   activatedAt: string | null;
   expiresAt: string | null;
+  /** Set once the link was extended (allowed once, PRD P-14). */
+  extendedAt: string | null;
   closedAt: string | null;
   closedReason: string | null;
   totalBytes: string;
@@ -53,6 +57,10 @@ export type Me = {
   email: string;
   phone: string;
   locale: 'ar' | 'en';
+  /** Public handle, profile photo and unread notification count (account slice). */
+  slug?: string | null;
+  avatarUrl?: string | null;
+  unreadNotifications?: number;
   subscription: Subscription | null;
 };
 
@@ -133,10 +141,16 @@ export type ActivityItem = {
   at: string;
 };
 
+/** A number over the last 30 days and the 30 days before; the page shows the change. */
+export type Trend = { current: number; previous: number };
+
 export type Dashboard = {
   clients: number;
   activeGalleries: number;
+  /** Downloads since the current plan cycle started. */
   downloads: number;
+  cycleStart: string | null;
+  trends: { clients: Trend; activeGalleries: Trend; downloads: Trend; allowance: Trend };
   storage: { usedBytes: string; allowanceBytes: string; state: string } | null;
   recentGalleries: GalleryListItem[];
   activity: ActivityItem[];

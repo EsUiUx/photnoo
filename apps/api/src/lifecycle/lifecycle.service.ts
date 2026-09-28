@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DeliveryRules } from '@photnoo/shared';
 import { AuditService } from '../audit/audit.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { objectKeys, STORAGE, type Storage } from '../storage/storage';
 
@@ -23,11 +24,13 @@ export class LifecycleService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
   async tick(now = new Date()): Promise<Record<string, number>> {
     const result = {
+      expiringNotices: await this.noticeExpiring(now),
       expired: await this.expire(now),
       abandonedUploads: await this.cleanAbandonedUploads(now),
       purged: await this.purge(now),
@@ -38,13 +41,48 @@ export class LifecycleService {
     return result;
   }
 
-  /** Links close the moment they expire. */
+  /** Links close the moment they expire. The photographer hears about each one. */
   async expire(now: Date): Promise<number> {
-    const closed = await this.prisma.client.gallery.updateMany({
+    const due = await this.prisma.client.gallery.findMany({
       where: { state: 'active', expiresAt: { lte: now } },
+      select: { id: true, name: true, clientName: true, photographerId: true },
+    });
+    if (due.length === 0) return 0;
+    const closed = await this.prisma.client.gallery.updateMany({
+      where: { id: { in: due.map((g) => g.id) }, state: 'active', expiresAt: { lte: now } },
       data: { state: 'closed', closedAt: now, closedReason: 'expired' },
     });
+    for (const gallery of due) {
+      await this.notifications.notify(gallery.photographerId, {
+        type: 'gallery_closed',
+        galleryId: gallery.id,
+        dedupeKey: `closed:${gallery.id}`,
+        data: { gallery: gallery.name, client: gallery.clientName, reason: 'expired' },
+      });
+    }
     return closed.count;
+  }
+
+  /** One notice 24 hours before a link closes (a new expiry date gets a new notice). */
+  async noticeExpiring(now: Date): Promise<number> {
+    const soon = await this.prisma.client.gallery.findMany({
+      where: { state: 'active', expiresAt: { gt: now, lte: new Date(now.getTime() + DAY) } },
+      select: { id: true, name: true, clientName: true, photographerId: true, expiresAt: true },
+      take: BATCH * 4,
+    });
+    let sent = 0;
+    for (const gallery of soon) {
+      const dedupeKey = `expiring:${gallery.id}:${gallery.expiresAt!.toISOString()}`;
+      if ((await this.notifications.existingKeys(gallery.photographerId, [dedupeKey])).size > 0) continue;
+      await this.notifications.notify(gallery.photographerId, {
+        type: 'gallery_expiring',
+        galleryId: gallery.id,
+        dedupeKey,
+        data: { gallery: gallery.name, client: gallery.clientName, expiresAt: gallery.expiresAt!.toISOString() },
+      });
+      sent += 1;
+    }
+    return sent;
   }
 
   /** Deletes the files of closed galleries and of drafts left untouched for 14 days. */

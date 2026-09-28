@@ -1,13 +1,39 @@
 {
   "App": {
     "editGallery": {
-      "title": "Edit details",
+      "title": "Edit gallery",
       "name": "Gallery name",
       "client": "Client name",
       "phone": "Client phone number",
       "phoneHint": "Used for the WhatsApp buttons, e.g. 01012345678.",
-      "note": "The link and password don't change.",
-      "save": "Save changes"
+      "note": "The link and password stay the same.",
+      "save": "Save changes",
+      "cover": "Cover photo",
+      "noPhotos": "Upload photos to choose a cover.",
+      "useAsCover": "Use {name} as the cover",
+      "viewPhoto": "View {name}",
+      "chooseThis": "Use as cover",
+      "chooseClient": "Choose a client, or add a new one.",
+      "saveGone": "That client or photo no longer exists. Choose again.",
+      "expiry": "Link expiry",
+      "expiresOn": "The link works until {date}.",
+      "extendBy": "Extend by",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "extend": "Extend link",
+      "extendHint": "You can extend once. New end date: {date}.",
+      "extendTitle": "Extend the link?",
+      "extendBody": "{count, plural, one {The link will work # more day, until {date}.} other {The link will work # more days, until {date}.}} A link can be extended only once.",
+      "extendConfirm": "{count, plural, one {Extend by # day} other {Extend by # days}}",
+      "extended": "Extended. The link now works until {date}.",
+      "extendedOnce": "Already extended on {date}. A link can be extended only once.",
+      "extendUsed": "This link was already extended once.",
+      "extendFailed": "Couldn't extend the link. Try again.",
+      "status": "Status",
+      "statusHint": "The status follows the link: Draft until shared, Active while it works, then Expired or Delivered. You can close it early.",
+      "printsTitle": "Prints",
+      "printsLabel": "Let this client order prints",
+      "printsHint": "Your client sees “Order a print” on each photo. You arrange payment and delivery.",
+      "printsFailed": "Couldn't save. Check your connection and try again."
     }
   }
 }

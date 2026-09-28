@@ -1,0 +1,74 @@
+{
+  "App": {
+    "notifications": {
+      "metaTitle": "الإشعارات",
+      "title": "الإشعارات",
+      "intro": "نشاط عملائك، والرفع الذي اكتمل، والمدفوعات، وتذكيرات باقتك.",
+      "filterLabel": "عرض",
+      "all": "الكل",
+      "unread": "غير المقروءة",
+      "new": "جديد",
+      "markAllRead": "تعليم الكل كمقروء",
+      "markRead": "تعليم كمقروء",
+      "markedAllRead": "تم تعليم كل الإشعارات كمقروءة.",
+      "loadMore": "عرض إشعارات أقدم",
+      "loadFailedTitle": "لم يتم تحميل الإشعارات",
+      "loadFailed": "تأكد من اتصالك بالإنترنت وحاول مرة أخرى.",
+      "actionFailed": "لم يتم ذلك. حاول مرة أخرى.",
+      "emptyTitle": "لا توجد إشعارات بعد",
+      "emptyBody": "عندما يفتح عميل معرضًا أو يحمّله، أو يكتمل رفع صورك، ستجد ذلك هنا.",
+      "emptyUnreadTitle": "لا جديد عليك",
+      "emptyUnreadBody": "لا توجد إشعارات غير مقروءة.",
+      "bell": "الإشعارات",
+      "bellUnread": "الإشعارات، {count, plural, zero {لا يوجد غير مقروء} one {إشعار واحد غير مقروء} two {إشعاران غير مقروءين} few {# إشعارات غير مقروءة} many {# إشعارًا غير مقروء} other {# إشعار غير مقروء}}",
+      "latest": "أحدث الإشعارات",
+      "seeAll": "عرض كل الإشعارات",
+      "loading": "جارٍ تحميل الإشعارات…",
+      "yourClient": "عميلك",
+      "aCustomer": "أحد العملاء",
+      "types": {
+        "gallery_opened": {
+          "title": "تم فتح المعرض",
+          "body": "فتح {client} معرض «{gallery}» لأول مرة."
+        },
+        "gallery_downloaded": {
+          "title": "تم تحميل المعرض بالكامل",
+          "bodyAll": "حمّل {client} كل الصور في معرض «{gallery}».",
+          "bodyCap": "استهلك {client} حد التحميل الكامل لمعرض «{gallery}»، وأُغلق الرابط الآن."
+        },
+        "gallery_expiring": {
+          "title": "المعرض يُغلق قريبًا",
+          "body": "يُغلق رابط معرض «{gallery}» في {date}. مدّد المدة من صفحة المعرض إذا احتاج عميلك وقتًا أطول."
+        },
+        "gallery_closed": {
+          "title": "تم إغلاق المعرض",
+          "body": "انتهت مدة رابط معرض «{gallery}» وأصبح مغلقًا."
+        },
+        "gallery_ready": {
+          "title": "المعرض جاهز للمشاركة",
+          "body": "{files, plural, zero {لا توجد صور جاهزة} one {صورة واحدة جاهزة} two {صورتان جاهزتان} few {# صور جاهزة} many {# صورة جاهزة} other {# صورة جاهزة}} في معرض «{gallery}»."
+        },
+        "order_placed": {
+          "title": "طلب جديد رقم {number}",
+          "body": "قدّم {customer} طلبًا بقيمة {total}."
+        },
+        "payment_approved": {
+          "title": "تم قبول الدفع",
+          "body": "تم قبول الدفعة {reference}. باقتك سارية حتى {date}."
+        },
+        "payment_rejected": {
+          "title": "لم يتم قبول الدفع",
+          "body": "لم يتم قبول الدفعة {reference}: {reason}"
+        },
+        "allowance_warning": {
+          "title": "{percent, select, 100 {نفد حد التسليم} other {استهلكت {percent}% من حد التسليم}}",
+          "body": "استخدمت {used} من {allowance} في هذه الدورة."
+        },
+        "renewal_due": {
+          "title": "{trial, select, yes {الفترة التجريبية تنتهي قريبًا} other {موعد التجديد}}",
+          "body": "{days, plural, =0 {تنتهي باقتك اليوم.} one {تنتهي باقتك بعد يوم واحد، في {date}.} two {تنتهي باقتك بعد يومين، في {date}.} few {تنتهي باقتك بعد # أيام، في {date}.} other {تنتهي باقتك بعد # يومًا، في {date}.}} جدّد باقتك لتواصل رفع الصور."
+        }
+      }
+    }
+  }
+}

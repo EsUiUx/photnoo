@@ -2,7 +2,7 @@
   "App": {
     "create": {
       "title": "New gallery",
-      "description": "The link stays open for 7 days from the moment you share it.",
+      "description": "Name the gallery and choose who it is for.",
       "name": "Gallery name",
       "namePlaceholder": "Noura & Karim, Wedding",
       "client": "Client name",
@@ -15,7 +15,13 @@
       "submit": "Create gallery",
       "inactiveTitle": "Your plan isn't active",
       "inactiveBody": "Renew or choose a plan in Billing, then create the gallery.",
-      "goToBilling": "Go to Billing"
+      "goToBilling": "Go to Billing",
+      "titleUpload": "Upload new project",
+      "descriptionUpload": "Create the gallery first; the upload area opens right after.",
+      "chooseClient": "Choose a client, or add a new one.",
+      "clientGone": "That client was removed. Choose another one.",
+      "durationNote": "You choose how long the link works ({min} to {max} days, {days} by default) when you share the gallery. The clock starts then.",
+      "submitUpload": "Create and upload"
     }
   }
 }

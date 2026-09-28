@@ -22,7 +22,7 @@
       "newPasswordBody": "The old password stops working immediately. Your client will need the new one to open the gallery.",
       "newPasswordConfirm": "Create new password",
       "newPasswordFailed": "Couldn't create a new password. The old one still works. Try again.",
-      "closeHint": "Ends the 7-day window early.",
+      "closeHint": "Ends the link window early.",
       "closeNow": "Close gallery now",
       "closeTitle": "Close “{name}” now?",
       "closeWarning": "The link stops working immediately and the files are deleted within the hour. This can't be undone.",
@@ -34,7 +34,12 @@
         "uploads_in_progress": "Wait for all uploads to finish first.",
         "gallery_empty": "Add at least one photo first.",
         "generic": "Couldn't share the gallery. Check your connection and try again."
-      }
+      },
+      "draftIntroChoose": "Sharing starts the link clock. Your client opens the link on their phone and enters the password.",
+      "draftPoint3Choose": "The link closes after the days you choose, or once the photos have been downloaded twice over.",
+      "duration": "Link works for",
+      "durationOption": "{count, plural, one {# day} other {# days}}",
+      "worksUntil": "Link works until {date}"
     }
   }
 }

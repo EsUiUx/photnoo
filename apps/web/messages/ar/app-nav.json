@@ -9,7 +9,19 @@
       "storage": "الرصيد",
       "storageUsed": "{used} من {total}",
       "storageMeter": "المستخدم من رصيد التسليم",
-      "noPlan": "لا توجد باقة نشطة"
+      "noPlan": "لا توجد باقة نشطة",
+      "portfolio": "معرض الأعمال",
+      "clients": "العملاء",
+      "store": "المتجر",
+      "prints": "الطباعة",
+      "analytics": "التحليلات",
+      "notifications": "الإشعارات",
+      "settings": "الإعدادات",
+      "group": {
+        "main": "العمل",
+        "business": "الأعمال",
+        "account": "الحساب"
+      }
     }
   }
 }

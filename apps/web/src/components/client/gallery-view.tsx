@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertTriangle, Clock, Download, FileImage, Images, Info } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,12 @@ import { EmptyState } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { type ClientContent, type ClientFile, daysLeft, whatsappLink } from '@/lib/client-api';
 import { downloadFile } from '@/lib/client-downloads';
+import { clientPrintsApi } from '@/lib/queries-commerce';
 import { cn } from '@/lib/cn';
 import { formatBytes, formatDate, percent } from '@/lib/format';
 import { PhotographerMark, WhatsAppButton } from './client-shell';
 import { DownloadAllDialog } from './download-all-dialog';
+import { PrintOrderDialog } from './print-order-dialog';
 import { Viewer } from './viewer';
 
 export type Notice = { kind: 'cap'; remainingBytes: string } | { kind: 'error' } | null;
@@ -31,6 +34,9 @@ export function GalleryView({ token, content, onGone }: { token: string; content
   const [remaining, setRemaining] = useState(content.allowance.remainingBytes);
   const [notice, setNotice] = useState<Notice>(null);
   const [batchOpen, setBatchOpen] = useState(false);
+  const [printFile, setPrintFile] = useState<ClientFile | null>(null);
+  // Print options, when the photographer offers them; a failure just hides the button.
+  const prints = useQuery({ queryKey: ['g', token, 'prints'], queryFn: () => clientPrintsApi.offer(token), staleTime: 10 * 60_000 });
   const tileRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const cover = content.files.find((f) => f.id === content.coverFileId) ?? content.files.find((f) => f.previewUrl);
@@ -232,7 +238,8 @@ export function GalleryView({ token, content, onGone }: { token: string; content
         )}
       </section>
 
-      {viewing !== null ? (
+      {/* The viewer steps aside while a print is ordered, then comes back on the same photo. */}
+      {viewing !== null && !printFile ? (
         <Viewer
           files={files}
           index={viewing}
@@ -243,7 +250,12 @@ export function GalleryView({ token, content, onGone }: { token: string; content
           downloaded={downloaded}
           disabled={used}
           message={notice ? noticeText(notice, t, locale) : undefined}
+          onOrderPrint={prints.data?.enabled ? setPrintFile : undefined}
         />
+      ) : null}
+
+      {prints.data?.enabled ? (
+        <PrintOrderDialog token={token} file={printFile} offer={prints.data} photographer={content.photographer} onClose={() => setPrintFile(null)} />
       ) : null}
 
       <DownloadAllDialog

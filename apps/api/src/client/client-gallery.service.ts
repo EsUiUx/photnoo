@@ -14,6 +14,7 @@ import { ENV, type Env } from '../config/env';
 import { FlagsService } from '../flags/flags.service';
 import { deviceType, randomToken, sha256 } from '../common/crypto';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { templates } from '../mail/templates';
 import { PrismaService } from '../prisma/prisma.service';
 import { STORAGE, type Storage } from '../storage/storage';
@@ -46,6 +47,7 @@ export class ClientGalleryService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly flags: FlagsService,
+    private readonly notifications: NotificationsService,
     @Inject(ENV) private readonly env: Env,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
@@ -55,7 +57,7 @@ export class ClientGalleryService {
     if (!/^[A-Za-z0-9_-]{20,64}$/.test(linkToken)) throw this.notFound();
     const gallery = await this.prisma.client.gallery.findUnique({
       where: { linkTokenHash: sha256(linkToken) },
-      include: { photographer: { select: { name: true, studioName: true, phone: true, email: true, logoKey: true, status: true } } },
+      include: { photographer: { select: { name: true, studioName: true, phone: true, email: true, logoKey: true, avatarKey: true, galleryTheme: true, status: true } } },
     });
     if (!gallery || gallery.state === 'draft') throw this.notFound();
     return gallery;
@@ -78,9 +80,17 @@ export class ClientGalleryService {
       photographer: {
         name: gallery.photographer.studioName ?? gallery.photographer.name,
         whatsapp: gallery.photographer.phone,
+        ...(await this.branding(gallery.photographer)),
       },
       expiresAt: gallery.expiresAt,
     };
+  }
+
+  /** PRD P-15: the photographer's logo (or photo) and gallery theme. Branding only, never gallery photos. */
+  private async branding(photographer: { logoKey: string | null; avatarKey: string | null; galleryTheme: 'light' | 'dark' }) {
+    const sign = (key: string | null) => (key ? this.storage.signDownload(key, PREVIEW_URL_TTL_SECONDS) : Promise.resolve(null));
+    const [logoUrl, avatarUrl] = await Promise.all([sign(photographer.logoKey), sign(photographer.avatarKey)]);
+    return { logoUrl, avatarUrl, theme: photographer.galleryTheme };
   }
 
   // ---------- unlock ----------
@@ -173,11 +183,22 @@ export class ClientGalleryService {
       await this.prisma.client.accessEvent.create({
         data: { galleryId: gallery.id, type: 'open', ip: meta.ip, country: meta.country, deviceType: deviceType(meta.userAgent) },
       });
+      // First open per gallery only; the dedupe key drops every later one.
+      await this.notifications.notify(gallery.photographerId, {
+        type: 'gallery_opened',
+        galleryId: gallery.id,
+        dedupeKey: `opened:${gallery.id}`,
+        data: { gallery: gallery.name, client: gallery.clientName },
+      });
     }
 
     return {
       name: gallery.name,
-      photographer: { name: gallery.photographer.studioName ?? gallery.photographer.name, whatsapp: gallery.photographer.phone },
+      photographer: {
+        name: gallery.photographer.studioName ?? gallery.photographer.name,
+        whatsapp: gallery.photographer.phone,
+        ...(await this.branding(gallery.photographer)),
+      },
       expiresAt: gallery.expiresAt,
       coverFileId: gallery.coverFileId ?? files.find((f) => f.previewKey)?.id ?? null,
       allowance: {
@@ -257,7 +278,7 @@ export class ClientGalleryService {
       if (row.servedBytes >= row.capBytes) {
         await tx.gallery.update({ where: { id: gallery.id }, data: { state: 'closed', closedAt: now, closedReason: 'cap_used' } });
       }
-      return { id: created.id, remaining: maxZero(row.capBytes - row.servedBytes) };
+      return { id: created.id, remaining: maxZero(row.capBytes - row.servedBytes), capUsed: row.servedBytes >= row.capBytes };
     });
 
     if (!receipt) {
@@ -268,6 +289,7 @@ export class ClientGalleryService {
         details: { remainingBytes: maxZero(current.capBytes - current.servedBytes).toString() },
       });
     }
+    await this.notifyFullDownload(gallery, receipt.capUsed);
     return { url: await url(), receiptId: receipt.id, charged: true, remainingBytes: receipt.remaining.toString() };
   }
 
@@ -289,6 +311,25 @@ export class ClientGalleryService {
       { code: 'temporarily_unavailable', message: 'Downloads are paused for a while. Please try later.' },
       HttpStatus.SERVICE_UNAVAILABLE,
     );
+  }
+
+  /** Once per gallery: the cap is used up, or every file has been downloaded at least once. */
+  private async notifyFullDownload(gallery: Gallery, capUsed: boolean) {
+    const dedupeKey = `downloaded:${gallery.id}`;
+    if (!capUsed) {
+      if ((await this.notifications.existingKeys(gallery.photographerId, [dedupeKey])).size > 0) return;
+      const [downloaded, ready] = await Promise.all([
+        this.prisma.client.downloadReceipt.groupBy({ by: ['fileId'], where: { galleryId: gallery.id } }),
+        this.prisma.client.file.count({ where: { galleryId: gallery.id, status: 'ready' } }),
+      ]);
+      if (ready === 0 || downloaded.length < ready) return;
+    }
+    await this.notifications.notify(gallery.photographerId, {
+      type: 'gallery_downloaded',
+      galleryId: gallery.id,
+      dedupeKey,
+      data: { gallery: gallery.name, client: gallery.clientName, reason: capUsed ? 'cap' : 'all_files' },
+    });
   }
 
   // ---------- abuse ----------

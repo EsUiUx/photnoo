@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Download, FileImage, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileImage, Frame, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ type Props = {
   disabled: boolean;
   /** Cap or failure message, repeated here because the viewer covers the page notice. */
   message?: string;
+  /** Set only when the photographer offers prints for this gallery. */
+  onOrderPrint?: (file: ClientFile) => void;
 };
 
 type Zoom = { scale: number; x: number; y: number };
@@ -81,11 +83,13 @@ function ViewerFrame({
   downloaded,
   disabled,
   message,
+  onOrderPrint,
   file,
   closeRef,
   rtl,
 }: Props & { file: ClientFile; closeRef: React.RefObject<HTMLButtonElement | null>; rtl: boolean }) {
   const t = useTranslations('Client.viewer');
+  const tPrints = useTranslations('ClientPrints');
   const locale = useLocale();
   const [zoom, setZoom] = useState<Zoom>(NO_ZOOM);
   const [dragX, setDragX] = useState(0);
@@ -282,6 +286,11 @@ function ViewerFrame({
           </Button>
           <span className="min-w-12" aria-hidden />
         </div>
+        {onOrderPrint && file.previewUrl ? (
+          <Button variant="inverse-outline" icon={Frame} onClick={() => onOrderPrint(file)} className="w-full max-w-md">
+            {tPrints('orderPrint')}
+          </Button>
+        ) : null}
         <p id={`viewer-meta-${file.id}`} className="tabular text-xs text-white/70" dir="ltr">
           {formatBytes(file.sizeBytes, locale)}
           {file.width && file.height ? ` · ${file.width}×${file.height}` : ''}

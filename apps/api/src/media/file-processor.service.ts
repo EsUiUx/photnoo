@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DeliveryRules, fileExtension, isPreviewable } from '@photnoo/shared';
 import { createHash } from 'node:crypto';
 import sharp from 'sharp';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { objectKeys, STORAGE, type Storage } from '../storage/storage';
 import { matchesExtension, MIME, sniff } from './file-sniff';
@@ -22,6 +23,7 @@ export class FileProcessorService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
@@ -58,6 +60,26 @@ export class FileProcessorService {
       if (!(err instanceof RejectFile)) throw err;
       await this.reject(file.id, err.message);
     }
+    await this.notifyIfGalleryReady(file.galleryId);
+  }
+
+  /** "Gallery ready" once the last file of an upload batch is processed. */
+  private async notifyIfGalleryReady(galleryId: string): Promise<void> {
+    const [pending, gallery] = await Promise.all([
+      this.prisma.client.file.count({ where: { galleryId, status: { in: ['uploading', 'processing'] } } }),
+      this.prisma.client.gallery.findUnique({ where: { id: galleryId }, select: { name: true, photographerId: true, state: true } }),
+    ]);
+    if (pending > 0 || !gallery || (gallery.state !== 'draft' && gallery.state !== 'active')) return;
+    const ready = await this.prisma.client.file.count({ where: { galleryId, status: 'ready' } });
+    if (ready === 0) return;
+    // One notice per gallery per day; later batches that day update its photo count.
+    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Cairo' });
+    await this.notifications.notifyOrRefresh(gallery.photographerId, {
+      type: 'gallery_ready',
+      galleryId,
+      dedupeKey: `ready:${galleryId}:${day}`,
+      data: { gallery: gallery.name, files: ready },
+    });
   }
 
   private async makePreview(galleryId: string, fileId: string, source: Buffer) {

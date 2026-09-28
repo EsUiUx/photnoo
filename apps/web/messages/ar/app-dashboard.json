@@ -3,7 +3,7 @@
     "dashboard": {
       "metaTitle": "لوحة التحكم",
       "title": "لوحة التحكم",
-      "hello": "أهلًا بعودتك، {name}",
+      "hello": "أهلًا، {name}!",
       "newGallery": "معرض جديد",
       "overview": "نظرة عامة",
       "clients": "العملاء",
@@ -35,7 +35,25 @@
       "emptyTitle": "أنشئ أول معرض لك",
       "empty": "أضف العميل، وارفع جلسة التصوير، ثم شارك رابطًا خاصًا وكلمة مرور عبر واتساب.",
       "createFirst": "أنشئ أول معرض",
-      "photos": "{count, plural, =0 {لا توجد صور} one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}"
+      "photos": "{count, plural, =0 {لا توجد صور} one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}",
+      "quickActions": "إجراءات سريعة",
+      "createGallery": "إنشاء معرض جديد",
+      "createGalleryBody": "سمِّه واختر العميل، وارفع الصور متى كنت جاهزًا.",
+      "uploadProject": "رفع مشروع جديد",
+      "uploadProjectBody": "أنشئ المعرض وانتقل مباشرة إلى رفع جلسة التصوير.",
+      "downloadsCycle": "التحميلات في هذه الدورة",
+      "trendLabel": "مقارنة بالثلاثين يومًا السابقة",
+      "trendShared": "مشاركات مقارنة بالثلاثين يومًا السابقة",
+      "trendUploads": "رفع مقارنة بالثلاثين يومًا السابقة",
+      "upgrade": "ترقية الباقة",
+      "showLess": "عرض أقل",
+      "viewDetails": "عرض التفاصيل",
+      "viewDetailsFor": "عرض تفاصيل {gallery}",
+      "searchGalleries": "البحث في أحدث المعارض",
+      "searchPlaceholder": "ابحث باسم المعرض أو العميل",
+      "noMatchTitle": "لا توجد نتائج",
+      "noMatch": "لا يوجد معرض يطابق هذا البحث أو هذه التواريخ.",
+      "clearFilters": "مسح عوامل التصفية"
     }
   }
 }

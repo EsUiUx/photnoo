@@ -1,0 +1,41 @@
+{
+  "PublicProfile": {
+    "metaTitle": "{name} · معرض الأعمال",
+    "metaDescription": "تصوير {name}{city, select, none {} other { في {city}}}.",
+    "notFoundMeta": "معرض الأعمال غير موجود",
+    "notFoundTitle": "معرض الأعمال هذا غير متاح",
+    "notFoundBody": "ربما كُتب العنوان بشكل خاطئ، أو لم ينشر المصوّر معرض أعماله بعد.",
+    "home": "الذهاب إلى Photnoo",
+    "photographer": "مصوّر",
+    "whatsapp": "راسلني على واتساب",
+    "whatsappText": "مرحبًا {name}، شاهدت معرض أعمالك على Photnoo وأود الاستفسار عن جلسة تصوير.",
+    "links": "الروابط",
+    "instagram": "إنستجرام",
+    "behance": "بيهانس",
+    "website": "الموقع الإلكتروني",
+    "other": "رابط آخر",
+    "work": "معرض الأعمال",
+    "filterLabel": "التصفية حسب التصنيف",
+    "all": "الكل",
+    "count": "{count, plural, zero {لا صور} one {صورة واحدة} two {صورتان} few {# صور} many {# صورة} other {# صورة}}",
+    "empty": "لا توجد صور هنا بعد.",
+    "open": "فتح الصورة {position} من {total}",
+    "lightbox": "عارض الصور",
+    "close": "إغلاق",
+    "previous": "الصورة السابقة",
+    "next": "الصورة التالية",
+    "position": "{position} من {total}",
+    "shopTitle": "المتجر",
+    "shopBody": "مطبوعات وألبومات وجلسات تصوير من {name}.",
+    "shopCta": "زيارة المتجر",
+    "deliveredWith": "يُقدَّم عبر",
+    "categories": {
+      "wedding": "زفاف",
+      "engagement": "خطوبة",
+      "portrait": "بورتريه",
+      "family": "عائلي",
+      "event": "مناسبات",
+      "commercial": "تجاري"
+    }
+  }
+}

@@ -22,6 +22,7 @@ import type { Payment, Plan, Prisma, Subscription } from '@photnoo/db';
 import { AuditService } from '../audit/audit.service';
 import { ENV, type Env } from '../config/env';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { templates } from '../mail/templates';
 import { PrismaService } from '../prisma/prisma.service';
 import { STORAGE, type Storage } from '../storage/storage';
@@ -91,6 +92,7 @@ export class BillingService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationsService,
     @Inject(STORAGE) private readonly storage: Storage,
     @Inject(ENV) private readonly env: Env,
   ) {}
@@ -432,6 +434,11 @@ export class BillingService {
     await this.mail.send(
       templates.paymentApproved(photographer.email, payment.reference, planLabel(plan), day(period.end), invoiceNumber(invoice.number)),
     );
+    await this.notifications.notify(payment.photographerId, {
+      type: 'payment_approved',
+      dedupeKey: `payment:${payment.id}`,
+      data: { reference: payment.reference, plan: planLabel(plan), amountEgp: egp(payment.amountEgp), periodEnd: period.end.toISOString() },
+    });
     return invoice;
   }
 
@@ -454,6 +461,11 @@ export class BillingService {
     });
     const photographer = await this.prisma.client.photographer.findUniqueOrThrow({ where: { id: payment.photographerId } });
     await this.mail.send(templates.paymentRejected(photographer.email, payment.reference, reason));
+    await this.notifications.notify(payment.photographerId, {
+      type: 'payment_rejected',
+      dedupeKey: `payment:${payment.id}`,
+      data: { reference: payment.reference, reason, amountEgp: egp(payment.amountEgp) },
+    });
   }
 
   // ---------- helpers ----------

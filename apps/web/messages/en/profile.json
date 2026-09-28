@@ -1,0 +1,41 @@
+{
+  "PublicProfile": {
+    "metaTitle": "{name} · Portfolio",
+    "metaDescription": "Photography by {name}{city, select, none {} other { in {city}}}.",
+    "notFoundMeta": "Portfolio not found",
+    "notFoundTitle": "This portfolio isn't available",
+    "notFoundBody": "The address may be mistyped, or the photographer hasn't published their portfolio yet.",
+    "home": "Go to Photnoo",
+    "photographer": "Photographer",
+    "whatsapp": "Message on WhatsApp",
+    "whatsappText": "Hello {name}, I found your portfolio on Photnoo and would like to ask about a shoot.",
+    "links": "Links",
+    "instagram": "Instagram",
+    "behance": "Behance",
+    "website": "Website",
+    "other": "Other link",
+    "work": "Portfolio",
+    "filterLabel": "Filter by category",
+    "all": "All",
+    "count": "{count, plural, one {# photo} other {# photos}}",
+    "empty": "No photos here yet.",
+    "open": "Open photo {position} of {total}",
+    "lightbox": "Photo viewer",
+    "close": "Close",
+    "previous": "Previous photo",
+    "next": "Next photo",
+    "position": "{position} of {total}",
+    "shopTitle": "Shop",
+    "shopBody": "Prints, albums and sessions from {name}.",
+    "shopCta": "Visit the shop",
+    "deliveredWith": "Delivered with",
+    "categories": {
+      "wedding": "Wedding",
+      "engagement": "Engagement",
+      "portrait": "Portrait",
+      "family": "Family",
+      "event": "Event",
+      "commercial": "Commercial"
+    }
+  }
+}

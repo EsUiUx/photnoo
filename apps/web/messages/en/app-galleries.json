@@ -23,7 +23,22 @@
       "noFilterResultsTitle": "Nothing here",
       "noFilterResults": "No galleries have this status right now.",
       "showAll": "Show all galleries",
-      "loadMore": "Load more galleries"
+      "loadMore": "Load more galleries",
+      "countMore": "{count, plural, one {# gallery shown} other {# galleries shown}}",
+      "noResultsDates": "No gallery was created in these dates.",
+      "clearFilters": "Clear filters",
+      "sortLabel": "Sort by",
+      "sort": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "expiring": "Expiring soonest",
+        "views": "Most viewed"
+      },
+      "viewLabel": "Layout",
+      "view": {
+        "grid": "Cards",
+        "table": "Table"
+      }
     }
   }
 }

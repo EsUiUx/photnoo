@@ -2,10 +2,13 @@ import { api } from './api';
 
 /** Shapes returned by the public, link-scoped client API (apps/api/src/client). */
 
+/** PRD P-15 branding: the photographer's logo or photo and the gallery theme. */
+export type ClientBranding = { logoUrl?: string | null; avatarUrl?: string | null; theme?: 'light' | 'dark' };
+
 export type ClientSummary = {
   state: 'open' | 'closed' | 'unavailable';
   name: string;
-  photographer: { name: string; whatsapp: string | null };
+  photographer: { name: string; whatsapp: string | null } & ClientBranding;
   expiresAt: string | null;
 };
 
@@ -22,7 +25,7 @@ export type ClientFile = {
 
 export type ClientContent = {
   name: string;
-  photographer: { name: string; whatsapp: string | null };
+  photographer: { name: string; whatsapp: string | null } & ClientBranding;
   expiresAt: string | null;
   coverFileId: string | null;
   allowance: { capBytes: string; servedBytes: string; remainingBytes: string };

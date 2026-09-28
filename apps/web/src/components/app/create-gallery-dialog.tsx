@@ -1,10 +1,11 @@
 'use client';
 
-import { createGallerySchema } from '@photnoo/shared';
-import { ArrowRight } from 'lucide-react';
+import { createGallerySchema, LinkDays } from '@photnoo/shared';
+import { ArrowRight, CalendarClock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useFormErrors } from '@/components/auth/use-form-errors';
+import { type ClientChoice, clientPayload, ClientPicker } from '@/components/clients/client-picker';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { TextField } from '@/components/ui/field';
@@ -13,49 +14,64 @@ import { useRouter } from '@/i18n/navigation';
 import { ApiError, normalisePhone } from '@/lib/api';
 import { useCreateGallery } from '@/lib/queries';
 
-/** New gallery (PRD P-05): gallery and client details, then straight into the gallery to upload. */
-export function CreateGalleryDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** "gallery" opens the new gallery; "upload" lands on its upload area with the file picker ready. */
+export type CreateIntent = 'gallery' | 'upload';
+
+/**
+ * New gallery (PRD P-05): name and client (existing or new), then straight into the gallery.
+ * The link duration (1 to 10 days) is chosen when the gallery is shared, because the clock
+ * only starts then.
+ */
+export function CreateGalleryDialog({ open, onClose, intent = 'gallery' }: { open: boolean; onClose: () => void; intent?: CreateIntent }) {
   const t = useTranslations('App.create');
   const create = useCreateGallery();
   return (
-    <Dialog open={open} onClose={onClose} title={t('title')} description={t('description')} dismissible={!create.isPending}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={intent === 'upload' ? t('titleUpload') : t('title')}
+      description={intent === 'upload' ? t('descriptionUpload') : t('description')}
+      dismissible={!create.isPending}
+    >
       {/* Mounted only while open, so every visit starts with an empty form. */}
-      <CreateGalleryForm create={create} onClose={onClose} />
+      <CreateGalleryForm create={create} onClose={onClose} intent={intent} />
     </Dialog>
   );
 }
 
-function CreateGalleryForm({ create, onClose }: { create: ReturnType<typeof useCreateGallery>; onClose: () => void }) {
+function CreateGalleryForm({ create, onClose, intent }: { create: ReturnType<typeof useCreateGallery>; onClose: () => void; intent: CreateIntent }) {
   const t = useTranslations('App.create');
-  const tCommon = useTranslations('Common');
+  const tc = useTranslations('Common');
   const tErrors = useTranslations('Errors');
   const router = useRouter();
   const errors = useFormErrors();
   const [inactive, setInactive] = useState(false);
-  const [values, setValues] = useState({ name: '', clientName: '', clientPhone: '', clientEmail: '' });
-
-  const set = (key: keyof typeof values) => (event: React.ChangeEvent<HTMLInputElement>) =>
-    setValues((current) => ({ ...current, [key]: event.target.value }));
+  const [name, setName] = useState('');
+  const [client, setClient] = useState<ClientChoice>({ mode: 'search' });
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setInactive(false);
-    const email = values.clientEmail.trim();
-    const input = errors.validate(createGallerySchema, {
-      name: values.name,
-      clientName: values.clientName,
-      clientPhone: normalisePhone(values.clientPhone),
-      clientEmail: email || undefined,
-    });
+    if (client.mode === 'search') {
+      if (!name.trim()) errors.validate(createGallerySchema, { name });
+      else errors.setFieldError('clientId', t('chooseClient'));
+      return;
+    }
+    const input = errors.validate(createGallerySchema, { name, ...clientPayload(client, normalisePhone) });
     if (!input) return;
     try {
       const gallery = await create.mutateAsync(input);
       onClose();
-      router.push(`/galleries/${gallery.id}`);
+      router.push(intent === 'upload' ? `/galleries/${gallery.id}?upload=1` : `/galleries/${gallery.id}`);
     } catch (error) {
       if (error instanceof ApiError && error.code === 'subscription_inactive') {
         errors.clear();
         setInactive(true);
+        return;
+      }
+      if (error instanceof ApiError && error.status === 404) {
+        setClient({ mode: 'search' });
+        errors.setFieldError('clientId', t('clientGone'));
         return;
       }
       errors.fromError(error);
@@ -76,47 +92,43 @@ function CreateGalleryForm({ create, onClose }: { create: ReturnType<typeof useC
       ) : null}
       {errors.form ? <Alert tone="danger">{errors.form}</Alert> : null}
 
-      <TextField label={t('name')} placeholder={t('namePlaceholder')} value={values.name} onChange={set('name')} error={f.name} autoFocus maxLength={80} />
       <TextField
-        label={t('client')}
-        placeholder={t('clientPlaceholder')}
-        value={values.clientName}
-        onChange={set('clientName')}
-        error={f.clientName}
+        id={errors.id('name')}
+        label={t('name')}
+        placeholder={t('namePlaceholder')}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        error={f.name}
+        autoFocus
+        maxLength={80}
         autoComplete="off"
-        maxLength={100}
       />
-      <TextField
-        label={t('phone')}
-        placeholder={t('phonePlaceholder')}
-        hint={t('phoneHint')}
-        value={values.clientPhone}
-        onChange={set('clientPhone')}
-        error={f.clientPhone ?? f.phone}
-        type="tel"
-        inputMode="tel"
-        autoComplete="off"
-        ltr
+      <ClientPicker
+        value={client}
+        onChange={(next) => {
+          setClient(next);
+          if (f.clientId) errors.clear();
+        }}
+        errors={{
+          clientId: f.clientId,
+          clientName: f.clientName,
+          clientPhone: f.clientPhone ?? f.phone,
+          clientEmail: f.clientEmail || f.email ? tErrors('field.email') : undefined,
+        }}
+        ids={{ search: errors.id('clientId'), name: errors.id('clientName'), phone: errors.id('clientPhone'), email: errors.id('clientEmail') }}
       />
-      <TextField
-        label={t('email')}
-        placeholder={t('emailPlaceholder')}
-        value={values.clientEmail}
-        onChange={set('clientEmail')}
-        error={f.clientEmail || f.email ? tErrors('field.email') : undefined}
-        type="email"
-        inputMode="email"
-        autoComplete="off"
-        optional
-        ltr
-      />
+
+      <p className="flex items-start gap-2 rounded-md bg-surface-subtle px-3.5 py-3 text-sm text-fg-secondary">
+        <CalendarClock size={18} strokeWidth={1.75} aria-hidden className="mt-0.5 shrink-0 text-fg-muted" />
+        {t('durationNote', { min: LinkDays.min, max: LinkDays.max, days: LinkDays.default })}
+      </p>
 
       <div className="-mx-6 mt-1 -mb-6 flex flex-wrap justify-end gap-3 rounded-b-xl border-t border-border bg-surface-subtle px-6 py-4">
         <Button variant="secondary" onClick={onClose} disabled={create.isPending}>
-          {tCommon('cancel')}
+          {tc('cancel')}
         </Button>
         <Button type="submit" pending={create.isPending}>
-          {t('submit')}
+          {intent === 'upload' ? t('submitUpload') : t('submit')}
         </Button>
       </div>
     </form>

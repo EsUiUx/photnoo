@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { CreditCard, Images, LayoutDashboard } from 'lucide-react';
+import { Bell, ChartNoAxesColumn, CreditCard, Frame, Images, LayoutDashboard, LayoutGrid, Settings, ShoppingBag, Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Meter } from '@/components/ui/primitives';
 import { Skeleton } from '@/components/ui/state';
@@ -10,20 +10,56 @@ import { cn } from '@/lib/cn';
 import { formatBytes, percent } from '@/lib/format';
 import type { Me } from '@/lib/types';
 
-export type NavItem = { key: 'dashboard' | 'galleries' | 'billing'; href: string; icon: LucideIcon };
+export type NavKey =
+  | 'dashboard'
+  | 'galleries'
+  | 'portfolio'
+  | 'clients'
+  | 'store'
+  | 'prints'
+  | 'analytics'
+  | 'billing'
+  | 'notifications'
+  | 'settings';
+export type NavItem = { key: NavKey; href: string; icon: LucideIcon };
+export type NavGroup = { key: 'main' | 'business' | 'account'; items: NavItem[] };
 
-// v1 navigation only (PRODUCT.md): unbuilt sections are not listed at all.
-export const NAV_ITEMS: NavItem[] = [
-  { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { key: 'galleries', href: '/galleries', icon: Images },
-  { key: 'billing', href: '/billing', icon: CreditCard },
+// Grouped as in the Figma sidebar: work, selling, account.
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    key: 'main',
+    items: [
+      { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { key: 'galleries', href: '/galleries', icon: Images },
+      { key: 'portfolio', href: '/portfolio', icon: LayoutGrid },
+      { key: 'clients', href: '/clients', icon: Users },
+    ],
+  },
+  {
+    key: 'business',
+    items: [
+      { key: 'store', href: '/store', icon: ShoppingBag },
+      { key: 'prints', href: '/prints', icon: Frame },
+      { key: 'analytics', href: '/analytics', icon: ChartNoAxesColumn },
+    ],
+  },
+  {
+    key: 'account',
+    items: [
+      { key: 'billing', href: '/billing', icon: CreditCard },
+      { key: 'notifications', href: '/notifications', icon: Bell },
+      { key: 'settings', href: '/settings', icon: Settings },
+    ],
+  },
 ];
+
+export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items);
 
 export function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Light sidebar: logo, three destinations and the delivery allowance, which links to Billing. */
+/** Light sidebar: logo, grouped destinations and the delivery allowance, which links to Billing. */
 export function Sidebar({ me, loading, onNavigate }: { me?: Me; loading?: boolean; onNavigate?: () => void }) {
   const t = useTranslations('App.nav');
   const pathname = usePathname();
@@ -36,28 +72,35 @@ export function Sidebar({ me, loading, onNavigate }: { me?: Me; loading?: boolea
           <img src="/brand/logo-green.svg" alt="" width={175} height={32} className="h-6 w-auto" />
         </Link>
       </div>
-      <nav aria-label={t('label')} className="flex-1 overflow-y-auto px-3 py-3">
-        <ul className="flex flex-col gap-1">
-          {NAV_ITEMS.map(({ key, href, icon: Icon }) => {
-            const active = isActivePath(pathname, href);
-            return (
-              <li key={key}>
-                <Link
-                  href={href}
-                  onClick={onNavigate}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 pointer-coarse:h-11',
-                    active ? 'bg-brand-soft text-brand' : 'text-fg-secondary hover:bg-surface-sunken hover:text-fg',
-                  )}
-                >
-                  <Icon size={18} strokeWidth={1.75} aria-hidden className={active ? 'text-brand' : 'text-fg-muted'} />
-                  {t(key)}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      <nav aria-label={t('label')} className="flex-1 overflow-y-auto px-3 pb-3">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.key} className="pt-4 first:pt-2">
+            <p id={`nav-${group.key}`} className="px-3 pb-1.5 text-xs font-medium text-fg-muted">
+              {t(`group.${group.key}`)}
+            </p>
+            <ul aria-labelledby={`nav-${group.key}`} className="flex flex-col gap-0.5">
+              {group.items.map(({ key, href, icon: Icon }) => {
+                const active = isActivePath(pathname, href);
+                return (
+                  <li key={key}>
+                    <Link
+                      href={href}
+                      onClick={onNavigate}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150 pointer-coarse:h-11',
+                        active ? 'bg-brand-soft text-brand' : 'text-fg-secondary hover:bg-surface-sunken hover:text-fg',
+                      )}
+                    >
+                      <Icon size={18} strokeWidth={1.75} aria-hidden className={active ? 'text-brand' : 'text-fg-muted'} />
+                      {t(key)}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
       <div className="shrink-0 p-3">
         <AllowanceCard me={me} loading={loading} onNavigate={onNavigate} />

@@ -1,0 +1,43 @@
+{
+  "ClientPrints": {
+    "orderPrint": "Order a print",
+    "title": "Order a print",
+    "intro": "Choose a print of this photo. You don't pay now; the photographer will contact you.",
+    "photo": "Photo",
+    "option": "Print",
+    "types": {
+      "album": "Album",
+      "frame": "Frame",
+      "canvas": "Canvas",
+      "magazine": "Magazine",
+      "wooden": "Wooden portrait",
+      "other": "Print"
+    },
+    "chooseItem": "Choose a print.",
+    "quantity": "Quantity",
+    "less": "One less",
+    "more": "One more",
+    "total": "Total",
+    "name": "Your name",
+    "phone": "Phone number",
+    "phoneHint": "The photographer uses it to arrange payment and delivery.",
+    "note": "Note",
+    "notePlaceholder": "Finish, framing colour, delivery address…",
+    "nameRequired": "Enter your name.",
+    "phoneInvalid": "Enter a phone number, e.g. 01001234567.",
+    "paymentNote": "Placing the order doesn't charge you. The photographer confirms the price, payment and delivery with you.",
+    "cancel": "Cancel",
+    "confirm": "Place order",
+    "failed": "Your order didn't go through. Check your connection and try again.",
+    "rateLimited": "You've placed several orders in a short time. Please try again in an hour or message the photographer.",
+    "unavailable": "This print is no longer available. Choose another one or message the photographer.",
+    "sessionEnded": "Your gallery session ended. Reload the page and enter the password again.",
+    "doneTitle": "Order placed",
+    "doneHeading": "Order #{number} is with the photographer",
+    "doneBody": "{photographer} will contact you about payment and delivery.",
+    "doneTotal": "Total {total}",
+    "message": "Message {photographer}",
+    "whatsappText": "Hi, I just ordered a print (order #{number}).",
+    "done": "Done"
+  }
+}

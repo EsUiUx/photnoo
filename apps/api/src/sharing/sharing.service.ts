@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { DeliveryRules } from '@photnoo/shared';
+import { DeliveryRules, ExtendDays, LinkDays } from '@photnoo/shared';
 import { AuditService } from '../audit/audit.service';
 import { hashPassword } from '../auth/passwords';
 import { decrypt, encrypt, galleryPassword, randomToken, sha256 } from '../common/crypto';
@@ -24,10 +24,10 @@ export class SharingService {
   }
 
   /**
-   * Starts the 7-day clock and returns the link and a fresh password. The password is shown
+   * Starts the link clock (1 to 10 days, 7 by default) and returns the link and a fresh password. The password is shown
    * only here; it is stored as an argon2id hash and can only be replaced, never read back.
    */
-  async activate(photographerId: string, galleryId: string) {
+  async activate(photographerId: string, galleryId: string, days: number = LinkDays.default) {
     const gallery = await this.galleries.get(photographerId, galleryId);
     if (gallery.state !== 'draft') {
       throw new ConflictException({ code: 'not_draft', message: 'This gallery was already shared.' });
@@ -44,7 +44,7 @@ export class SharingService {
     const token = randomToken(16); // 128-bit, 22 URL-safe characters
     const password = galleryPassword();
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + DeliveryRules.linkActiveDays * DAY_MS);
+    const expiresAt = new Date(now.getTime() + days * DAY_MS);
 
     const updated = await this.prisma.client.gallery.updateMany({
       where: { id: galleryId, photographerId, state: 'draft' },
@@ -66,9 +66,46 @@ export class SharingService {
       action: 'gallery.activated',
       targetType: 'gallery',
       targetId: galleryId,
-      data: { expiresAt: expiresAt.toISOString() },
+      data: { expiresAt: expiresAt.toISOString(), days },
     });
     return { link: this.linkFor(token), password, expiresAt };
+  }
+
+  /**
+   * PRD P-14: an active link may be extended once, by 1 to 3 days. Open client sessions that
+   * were cut short by the old expiry run on to their normal 24-hour end (PRD C-03), capped at
+   * the new expiry, so nobody is asked for the password again just because of the extension.
+   */
+  async extend(photographerId: string, galleryId: string, days: number) {
+    if (days < ExtendDays.min || days > ExtendDays.max) {
+      throw new ConflictException({ code: 'invalid_extension', message: 'Extend by 1 to 3 days.' });
+    }
+    const gallery = await this.galleries.get(photographerId, galleryId);
+    if (gallery.state !== 'active' || !gallery.expiresAt) {
+      throw new ConflictException({ code: 'not_active', message: 'Only a shared gallery can be extended.' });
+    }
+    if (gallery.extendedAt) {
+      throw new ConflictException({ code: 'already_extended', message: 'This link was already extended once.' });
+    }
+    const expiresAt = new Date(gallery.expiresAt.getTime() + days * DAY_MS);
+    const updated = await this.prisma.client.gallery.updateMany({
+      where: { id: galleryId, photographerId, state: 'active', extendedAt: null },
+      data: { expiresAt, extendedAt: new Date() },
+    });
+    if (updated.count !== 1) throw new ConflictException({ code: 'already_extended', message: 'This link was already extended once.' });
+    await this.prisma.client.$executeRaw`
+      UPDATE "ClientSession"
+      SET "expiresAt" = LEAST("createdAt" + interval '24 hours', ${expiresAt})
+      WHERE "galleryId" = ${galleryId}::uuid AND "expiresAt" >= ${gallery.expiresAt} AND "expiresAt" > now()`;
+    await this.audit.record({
+      actorType: 'photographer',
+      actorId: photographerId,
+      action: 'gallery.extended',
+      targetType: 'gallery',
+      targetId: galleryId,
+      data: { days, expiresAt: expiresAt.toISOString() },
+    });
+    return { expiresAt, extendedAt: new Date() };
   }
 
   /** PRD P-11: the old password stops working at once; open client sessions run out normally. */

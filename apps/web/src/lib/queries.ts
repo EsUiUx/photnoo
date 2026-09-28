@@ -4,11 +4,12 @@ import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClie
 import type { CreateGalleryInput, UpdateGalleryInput } from '@photnoo/shared';
 import { api } from './api';
 import type { BillingOverview, BillingPayment, Dashboard, Gallery, GalleryActivity, GalleryDetail, GalleryListItem, Me } from './types';
+import type { GalleryFilters } from './types-galleries';
 
 export const keys = {
   me: ['me'] as const,
   dashboard: ['dashboard'] as const,
-  galleries: (q: string) => ['galleries', q] as const,
+  galleries: (filters: GalleryFilters) => ['galleries', filters] as const,
   gallery: (id: string) => ['gallery', id] as const,
   activity: (id: string) => ['gallery', id, 'activity'] as const,
   billing: ['billing'] as const,
@@ -18,14 +19,16 @@ export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api<Me>(
 
 export const useDashboard = () => useQuery({ queryKey: keys.dashboard, queryFn: () => api<Dashboard>('/v1/dashboard') });
 
-/** Cursor-paged gallery list (20 per page); `data.pages` holds each loaded page. */
-export const useGalleries = (q: string) =>
+/** Cursor-paged gallery list (20 per page by default); `data.pages` holds each loaded page. */
+export const useGalleries = (filters: GalleryFilters = {}) =>
   useInfiniteQuery({
-    queryKey: keys.galleries(q),
+    queryKey: keys.galleries(filters),
     initialPageParam: '',
     queryFn: ({ pageParam }) => {
       const params = new URLSearchParams();
-      if (q) params.set('q', q);
+      for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined && value !== '' && value !== null) params.set(key, String(value));
+      }
       if (pageParam) params.set('cursor', pageParam);
       const query = params.toString();
       return api<{ items: GalleryListItem[]; nextCursor: string | null }>(`/v1/galleries${query ? `?${query}` : ''}`);
@@ -107,7 +110,8 @@ export function useDeleteFile(galleryId: string) {
 export function useActivate(galleryId: string) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: () => api<{ link: string; password: string; expiresAt: string }>(`/v1/galleries/${galleryId}/activate`, { method: 'POST' }),
+    mutationFn: (days?: number) =>
+      api<{ link: string; password: string; expiresAt: string }>(`/v1/galleries/${galleryId}/activate`, { method: 'POST', body: { days } }),
     onSuccess: () => invalidate(galleryId),
   });
 }

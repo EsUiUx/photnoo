@@ -3,7 +3,7 @@
     "dashboard": {
       "metaTitle": "Dashboard",
       "title": "Dashboard",
-      "hello": "Welcome back, {name}",
+      "hello": "Hello, {name}!",
       "newGallery": "New gallery",
       "overview": "Overview",
       "clients": "Clients",
@@ -35,7 +35,25 @@
       "emptyTitle": "Create your first gallery",
       "empty": "Add the client, upload the shoot, then share a private link and password on WhatsApp.",
       "createFirst": "Create your first gallery",
-      "photos": "{count, plural, =0 {No photos} one {# photo} other {# photos}}"
+      "photos": "{count, plural, =0 {No photos} one {# photo} other {# photos}}",
+      "quickActions": "Quick actions",
+      "createGallery": "Create new gallery",
+      "createGalleryBody": "Name it and pick the client. Upload whenever you are ready.",
+      "uploadProject": "Upload new project",
+      "uploadProjectBody": "Create the gallery and go straight to uploading the shoot.",
+      "downloadsCycle": "Downloads this cycle",
+      "trendLabel": "vs. previous 30 days",
+      "trendShared": "shared vs. previous 30 days",
+      "trendUploads": "uploaded vs. previous 30 days",
+      "upgrade": "Upgrade plan",
+      "showLess": "Show less",
+      "viewDetails": "View details",
+      "viewDetailsFor": "View details of {gallery}",
+      "searchGalleries": "Search recent galleries",
+      "searchPlaceholder": "Search by gallery or client",
+      "noMatchTitle": "Nothing found",
+      "noMatch": "No gallery matches this search or these dates.",
+      "clearFilters": "Clear filters"
     }
   }
 }

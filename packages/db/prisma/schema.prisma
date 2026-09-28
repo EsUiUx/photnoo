@@ -25,31 +25,63 @@ enum Locale {
 }
 
 model Photographer {
-  id              String             @id @default(uuid()) @db.Uuid
-  name            String
-  studioName      String?
-  email           String             @unique
-  phone           String             @unique
-  city            String?
-  locale          Locale             @default(ar)
-  logoKey         String?
-  status          PhotographerStatus @default(active)
-  passwordHash    String
-  totpSecret      String?
-  termsAcceptedAt DateTime
-  failedLogins    Int                @default(0)
-  lockedUntil     DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  deletedAt       DateTime?
+  id                 String             @id @default(uuid()) @db.Uuid
+  name               String
+  studioName         String?
+  email              String             @unique
+  phone              String             @unique
+  city               String?
+  locale             Locale             @default(ar)
+  logoKey            String?
+  /// Profile photo shown in the app shell and on the public portfolio.
+  avatarKey          String?
+  /// Public handle for photnoo.com/p/<slug> (portfolio and store). Null until the photographer picks one.
+  slug               String?            @unique
+  bio                String?
+  instagramUrl       String?
+  behanceUrl         String?
+  websiteUrl         String?
+  otherUrl           String?
+  /// Client gallery theme (PRD P-15).
+  galleryTheme       GalleryTheme       @default(light)
+  portfolioPublished Boolean            @default(false)
+  storeEnabled       Boolean            @default(false)
+  printsEnabled      Boolean            @default(false)
+  /// Optional notifications (PRD section 9).
+  notifyFirstOpen    Boolean            @default(true)
+  notifyFullDownload Boolean            @default(true)
+  notifyExpiring     Boolean            @default(true)
+  notifyOrders       Boolean            @default(true)
+  notifyByEmail      Boolean            @default(true)
+  status             PhotographerStatus @default(active)
+  passwordHash       String
+  totpSecret         String?
+  termsAcceptedAt    DateTime
+  failedLogins       Int                @default(0)
+  lockedUntil        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
 
-  application   Application?        @relation(fields: [applicationId], references: [id])
-  applicationId String?             @unique @db.Uuid
-  sessions      Session[]
-  subscriptions Subscription[]
-  galleries     Gallery[]
-  usageEvents   UsageEvent[]
-  resetCodes    PasswordResetCode[]
+  application    Application?         @relation(fields: [applicationId], references: [id])
+  applicationId  String?              @unique @db.Uuid
+  sessions       Session[]
+  subscriptions  Subscription[]
+  galleries      Gallery[]
+  usageEvents    UsageEvent[]
+  resetCodes     PasswordResetCode[]
+  clients        Client[]
+  notifications  Notification[]
+  products       Product[]
+  printItems     PrintItem[]
+  orders         Order[]
+  portfolioItems PortfolioItem[]
+  counter        PhotographerCounter?
+}
+
+enum GalleryTheme {
+  light
+  dark
 }
 
 enum ApplicationStatus {
@@ -298,6 +330,11 @@ model Gallery {
   clientName      String?
   clientPhone     String?
   clientEmail     String?
+  /// The managed client this delivery belongs to; the client fields above stay as a snapshot.
+  clientId        String?      @db.Uuid
+  client          Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  /// Clients may order prints of this gallery's photos when the photographer offers prints.
+  printsEnabled   Boolean      @default(true)
   state           GalleryState @default(draft)
   suspended       Boolean      @default(false)
   suspendedUntil  DateTime?
@@ -332,8 +369,10 @@ model Gallery {
   receipts DownloadReceipt[]
   reports  AbuseReport[]
   sessions ClientSession[]
+  orders   Order[]
 
   @@index([photographerId, state, createdAt])
+  @@index([clientId])
   @@index([state, expiresAt])
 }
 
@@ -382,7 +421,8 @@ model File {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  receipts DownloadReceipt[]
+  receipts   DownloadReceipt[]
+  orderItems OrderItem[]
 
   @@index([galleryId, status])
   @@index([galleryId, folderId, position])
@@ -534,4 +574,200 @@ model Flag {
   setById   String?
   reason    String?
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Clients, notifications, store, prints, portfolio (Figma parity, 2026-09-29)
+// ---------------------------------------------------------------------------
+
+model Client {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  name           String
+  /// E.164. One client per phone per photographer; galleries and orders attach by phone.
+  phone          String
+  email          String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  galleries Gallery[]
+  orders    Order[]
+
+  @@unique([photographerId, phone])
+  @@index([photographerId, createdAt])
+}
+
+enum NotificationType {
+  gallery_opened
+  gallery_downloaded
+  gallery_expiring
+  gallery_closed
+  gallery_ready
+  order_placed
+  payment_approved
+  payment_rejected
+  allowance_warning
+  renewal_due
+}
+
+/// In-app notification. The web app renders the text from `type` + `data`, so it follows
+/// the photographer's language at read time.
+model Notification {
+  id             String           @id @default(uuid()) @db.Uuid
+  photographerId String           @db.Uuid
+  photographer   Photographer     @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  type           NotificationType
+  data           Json             @default("{}")
+  galleryId      String?          @db.Uuid
+  orderId        String?          @db.Uuid
+  /// Collapses repeats (e.g. one "opened" per gallery per day).
+  dedupeKey      String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@unique([photographerId, dedupeKey])
+  @@index([photographerId, createdAt])
+  @@index([photographerId, readAt])
+}
+
+model Product {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  priceEgp       Decimal      @db.Decimal(12, 2)
+  /// Sale price; shown with the regular price struck through.
+  salePriceEgp   Decimal?     @db.Decimal(12, 2)
+  imageKey       String?
+  inStock        Boolean      @default(true)
+  position       Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  archivedAt     DateTime?
+
+  orderItems OrderItem[]
+
+  @@index([photographerId, archivedAt, position])
+}
+
+enum PrintType {
+  album
+  frame
+  canvas
+  magazine
+  wooden
+  other
+}
+
+model PrintItem {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  type           PrintType
+  name           String
+  /// Free text such as "30x40 cm" or "A4".
+  size           String
+  priceEgp       Decimal      @db.Decimal(12, 2)
+  imageKey       String?
+  available      Boolean      @default(true)
+  position       Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  archivedAt     DateTime?
+
+  orderItems OrderItem[]
+
+  @@index([photographerId, archivedAt, type, position])
+}
+
+enum OrderKind {
+  store
+  print
+}
+
+enum OrderStatus {
+  pending
+  in_production
+  ready
+  delivered
+  cancelled
+}
+
+/// A client's order. Payment happens between client and photographer (cash, InstaPay...);
+/// Photnoo records it and the photographer moves it through its statuses.
+model Order {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  /// Sequential per photographer, shown as #1001.
+  number         Int
+  kind           OrderKind
+  status         OrderStatus  @default(pending)
+  clientId       String?      @db.Uuid
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  galleryId      String?      @db.Uuid
+  gallery        Gallery?     @relation(fields: [galleryId], references: [id], onDelete: SetNull)
+  customerName   String
+  customerPhone  String
+  customerEmail  String?
+  note           String?
+  totalEgp       Decimal      @db.Decimal(12, 2)
+  paidAt         DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  items OrderItem[]
+
+  @@unique([photographerId, number])
+  @@index([photographerId, kind, createdAt])
+  @@index([photographerId, status])
+  @@index([clientId])
+}
+
+model OrderItem {
+  id           String     @id @default(uuid()) @db.Uuid
+  orderId      String     @db.Uuid
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String?    @db.Uuid
+  product      Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  printItemId  String?    @db.Uuid
+  printItem    PrintItem? @relation(fields: [printItemId], references: [id], onDelete: SetNull)
+  /// The gallery photo to print (print orders).
+  fileId       String?    @db.Uuid
+  file         File?      @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  /// Snapshots so the order reads the same after the catalog changes.
+  name         String
+  detail       String?
+  unitPriceEgp Decimal    @db.Decimal(12, 2)
+  quantity     Int        @default(1)
+
+  @@index([orderId])
+}
+
+/// Showcase images for the public portfolio. Unlike gallery files they persist until removed.
+model PortfolioItem {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  imageKey       String       @unique
+  previewKey     String       @unique
+  blurDataUrl    String?
+  width          Int?
+  height         Int?
+  caption        String?
+  category       String?
+  position       Int          @default(0)
+  createdAt      DateTime     @default(now())
+
+  @@index([photographerId, position])
+}
+
+/// Per-photographer sequences (order numbers).
+model PhotographerCounter {
+  photographerId  String       @id @db.Uuid
+  photographer    Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  lastOrderNumber Int          @default(1000)
 }

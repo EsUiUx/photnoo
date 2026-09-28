@@ -55,6 +55,9 @@
   --color-danger-hover: #912018;
   --color-danger-soft: #fef1f0;
   --color-info: #1e5a85;
+  /* Chart series (validated pair: views, downloads). */
+  --color-chart-1: #2d6e3e;
+  --color-chart-2: #c07a1a;
   --color-info-soft: #e7f0f8;
 
   /* Legacy names, remapped to accessible values until every screen uses the roles above. */

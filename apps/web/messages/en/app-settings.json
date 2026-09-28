@@ -1,0 +1,132 @@
+{
+  "App": {
+    "settings": {
+      "metaTitle": "Settings",
+      "title": "Settings",
+      "intro": "Your profile, how clients see your galleries, notifications and security.",
+      "logout": "Log out",
+      "sectionsLabel": "Settings sections",
+      "loading": "Loading settings…",
+      "loadFailedTitle": "Settings didn't load",
+      "loadFailed": "Check your connection and try again.",
+      "saved": "Saved.",
+      "saveFailed": "That didn't save. Check the highlighted fields and try again.",
+      "networkError": "No connection. Check your internet and try again.",
+      "save": "Save changes",
+      "sections": {
+        "profile": "Profile",
+        "public": "Public page",
+        "branding": "Client galleries",
+        "language": "Language",
+        "notifications": "Notifications",
+        "security": "Security"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Your name and studio appear in the app and on the galleries you share.",
+        "photo": "Profile photo",
+        "photoHint": "JPEG or PNG, up to 15 MB. A square photo works best.",
+        "photoAlt": "Your profile photo",
+        "change": "Change",
+        "upload": "Upload",
+        "remove": "Remove",
+        "removePhotoTitle": "Remove your profile photo?",
+        "removePhotoBody": "Your initials show instead until you upload a new one.",
+        "name": "Full name",
+        "studioName": "Studio name",
+        "studioHint": "Clients see this name on your galleries. Leave it empty to use your full name.",
+        "phone": "Phone number",
+        "phoneHint": "Clients reach you on WhatsApp at this number.",
+        "city": "City",
+        "bio": "About you",
+        "bioHint": "A few lines for your public page. Up to 600 characters.",
+        "email": "Email",
+        "emailHint": "To change your email, contact Photnoo support.",
+        "role": "Photographer",
+        "nameRequired": "Enter your name (at least 2 characters).",
+        "phoneInvalid": "Enter a phone number such as 01012345678 or +201012345678.",
+        "phoneTaken": "Another account uses this phone number.",
+        "bioTooLong": "Keep it to 600 characters."
+      },
+      "public": {
+        "title": "Public page",
+        "description": "Your handle is the address of your portfolio and store.",
+        "slug": "Handle",
+        "slugHint": "Lowercase letters, numbers and hyphens, 3 to 30 characters.",
+        "slugPrefix": "photnoo.com/p/",
+        "checking": "Checking…",
+        "available": "This handle is available.",
+        "yours": "This is your current handle.",
+        "reasons": {
+          "length": "Use 3 to 30 characters.",
+          "characters": "Use lowercase letters, numbers and single hyphens, starting and ending with a letter or number.",
+          "reserved": "This handle is reserved. Choose another.",
+          "taken": "Someone else has this handle. Try another."
+        },
+        "links": "Links",
+        "linksHint": "Shown on your public page. Paste the full address of each profile.",
+        "instagram": "Instagram",
+        "behance": "Behance",
+        "website": "Website",
+        "other": "Other link",
+        "invalidUrl": "Enter a full web address, e.g. https://example.com",
+        "wrongSite": "Enter a link on {site}."
+      },
+      "branding": {
+        "title": "Client galleries",
+        "description": "Your logo and theme appear on the password screen and at the top of every gallery you share.",
+        "logo": "Studio logo",
+        "logoHint": "JPEG or PNG, up to 15 MB. A logo on a plain background reads best.",
+        "logoAlt": "Your studio logo",
+        "noLogo": "No logo yet. Clients see your initials.",
+        "removeLogoTitle": "Remove your studio logo?",
+        "removeLogoBody": "Clients see your initials instead until you upload a new one.",
+        "theme": "Gallery theme",
+        "themeHint": "Dark suits evening events and moody work; light suits everything else.",
+        "light": "Light",
+        "dark": "Dark",
+        "preview": "Preview of the {theme} theme"
+      },
+      "language": {
+        "title": "Language",
+        "description": "The language of the app and of the emails Photnoo sends you.",
+        "label": "Preferred language",
+        "english": "English",
+        "arabic": "العربية"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Choose what Photnoo tells you about. Payments, uploads and plan reminders are always on.",
+        "firstOpen": "A client opens a gallery for the first time",
+        "fullDownload": "A client downloads a whole gallery",
+        "expiring": "A gallery closes within 24 hours",
+        "orders": "A client places an order",
+        "byEmail": "Also send me these by email",
+        "byEmailHint": "In-app notifications always appear in the bell."
+      },
+      "security": {
+        "title": "Security",
+        "description": "Change your password. Use at least 10 characters that you don't use anywhere else.",
+        "current": "Current password",
+        "new": "New password",
+        "newHint": "At least 10 characters. Avoid common passwords and your email address.",
+        "tooShort": "Use at least 10 characters.",
+        "required": "Enter your current password.",
+        "logoutOthers": "Log out on all other devices",
+        "submit": "Change password",
+        "changed": "Your password is changed.",
+        "changedLoggedOut": "Your password is changed and {count, plural, one {# other device was} other {# other devices were}} logged out.",
+        "tooMany": "Too many attempts. Try again in 15 minutes.",
+        "wrongCurrent": "Your current password is not right.",
+        "weak": "This password is too easy to guess. Avoid common passwords, repeated characters and your email address, and use one different from your current password."
+      },
+      "fieldInvalid": "Check this field.",
+      "image": {
+        "tooLarge": "This image is over 15 MB. Choose a smaller one.",
+        "type": "Upload a JPEG or PNG image.",
+        "unreadable": "This image could not be read. Export a new copy and try again.",
+        "failed": "The image did not upload. Try again."
+      }
+    }
+  }
+}

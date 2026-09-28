@@ -69,7 +69,7 @@ export function GalleryCard({ gallery, now }: { gallery: GalleryListItem; now: n
             <Download size={16} strokeWidth={1.75} aria-hidden className="text-fg-muted" />
             {t('downloads', { count: gallery.downloads })}
           </span>
-          {gallery.state === 'active' ? <CopyLinkButton galleryId={gallery.id} name={gallery.name} className="relative z-10 ms-auto" /> : null}
+          {gallery.state === 'active' ? <CopyLinkButton galleryId={gallery.id} name={gallery.name} className="relative z-10 ms-auto -me-2" /> : null}
         </div>
       </div>
     </article>
@@ -105,7 +105,7 @@ export function CopyLinkButton({ galleryId, name, className }: { galleryId: stri
         disabled={state === 'busy'}
         aria-label={state === 'idle' || state === 'busy' ? t('copyLinkFor', { name }) : message}
         className={cn(
-          '-me-2 inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors duration-150 disabled:opacity-60 pointer-coarse:h-11',
+          'inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors duration-150 disabled:opacity-60 pointer-coarse:h-11',
           state === 'copied' ? 'text-success' : state === 'failed' ? 'text-danger' : 'text-brand hover:bg-brand-soft',
           className,
         )}

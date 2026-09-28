@@ -9,7 +9,19 @@
       "storage": "Allowance",
       "storageUsed": "{used} of {total}",
       "storageMeter": "Delivery allowance used",
-      "noPlan": "No active plan"
+      "noPlan": "No active plan",
+      "portfolio": "Portfolio",
+      "clients": "Clients",
+      "store": "Store",
+      "prints": "Prints",
+      "analytics": "Analytics",
+      "notifications": "Notifications",
+      "settings": "Settings",
+      "group": {
+        "main": "Work",
+        "business": "Business",
+        "account": "Account"
+      }
     }
   }
 }

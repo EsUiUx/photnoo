@@ -4,6 +4,7 @@
       "role": "Photographer",
       "accountMenu": "Account menu, {name}",
       "accountMenuFallback": "Account menu",
+      "editProfile": "Edit profile",
       "billing": "Billing",
       "logout": "Log out",
       "openMenu": "Open menu",

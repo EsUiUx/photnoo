@@ -1,12 +1,14 @@
 'use client';
 
+import { LinkDays } from '@photnoo/shared';
 import { CalendarClock, KeyRound, LockKeyhole, Link2, MessageCircle, RefreshCw } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, useConfirm } from '@/components/ui/dialog';
 import { CopyButton } from '@/components/ui/primitives';
+import { controlClasses } from '@/components/ui/field';
 import { Alert, Skeleton, Spinner } from '@/components/ui/state';
 import { ApiError } from '@/lib/api';
 import { formatDate } from '@/lib/format';
@@ -28,7 +30,7 @@ export function ShareDialog({ gallery, open, onClose }: { gallery: GalleryDetail
       onClose={onClose}
       dismissible={!busy}
       title={gallery.state === 'draft' ? t('titleDraft') : t('title')}
-      description={gallery.state === 'draft' ? t('draftIntro', { days: 7 }) : undefined}
+      description={gallery.state === 'draft' ? t('draftIntroChoose') : undefined}
     >
       <ShareBody gallery={gallery} onClose={onClose} onBusy={setBusy} />
     </Dialog>
@@ -52,6 +54,9 @@ function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClo
   const [created, setCreated] = useState<{ link: string; password: string; expiresAt: string } | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [error, setError] = useState<string | undefined>();
+  const [days, setDays] = useState<number>(LinkDays.default);
+  const [openedAt] = useState(() => Date.now());
+  const daysId = useId();
   const link = created?.link ?? shared.data?.link ?? null;
   const password = created?.password ?? newPassword;
   const expiresAt = created?.expiresAt ?? gallery.expiresAt ?? shared.data?.expiresAt ?? null;
@@ -72,7 +77,7 @@ function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClo
 
   async function share() {
     try {
-      const result = await run(() => activate.mutateAsync());
+      const result = await run(() => activate.mutateAsync(days));
       if (result) setCreated(result);
     } catch (err) {
       const code = err instanceof ApiError ? err.code : 'generic';
@@ -118,7 +123,7 @@ function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClo
     const points = [
       { icon: Link2, text: t('draftPoint1') },
       { icon: MessageCircle, text: t('draftPoint2') },
-      { icon: CalendarClock, text: t('draftPoint3') },
+      { icon: CalendarClock, text: t('draftPoint3Choose') },
     ];
     return (
       <div className="flex flex-col gap-5">
@@ -133,6 +138,27 @@ function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClo
             </li>
           ))}
         </ul>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={daysId} className="text-sm font-medium text-fg">
+            {t('duration')}
+          </label>
+          <select
+            id={daysId}
+            value={days}
+            onChange={(event) => setDays(Number(event.target.value))}
+            aria-describedby={`${daysId}-until`}
+            className={controlClasses(false, 'h-11')}
+          >
+            {Array.from({ length: LinkDays.max - LinkDays.min + 1 }, (_, i) => LinkDays.min + i).map((n) => (
+              <option key={n} value={n}>
+                {t('durationOption', { count: n })}
+              </option>
+            ))}
+          </select>
+          <p id={`${daysId}-until`} className="text-sm text-fg-muted">
+            {t('worksUntil', { date: formatDate(new Date(openedAt + days * 86_400_000).toISOString(), locale) })}
+          </p>
+        </div>
         <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-5">
           <Button variant="secondary" onClick={onClose} disabled={activate.isPending}>
             {tc('cancel')}
@@ -151,7 +177,7 @@ function ShareBody({ gallery, onClose, onBusy }: { gallery: GalleryDetail; onClo
       {expiresAt ? (
         <p className="flex items-center gap-2 text-sm text-fg-secondary">
           <CalendarClock size={16} strokeWidth={1.75} aria-hidden className="text-fg-muted" />
-          {t('expires', { date: formatDate(expiresAt, locale) })}
+          {t('worksUntil', { date: formatDate(expiresAt, locale) })}
         </p>
       ) : null}
 

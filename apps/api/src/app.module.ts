@@ -3,7 +3,14 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module';
 import { AdminModule } from './admin/admin.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AuthModule } from './auth/auth.module';
+import { ClientsModule } from './clients/clients.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
+import { PrintsModule } from './prints/prints.module';
+import { ProfileModule } from './profile/profile.module';
+import { StoreModule } from './store/store.module';
 import { BillingModule } from './billing/billing.module';
 import { CsrfMiddleware } from './auth/csrf.middleware';
 import { FlagsModule } from './flags/flags.module';
@@ -50,6 +57,13 @@ import { RedisModule } from './redis/redis.module';
     AdminModule,
     MediaModule,
     LifecycleModule,
+    NotificationsModule,
+    ClientsModule,
+    ProfileModule,
+    StoreModule,
+    PrintsModule,
+    PortfolioModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController],
 })

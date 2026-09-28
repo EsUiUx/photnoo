@@ -13,6 +13,10 @@ import { FileProcessorService } from '../media/file-processor.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SharingService } from '../sharing/sharing.service';
 import { objectKeys, STORAGE, type Storage } from '../storage/storage';
+import { seedDemoAccount } from './seed-demo-account';
+import { seedDemoCommerce } from './seed-demo-commerce';
+import { seedDemoGalleries } from './seed-demo-galleries';
+import { seedDemoInsights } from './seed-demo-insights';
 
 /**
  * Local demo data, so the whole platform can be clicked through as a real photographer and as
@@ -310,6 +314,12 @@ async function main(): Promise<void> {
 
     console.log(`Photographer ${email}`);
     for (const [i, spec] of MONA_GALLERIES.entries()) await seedGallery(mona.id, spec, i + 1);
+
+    // Figma-parity areas. Order matters: clients before orders, orders before notifications.
+    await seedDemoGalleries(prisma, mona.id);
+    await seedDemoCommerce(prisma, mona.id, storage);
+    await seedDemoInsights(prisma, mona.id, app);
+    await seedDemoAccount(prisma, mona.id);
 
     // ---------- other photographers, for the admin console ----------
     const demoPassword = await hashPassword(randomBytes(18).toString('base64url'));

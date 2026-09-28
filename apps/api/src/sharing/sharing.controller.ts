@@ -1,6 +1,8 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { type ActivateGalleryInput, activateGallerySchema, type ExtendGalleryInput, extendGallerySchema } from '@photnoo/shared';
 import { AuthGuard, CurrentAuth } from '../auth/auth.guard';
 import type { AccessClaims } from '../auth/tokens.service';
+import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SharingService } from './sharing.service';
 
 @Controller('galleries/:id')
@@ -10,8 +12,22 @@ export class SharingController {
 
   @Post('activate')
   @HttpCode(HttpStatus.OK)
-  activate(@CurrentAuth() auth: AccessClaims, @Param('id', ParseUUIDPipe) id: string) {
-    return this.sharing.activate(auth.photographerId, id);
+  activate(
+    @CurrentAuth() auth: AccessClaims,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(activateGallerySchema)) body: ActivateGalleryInput,
+  ) {
+    return this.sharing.activate(auth.photographerId, id, body.days);
+  }
+
+  @Post('extend')
+  @HttpCode(HttpStatus.OK)
+  extend(
+    @CurrentAuth() auth: AccessClaims,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(extendGallerySchema)) body: ExtendGalleryInput,
+  ) {
+    return this.sharing.extend(auth.photographerId, id, body.days);
   }
 
   @Post('password')

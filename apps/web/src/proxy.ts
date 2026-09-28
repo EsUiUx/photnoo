@@ -5,7 +5,7 @@ import { routing } from './i18n/routing';
 const intl = createMiddleware(routing);
 
 /** Pages that need a photographer session. The API still enforces auth on every call. */
-const PROTECTED = /^\/(?:(ar|en)\/)?(?:dashboard|galleries|billing)(?:\/|$)/;
+const PROTECTED = /^\/(?:(ar|en)\/)?(?:dashboard|galleries|billing|clients|portfolio|store|prints|analytics|notifications|settings)(?:\/|$)/;
 
 // Next.js 16 calls this file "proxy" (formerly middleware).
 export default function proxy(request: NextRequest) {

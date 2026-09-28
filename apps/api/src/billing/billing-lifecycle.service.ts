@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { addCycle, AllowanceWarnings, BillingRules, cycleAllowanceBytes, daysBetween } from '@photnoo/shared';
 import { MailService } from '../mail/mail.service';
 import { templates } from '../mail/templates';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -27,6 +28,7 @@ export class BillingLifecycleService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async tick(now = new Date()): Promise<Record<string, number>> {
@@ -120,6 +122,11 @@ export class BillingLifecycleService {
       await this.mail.send(
         templates.renewalReminder(subscription.photographer.email, closest, day(subscription.cycleEnd), subscription.state === 'trial'),
       );
+      await this.notifications.notify(subscription.photographerId, {
+        type: 'renewal_due',
+        dedupeKey: `renewal:${subscription.id}:${subscription.cycleEnd.toISOString()}:${closest}`,
+        data: { days: closest, cycleEnd: subscription.cycleEnd.toISOString(), trial: subscription.state === 'trial' ? 1 : 0 },
+      });
       sent += 1;
     }
     return sent;
@@ -139,6 +146,12 @@ export class BillingLifecycleService {
     const fresh = await this.claim(subscription.id, subscription.cycleEnd, kinds);
     const highest = kinds[kinds.length - 1]!;
     if (!fresh.includes(highest)) return;
+    const percent = Math.round(crossed[crossed.length - 1]! * 100);
+    await this.notifications.notify(subscription.photographerId, {
+      type: 'allowance_warning',
+      dedupeKey: `allowance:${subscription.id}:${subscription.cycleEnd.toISOString()}:${percent}`,
+      data: { percent, usedBytes: subscription.usedBytes.toString(), allowanceBytes: subscription.allowanceBytes.toString() },
+    });
     await this.mail.send(
       templates.allowanceWarning(
         subscription.photographer.email,
