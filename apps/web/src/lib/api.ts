@@ -12,6 +12,8 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly fields: FieldError[] = [],
+    /** Extra facts from the API, e.g. retryAfterSeconds or remainingBytes. */
+    readonly details: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -67,7 +69,7 @@ export async function api<T = unknown>(path: string, options: Options = {}): Pro
 
   if (response.status === 204) return undefined as T;
   const payload = (await response.json().catch(() => null)) as
-    | { error?: { code?: string; message?: string; fields?: FieldError[] } }
+    | { error?: { code?: string; message?: string; fields?: FieldError[]; details?: Record<string, unknown> } }
     | null;
 
   if (!response.ok) {
@@ -77,6 +79,7 @@ export async function api<T = unknown>(path: string, options: Options = {}): Pro
       error?.code ?? 'error',
       error?.message ?? response.statusText,
       error?.fields ?? [],
+      error?.details ?? {},
     );
   }
   return payload as T;
