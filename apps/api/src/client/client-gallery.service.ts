@@ -10,6 +10,8 @@ import {
 import { DeliveryRules } from '@photnoo/shared';
 import type { Gallery } from '@photnoo/db';
 import { verifyPassword } from '../auth/passwords';
+import { ENV, type Env } from '../config/env';
+import { FlagsService } from '../flags/flags.service';
 import { deviceType, randomToken, sha256 } from '../common/crypto';
 import { MailService } from '../mail/mail.service';
 import { templates } from '../mail/templates';
@@ -43,6 +45,8 @@ export class ClientGalleryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly flags: FlagsService,
+    @Inject(ENV) private readonly env: Env,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
@@ -51,14 +55,16 @@ export class ClientGalleryService {
     if (!/^[A-Za-z0-9_-]{20,64}$/.test(linkToken)) throw this.notFound();
     const gallery = await this.prisma.client.gallery.findUnique({
       where: { linkTokenHash: sha256(linkToken) },
-      include: { photographer: { select: { name: true, studioName: true, phone: true, email: true, logoKey: true } } },
+      include: { photographer: { select: { name: true, studioName: true, phone: true, email: true, logoKey: true, status: true } } },
     });
     if (!gallery || gallery.state === 'draft') throw this.notFound();
     return gallery;
   }
 
-  state(gallery: Gallery, now = new Date()): PublicState {
+  state(gallery: Gallery & { photographer?: { status: string } }, now = new Date()): PublicState {
     if (gallery.state !== 'active' || (gallery.expiresAt && gallery.expiresAt <= now)) return 'closed';
+    // A suspended photographer's links pause with the account (PRD A-03).
+    if (gallery.photographer && gallery.photographer.status !== 'active') return 'unavailable';
     if (gallery.suspended && (!gallery.suspendedUntil || gallery.suspendedUntil > now)) return 'unavailable';
     return 'open';
   }
@@ -204,6 +210,12 @@ export class ClientGalleryService {
   async download(linkToken: string, sessionToken: string | undefined, fileId: string, meta: ClientMeta) {
     const { gallery, session } = await this.session(linkToken, sessionToken);
     this.assertOpen(gallery);
+    if (await this.flags.isOn('downloads_frozen')) {
+      throw new HttpException(
+        { code: 'temporarily_unavailable', message: 'Downloads are paused for a short while. Please try again later.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     const file = await this.prisma.client.file.findFirst({ where: { id: fileId, galleryId: gallery.id, status: 'ready' } });
     if (!file) throw new NotFoundException({ code: 'not_found', message: 'File not found.' });
 
@@ -271,6 +283,8 @@ export class ClientGalleryService {
       data: { suspended: true, suspendedUntil: new Date(now.getTime() + BREAKER_PAUSE_MS) },
     });
     await this.mail.send(templates.galleryThrottled(gallery.photographer.email, gallery.name));
+    // A-06: admins hear about it too.
+    if (this.env.ADMIN_ALERT_EMAIL) await this.mail.send(templates.galleryThrottled(this.env.ADMIN_ALERT_EMAIL, `${gallery.name} (${gallery.id})`));
     throw new HttpException(
       { code: 'temporarily_unavailable', message: 'Downloads are paused for a while. Please try later.' },
       HttpStatus.SERVICE_UNAVAILABLE,

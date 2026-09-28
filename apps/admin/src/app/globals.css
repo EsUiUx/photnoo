@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Same brand tokens as the photographer app (Figma green scale), tuned for dense tables. */
+@theme {
+  --color-primary-50: #f4f8f5;
+  --color-primary-100: #e7f0e8;
+  --color-primary-200: #c7dcc9;
+  --color-primary-300: #588157;
+  --color-primary-400: #3a5a40;
+  --color-primary-500: #344e41;
+  --color-primary-700: #263930;
+  --color-primary-900: #14201b;
+
+  --color-ink: #141b34;
+  --color-ink-muted: #606060;
+  --color-line: #e3e5e8;
+  --color-surface: #f6f7f6;
+  --color-danger: #b42318;
+  --color-danger-bg: #fef3f2;
+  --color-warn-bg: #fff8eb;
+
+  --font-sans: var(--font-latin), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

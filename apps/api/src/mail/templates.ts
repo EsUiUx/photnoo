@@ -34,6 +34,24 @@ export const templates = {
     };
   },
 
+  applicationRejected(to: string, name: string, reason: string): Mail {
+    return {
+      to,
+      subject: 'Photnoo — بخصوص طلبك / About your application',
+      text: [
+        `مرحبًا ${name}،`,
+        'شكرًا لاهتمامك بـ Photnoo. لم نتمكن من قبول طلبك الآن.',
+        `السبب: ${reason}`,
+        'يمكنك التقديم مرة أخرى لاحقًا.',
+        '',
+        `Hello ${name},`,
+        'Thank you for your interest in Photnoo. We could not accept your application at this time.',
+        `Reason: ${reason}`,
+        'You are welcome to apply again later.',
+      ].join('\n'),
+    };
+  },
+
   linkLocked(to: string, galleryName: string): Mail {
     return {
       to,

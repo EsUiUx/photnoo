@@ -344,7 +344,7 @@ export class BillingService {
    *   otherwise from now;
    * - upgrade: the bigger allowance applies now, the renewal date stays.
    */
-  async approve(paymentId: string, options: { adminId?: string; now?: Date } = {}) {
+  async approve(paymentId: string, options: { adminId?: string; ip?: string | null; now?: Date } = {}) {
     const now = options.now ?? new Date();
     const payment = await this.prisma.client.payment.findUnique({
       where: { id: paymentId },
@@ -419,6 +419,7 @@ export class BillingService {
           action: 'payment.approved',
           targetType: 'payment',
           targetId: payment.id,
+          ip: options.ip ?? null,
           data: { kind: payment.kind, planId: plan.id, invoice: created.number, periodStart: period.start, periodEnd: period.end },
         },
         tx,
@@ -434,7 +435,7 @@ export class BillingService {
     return invoice;
   }
 
-  async reject(paymentId: string, reason: string, adminId?: string) {
+  async reject(paymentId: string, reason: string, adminId?: string, ip?: string | null) {
     const payment = await this.prisma.client.payment.findUnique({ where: { id: paymentId } });
     if (!payment) throw new NotFoundException({ code: 'not_found', message: 'Payment not found.' });
     const decided = await this.prisma.client.payment.updateMany({
@@ -449,6 +450,7 @@ export class BillingService {
       targetType: 'payment',
       targetId: paymentId,
       reason,
+      ip: ip ?? null,
     });
     const photographer = await this.prisma.client.photographer.findUniqueOrThrow({ where: { id: payment.photographerId } });
     await this.mail.send(templates.paymentRejected(photographer.email, payment.reference, reason));

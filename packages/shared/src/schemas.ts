@@ -114,3 +114,52 @@ export const paymentProofSchema = z.object({
   declaredAmountEgp: z.coerce.number().positive().max(1_000_000),
 });
 export type PaymentProofInput = z.infer<typeof paymentProofSchema>;
+
+// ---------- Admin (PRD section 8) ----------
+
+export const adminLoginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1).max(200),
+  code: z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code from your authenticator app'),
+});
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
+/** Every admin action carries a reason for the audit log (A-05, A-08). */
+export const reasonSchema = z.object({ reason: z.string().trim().min(3).max(500) });
+export type ReasonInput = z.infer<typeof reasonSchema>;
+
+export const approveApplicationSchema = z.object({ grantTrial: z.boolean() });
+export type ApproveApplicationInput = z.infer<typeof approveApplicationSchema>;
+
+export const changePlanSchema = reasonSchema.extend({ planId: z.string().uuid() });
+export type ChangePlanInput = z.infer<typeof changePlanSchema>;
+
+export const suspendGallerySchema = reasonSchema.extend({
+  /** Empty = until an admin lifts it. */
+  hours: z.number().int().min(1).max(24 * 90).optional(),
+});
+export type SuspendGalleryInput = z.infer<typeof suspendGallerySchema>;
+
+export const decideAbuseSchema = z.object({
+  status: z.enum(['actioned', 'dismissed']),
+  note: z.string().trim().min(3).max(1000),
+  suspendGallery: z.boolean().default(false),
+});
+export type DecideAbuseInput = z.infer<typeof decideAbuseSchema>;
+
+export const createPlanSchema = z.object({
+  tier: z.string().trim().regex(/^\d+(GB|TB)$/, 'Use a size such as 100GB or 1TB'),
+  annualAllowanceGb: z.number().int().min(1).max(1_000_000),
+  cycle: z.enum(['annual', 'monthly']),
+  priceEgp: z.number().positive().max(10_000_000),
+});
+export type CreatePlanInput = z.infer<typeof createPlanSchema>;
+
+export const planPriceSchema = z.object({ priceEgp: z.number().positive().max(10_000_000) });
+export type PlanPriceInput = z.infer<typeof planPriceSchema>;
+
+export const SwitchKeys = ['uploads_frozen', 'downloads_frozen', 'maintenance'] as const;
+export type SwitchKey = (typeof SwitchKeys)[number];
+
+export const setSwitchSchema = reasonSchema.extend({ on: z.boolean() });
+export type SetSwitchInput = z.infer<typeof setSwitchSchema>;

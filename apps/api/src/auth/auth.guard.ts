@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
+import { AccessCheckService } from './access-check.service';
 import { ACCESS_COOKIE } from './cookies';
 import { type AccessClaims, TokensService } from './tokens.service';
 
@@ -14,7 +15,10 @@ type AuthedRequest = Request & { auth?: AccessClaims };
 /** Requires a valid access token from the pn_at cookie (or a Bearer header for tooling). */
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly tokens: TokensService) {}
+  constructor(
+    private readonly tokens: TokensService,
+    private readonly access: AccessCheckService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<AuthedRequest>();
@@ -24,7 +28,7 @@ export class AuthGuard implements CanActivate {
     const token = cookieToken ?? bearer;
 
     const claims = token ? await this.tokens.verifyAccess(token) : null;
-    if (!claims) {
+    if (!claims || !(await this.access.sessionIsLive(claims.sessionId, claims.photographerId))) {
       throw new UnauthorizedException({ code: 'unauthenticated', message: 'Please log in.' });
     }
     req.auth = claims;

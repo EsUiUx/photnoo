@@ -24,7 +24,6 @@ beforeAll(async () => {
   ({ app, prisma, mail } = await createTestApp());
   billing = app.get(BillingService);
   lifecycle = app.get(BillingLifecycleService);
-  await prisma.plan.deleteMany({ where: { payments: { none: {} }, subscriptions: { none: {} }, nextSubscriptions: { none: {} } } });
   for (const [tier, gb, monthly] of [['100GB', 100, 100], ['500GB', 500, 300]] as const) {
     for (const cycle of ['monthly', 'annual'] as const) {
       const plan = await prisma.plan.create({

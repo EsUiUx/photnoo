@@ -301,6 +301,8 @@ model Gallery {
   state           GalleryState @default(draft)
   suspended       Boolean      @default(false)
   suspendedUntil  DateTime?
+  /// Why an admin (or the bandwidth breaker) suspended the gallery.
+  suspendedReason String?
   linkTokenHash   String?      @unique
   passwordHash    String?
   coverFileId     String?      @db.Uuid
@@ -454,6 +456,9 @@ model AbuseReport {
   reason        String
   reporterEmail String?
   status        AbuseReportStatus @default(open)
+  decidedById   String?           @db.Uuid
+  decidedAt     DateTime?
+  decisionNote  String?
   createdAt     DateTime          @default(now())
 
   @@index([status, createdAt])
@@ -467,14 +472,40 @@ enum AdminRole {
   support
 }
 
+/// Photnoo staff (PRD section 8). Password plus mandatory TOTP; Cloudflare Access in front in production.
 model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  email        String    @unique
+  role         AdminRole
+  passwordHash String
+  /// Encrypted TOTP secret (base32). Login is refused until it is set.
+  totpSecret   String?
+  /// Last accepted 30-second TOTP step, so a code cannot be replayed.
+  totpLastStep Int?
+  failedLogins Int       @default(0)
+  lockedUntil  DateTime?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  disabledAt   DateTime?
+
+  sessions AdminSession[]
+}
+
+/// Opaque admin session: HttpOnly cookie scoped to /v1/admin, 12 hours at most, 1 hour idle.
+model AdminSession {
   id         String    @id @default(uuid()) @db.Uuid
-  name       String
-  email      String    @unique
-  role       AdminRole
-  totpSecret String?
+  adminId    String    @db.Uuid
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  lastUsedAt DateTime  @default(now())
+  revokedAt  DateTime?
   createdAt  DateTime  @default(now())
-  disabledAt DateTime?
+
+  @@index([adminId])
 }
 
 /// Append-only. Each row stores the hash of the previous row so edits are detectable.

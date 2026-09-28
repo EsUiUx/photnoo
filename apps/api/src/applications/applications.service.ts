@@ -42,7 +42,7 @@ export class ApplicationsService {
   /** Approve an application and email a single-use invite. Returns the invite URL. */
   async approve(
     applicationId: string,
-    options: { grantTrial: boolean; decidedById?: string },
+    options: { grantTrial: boolean; decidedById?: string; ip?: string | null },
   ): Promise<string> {
     const application = await this.prisma.client.application.findUnique({ where: { id: applicationId } });
     if (!application) throw new NotFoundException({ code: 'not_found', message: 'Application not found.' });
@@ -83,6 +83,7 @@ export class ApplicationsService {
       action: 'application.approved',
       targetType: 'application',
       targetId: applicationId,
+      ip: options.ip ?? null,
       data: { grantTrial: options.grantTrial },
     });
 
@@ -91,7 +92,7 @@ export class ApplicationsService {
     return inviteUrl;
   }
 
-  async reject(applicationId: string, reason: string, decidedById?: string): Promise<void> {
+  async reject(applicationId: string, reason: string, decidedById?: string, ip?: string | null): Promise<void> {
     const updated = await this.prisma.client.application.updateMany({
       where: { id: applicationId, status: 'pending' },
       data: { status: 'rejected', decisionReason: reason, decidedById: decidedById ?? null, decidedAt: new Date() },
@@ -106,6 +107,9 @@ export class ApplicationsService {
       targetType: 'application',
       targetId: applicationId,
       reason,
+      ip: ip ?? null,
     });
+    const application = await this.prisma.client.application.findUniqueOrThrow({ where: { id: applicationId } });
+    await this.mail.send(templates.applicationRejected(application.email, application.name, reason));
   }
 }

@@ -4,14 +4,35 @@
     {
       "name": "web",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm@9.15.4", "--filter", "@photnoo/web", "dev"],
+      "runtimeArgs": [
+        "pnpm@9.15.4",
+        "--filter",
+        "@photnoo/web",
+        "dev"
+      ],
       "port": 3000
     },
     {
       "name": "api",
       "runtimeExecutable": "corepack",
-      "runtimeArgs": ["pnpm@9.15.4", "--filter", "@photnoo/api", "start"],
+      "runtimeArgs": [
+        "pnpm@9.15.4",
+        "--filter",
+        "@photnoo/api",
+        "start"
+      ],
       "port": 4000
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "corepack",
+      "runtimeArgs": [
+        "pnpm@9.15.4",
+        "--filter",
+        "@photnoo/admin",
+        "dev"
+      ],
+      "port": 3001
     }
   ]
 }

@@ -15,6 +15,15 @@ export class CsrfMiddleware implements NestMiddleware {
   use(req: Request, _res: Response, next: NextFunction): void {
     if (SAFE_METHODS.has(req.method)) return next();
     const cookies = req.cookies as Record<string, string | undefined>;
+    // Admin sessions use their own pair of cookies (pn_adm + pn_adm_csrf).
+    if (cookies.pn_adm) {
+      const adminCookie = cookies.pn_adm_csrf;
+      const adminHeader = req.header(CSRF_HEADER);
+      if (!adminCookie || !adminHeader || !safeEqual(adminCookie, adminHeader)) {
+        throw new ForbiddenException({ code: 'csrf_failed', message: 'Please refresh the page and try again.' });
+      }
+      return next();
+    }
     const hasSession = Boolean(cookies[ACCESS_COOKIE] || cookies[REFRESH_COOKIE]);
     if (!hasSession) return next();
 

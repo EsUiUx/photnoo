@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "cli:applications": "node --env-file-if-exists=../../.env dist/cli/applications.js",
-    "cli:billing": "node --env-file-if-exists=../../.env dist/cli/billing.js"
+    "cli:billing": "node --env-file-if-exists=../../.env dist/cli/billing.js",
+    "cli:admins": "node --env-file-if-exists=../../.env dist/cli/admins.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",

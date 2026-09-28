@@ -18,7 +18,7 @@ export function configureApp(app: NestExpressApplication): INestApplication {
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
   app.use(cookieParser());
   // ETag must be readable so the browser uploader can complete multipart uploads.
-  app.enableCors({ origin: env.WEB_ORIGIN, credentials: true, exposedHeaders: ['ETag'] });
+  app.enableCors({ origin: [env.WEB_ORIGIN, env.ADMIN_ORIGIN], credentials: true, exposedHeaders: ['ETag'] });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.setGlobalPrefix('v1', { exclude: ['health'] });
   app.enableShutdownHooks();

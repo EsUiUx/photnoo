@@ -37,6 +37,18 @@ const envSchema = z
     PAY_BANK_ACCOUNT_NAME: z.string().optional(),
     PAY_BANK_ACCOUNT_NUMBER: z.string().optional(),
     PAY_BANK_IBAN: z.string().optional(),
+    /** Where breaker and abuse alerts go (PRD A-06). */
+    ADMIN_ALERT_EMAIL: z.string().email().optional(),
+    /** Origin of the admin app, for CORS and links. */
+    ADMIN_ORIGIN: z.string().url().default('http://localhost:3001'),
+    /**
+     * Cloudflare Access in front of the admin API (PRD section 8). When both are set, every admin
+     * request must carry a valid Access JWT for the same email as the admin account.
+     */
+    CF_ACCESS_TEAM_DOMAIN: z.string().optional(),
+    CF_ACCESS_AUD: z.string().optional(),
+    /** Test-only prefix for switch keys, so parallel test files cannot flip each other's switches. */
+    FLAG_NAMESPACE: z.string().default(''),
   })
   .superRefine((env, ctx) => {
     if (env.STORAGE_DRIVER === 's3') {

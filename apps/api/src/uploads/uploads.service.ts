@@ -18,6 +18,7 @@ import { randomUUID } from 'node:crypto';
 import { GalleriesService } from '../galleries/galleries.service';
 import { JobsService } from '../jobs/jobs.service';
 import { BillingLifecycleService } from '../billing/billing-lifecycle.service';
+import { FlagsService } from '../flags/flags.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { objectKeys, STORAGE, type Storage } from '../storage/storage';
 
@@ -38,10 +39,12 @@ export class UploadsService {
     private readonly galleries: GalleriesService,
     private readonly jobs: JobsService,
     private readonly billing: BillingLifecycleService,
+    private readonly flags: FlagsService,
     @Inject(STORAGE) private readonly storage: Storage,
   ) {}
 
   async create(photographerId: string, galleryId: string, input: CreateUploadInput) {
+    await this.assertUploadsOpen();
     const gallery = await this.galleries.get(photographerId, galleryId);
     if (!(OPEN_GALLERY_STATES as readonly string[]).includes(gallery.state)) {
       throw new ConflictException({ code: 'gallery_closed', message: 'This gallery no longer accepts uploads.' });
@@ -109,6 +112,7 @@ export class UploadsService {
   }
 
   async complete(photographerId: string, fileId: string, input: CompleteUploadInput) {
+    await this.assertUploadsOpen();
     const file = await this.uploading(photographerId, fileId);
     await this.storage.completeMultipartUpload(file.originalKey, file.uploadId!, input.parts);
 
@@ -154,6 +158,16 @@ export class UploadsService {
   }
 
   // ---------- helpers ----------
+
+  /** PRD A-05 global upload freeze. Uploads already sent stay; the browser retries later. */
+  private async assertUploadsOpen() {
+    if (await this.flags.isOn('uploads_frozen')) {
+      throw new HttpException(
+        { code: 'uploads_frozen', message: 'Uploads are paused for maintenance. Please try again shortly.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
 
   private async uploading(photographerId: string, fileId: string) {
     const file = await this.prisma.client.file.findFirst({

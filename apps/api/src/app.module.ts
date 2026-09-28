@@ -2,9 +2,12 @@ import { randomUUID } from 'node:crypto';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { AuditModule } from './audit/audit.module';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { BillingModule } from './billing/billing.module';
 import { CsrfMiddleware } from './auth/csrf.middleware';
+import { FlagsModule } from './flags/flags.module';
+import { MaintenanceMiddleware } from './flags/maintenance.middleware';
 import { ConfigModule } from './config/config.module';
 import { GalleriesModule } from './galleries/galleries.module';
 import { HealthController } from './health/health.controller';
@@ -43,6 +46,8 @@ import { RedisModule } from './redis/redis.module';
     GalleriesModule,
     SharingModule,
     BillingModule,
+    FlagsModule,
+    AdminModule,
     MediaModule,
     LifecycleModule,
   ],
@@ -50,6 +55,6 @@ import { RedisModule } from './redis/redis.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(CsrfMiddleware).forRoutes('*');
+    consumer.apply(MaintenanceMiddleware, CsrfMiddleware).forRoutes('*');
   }
 }

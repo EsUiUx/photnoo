@@ -15,4 +15,5 @@ Object.assign(process.env, {
   SMTP_HOST: 'localhost',
   SMTP_PORT: '1025',
   MAIL_FROM: 'Photnoo <test@photnoo.local>',
+  FLAG_NAMESPACE: `test-${process.pid}-${Math.random().toString(36).slice(2, 8)}:`,
 });

@@ -7,6 +7,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { AuditModule } from './audit/audit.module';
 import { BillingLifecycleModule } from './billing/billing-lifecycle.module';
 import { BillingLifecycleService } from './billing/billing-lifecycle.service';
+import { FlagsModule } from './flags/flags.module';
 import { MailModule } from './mail/mail.module';
 import { JobsService } from './jobs/jobs.service';
 import { LifecycleModule } from './lifecycle/lifecycle.module';
@@ -29,6 +30,7 @@ import { StorageModule } from './storage/storage.module';
     MediaModule,
     LifecycleModule,
     MailModule,
+    FlagsModule,
     BillingLifecycleModule,
   ],
 })
