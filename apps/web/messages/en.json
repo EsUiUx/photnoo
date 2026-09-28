@@ -1,0 +1,29 @@
+{
+  "Meta": {
+    "title": "Photnoo — Professional photo delivery",
+    "description": "Deliver galleries to your clients with a private link, a password and proof of every download."
+  },
+  "Nav": {
+    "howItWorks": "How it works",
+    "pricing": "Pricing",
+    "login": "Log in",
+    "apply": "Request access",
+    "language": "العربية"
+  },
+  "Home": {
+    "title": "Deliver your work the way it deserves.",
+    "subtitle": "Upload a gallery, send your client a private link and password, and get proof of every download. Files delete themselves when the link expires.",
+    "primaryCta": "Request access",
+    "secondaryCta": "See pricing",
+    "invite": "Photnoo is invite-only while we onboard our first photographers."
+  },
+  "Steps": {
+    "title": "Three steps, no chasing",
+    "upload": "Upload",
+    "uploadBody": "Drag in the whole shoot. Uploads resume if your connection drops.",
+    "send": "Send",
+    "sendBody": "Share the link on WhatsApp and send the password separately.",
+    "proof": "Proof",
+    "proofBody": "See when your client opened the gallery and what they downloaded."
+  }
+}

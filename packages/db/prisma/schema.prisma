@@ -1,0 +1,432 @@
+// Photnoo data model - PRD v1 section 11.
+// Every tenant-owned table carries photographerId; queries must always filter by it.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Identity ----------
+
+enum PhotographerStatus {
+  active
+  suspended
+  deleted
+}
+
+enum Locale {
+  ar
+  en
+}
+
+model Photographer {
+  id           String             @id @default(uuid()) @db.Uuid
+  name         String
+  studioName   String?
+  email        String             @unique
+  phone        String             @unique
+  city         String?
+  locale       Locale             @default(ar)
+  logoKey      String?
+  status       PhotographerStatus @default(active)
+  passwordHash String
+  totpSecret   String?
+  termsAcceptedAt DateTime
+  failedLogins Int                @default(0)
+  lockedUntil  DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+
+  application   Application?   @relation(fields: [applicationId], references: [id])
+  applicationId String?        @unique @db.Uuid
+  sessions      Session[]
+  subscriptions Subscription[]
+  galleries     Gallery[]
+  usageEvents   UsageEvent[]
+  resetCodes    PasswordResetCode[]
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+model Application {
+  id             String            @id @default(uuid()) @db.Uuid
+  name           String
+  studioName     String?
+  city           String
+  phone          String
+  email          String
+  portfolioUrl   String
+  status         ApplicationStatus @default(pending)
+  decisionReason String?
+  decidedById    String?           @db.Uuid
+  decidedAt      DateTime?
+  grantTrial     Boolean           @default(false)
+  // Single-use invite, stored hashed. Valid 7 days from approval.
+  inviteTokenHash String?          @unique
+  inviteExpiresAt DateTime?
+  inviteUsedAt    DateTime?
+  createdAt      DateTime          @default(now())
+
+  photographer Photographer?
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+/// Refresh-token session. The token itself is never stored, only its hash.
+model Session {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  refreshHash    String       @unique
+  /// All rotations of one login share a family; reuse of an old token revokes the family.
+  familyId       String       @db.Uuid
+  userAgent      String?
+  ip             String?
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  replacedById   String?      @db.Uuid
+  createdAt      DateTime     @default(now())
+  lastUsedAt     DateTime     @default(now())
+
+  @@index([photographerId])
+  @@index([familyId])
+}
+
+model PasswordResetCode {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  codeHash       String
+  attempts       Int          @default(0)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([photographerId, createdAt])
+}
+
+// ---------- Plans and billing ----------
+
+enum BillingCycle {
+  annual
+  monthly
+}
+
+model Plan {
+  id             String       @id @default(uuid()) @db.Uuid
+  tier           String       // e.g. "100GB", "1TB"
+  allowanceBytes BigInt       // per annual cycle; monthly gets 1/12 per month
+  cycle          BillingCycle
+  priceEgp       Decimal      @db.Decimal(12, 2)
+  activeFrom     DateTime     @default(now())
+  activeTo       DateTime?
+  createdAt      DateTime     @default(now())
+
+  subscriptions Subscription[]
+
+  @@index([cycle, activeFrom])
+}
+
+enum SubscriptionState {
+  trial
+  pending_payment
+  active
+  soft_locked
+  dormant
+  suspended
+}
+
+model Subscription {
+  id             String            @id @default(uuid()) @db.Uuid
+  photographerId String            @db.Uuid
+  photographer   Photographer      @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  planId         String?           @db.Uuid
+  plan           Plan?             @relation(fields: [planId], references: [id])
+  state          SubscriptionState
+  cycleStart     DateTime
+  cycleEnd       DateTime
+  allowanceBytes BigInt
+  /// Counter cache, updated in the same transaction as each completed upload.
+  usedBytes      BigInt            @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  payments Payment[]
+
+  @@index([photographerId, state])
+  @@index([state, cycleEnd])
+}
+
+enum PaymentMethod {
+  instapay
+  vodafone_cash
+  bank_transfer
+  paymob
+}
+
+enum PaymentStatus {
+  pending
+  approved
+  rejected
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  subscriptionId String        @db.Uuid
+  subscription   Subscription  @relation(fields: [subscriptionId], references: [id])
+  method         PaymentMethod
+  amountEgp      Decimal       @db.Decimal(12, 2)
+  reference      String        @unique
+  proofKey       String?
+  status         PaymentStatus @default(pending)
+  rejectReason   String?
+  approvedById   String?       @db.Uuid
+  decidedAt      DateTime?
+  createdAt      DateTime      @default(now())
+
+  invoice Invoice?
+
+  @@index([status, createdAt])
+}
+
+model Invoice {
+  id        String   @id @default(uuid()) @db.Uuid
+  number    Int      @unique @default(autoincrement())
+  paymentId String   @unique @db.Uuid
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  totalEgp  Decimal  @db.Decimal(12, 2)
+  vatEgp    Decimal  @default(0) @db.Decimal(12, 2)
+  pdfKey    String?
+  issuedAt  DateTime @default(now())
+}
+
+enum UsageEventType {
+  upload
+  top_up
+  cycle_reset
+}
+
+model UsageEvent {
+  id             String         @id @default(uuid()) @db.Uuid
+  photographerId String         @db.Uuid
+  photographer   Photographer   @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  type           UsageEventType
+  bytes          BigInt
+  galleryId      String?        @db.Uuid
+  createdAt      DateTime       @default(now())
+
+  @@index([photographerId, createdAt])
+}
+
+// ---------- Galleries and files ----------
+
+enum GalleryState {
+  draft
+  active
+  closed
+  purged
+  anonymised
+}
+
+model Gallery {
+  id             String       @id @default(uuid()) @db.Uuid
+  photographerId String       @db.Uuid
+  photographer   Photographer @relation(fields: [photographerId], references: [id], onDelete: Cascade)
+  name           String
+  clientName     String?
+  clientPhone    String?
+  clientEmail    String?
+  state          GalleryState @default(draft)
+  suspended      Boolean      @default(false)
+  suspendedUntil DateTime?
+  linkTokenHash  String?      @unique
+  passwordHash   String?
+  coverFileId    String?      @db.Uuid
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  extendedAt     DateTime?
+  closedAt       DateTime?
+  closedReason   String?      // expired | cap_used | closed_by_photographer | account_deleted
+  purgedAt       DateTime?
+  totalBytes     BigInt       @default(0)
+  capBytes       BigInt       @default(0)
+  /// Counter cache of bytes served to the client.
+  servedBytes    BigInt       @default(0)
+  fileCount      Int          @default(0)
+  lastUploadAt   DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  folders   Folder[]
+  files     File[]
+  accesses  AccessEvent[]
+  receipts  DownloadReceipt[]
+  reports   AbuseReport[]
+
+  @@index([photographerId, state, createdAt])
+  @@index([state, expiresAt])
+}
+
+model Folder {
+  id        String   @id @default(uuid()) @db.Uuid
+  galleryId String   @db.Uuid
+  gallery   Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  name      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  files File[]
+
+  @@unique([galleryId, name])
+}
+
+enum FileStatus {
+  uploading
+  processing
+  ready
+  rejected
+  purged
+}
+
+model File {
+  id           String     @id @default(uuid()) @db.Uuid
+  galleryId    String     @db.Uuid
+  gallery      Gallery    @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  folderId     String?    @db.Uuid
+  folder       Folder?    @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  originalName String
+  sizeBytes    BigInt
+  mimeType     String?
+  sha256       String?
+  /// Random object keys - never derived from names or ids a person could guess.
+  originalKey  String     @unique
+  previewKey   String?    @unique
+  blurDataUrl  String?
+  width        Int?
+  height       Int?
+  status       FileStatus @default(uploading)
+  rejectReason String?
+  uploadId     String?    // S3 multipart upload id while uploading
+  position     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  receipts DownloadReceipt[]
+
+  @@index([galleryId, status])
+  @@index([galleryId, folderId, position])
+}
+
+// ---------- Evidence ----------
+
+enum AccessEventType {
+  open
+  password_ok
+  password_fail
+}
+
+model AccessEvent {
+  id         String          @id @default(uuid()) @db.Uuid
+  galleryId  String          @db.Uuid
+  gallery    Gallery         @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  type       AccessEventType
+  ip         String?
+  country    String?
+  deviceType String?
+  createdAt  DateTime        @default(now())
+
+  @@index([galleryId, createdAt])
+}
+
+/// Immutable proof of one download (PRD C-07). Never updated after insert.
+model DownloadReceipt {
+  id         String   @id @default(uuid()) @db.Uuid
+  galleryId  String   @db.Uuid
+  gallery    Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  fileId     String   @db.Uuid
+  file       File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  bytes      BigInt
+  sessionId  String
+  ip         String?
+  country    String?
+  deviceType String?
+  createdAt  DateTime @default(now())
+
+  @@index([galleryId, createdAt])
+  @@index([sessionId, fileId, createdAt])
+}
+
+enum AbuseReportStatus {
+  open
+  actioned
+  dismissed
+}
+
+model AbuseReport {
+  id            String            @id @default(uuid()) @db.Uuid
+  galleryId     String            @db.Uuid
+  gallery       Gallery           @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  reason        String
+  reporterEmail String?
+  status        AbuseReportStatus @default(open)
+  createdAt     DateTime          @default(now())
+
+  @@index([status, createdAt])
+}
+
+// ---------- Admin ----------
+
+enum AdminRole {
+  super_admin
+  operations
+  support
+}
+
+model AdminUser {
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String
+  email      String    @unique
+  role       AdminRole
+  totpSecret String?
+  createdAt  DateTime  @default(now())
+  disabledAt DateTime?
+}
+
+/// Append-only. Each row stores the hash of the previous row so edits are detectable.
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  actorType String   // admin | photographer | system
+  actorId   String?
+  action    String
+  targetType String?
+  targetId  String?
+  reason    String?
+  ip        String?
+  data      Json?
+  prevHash  String?
+  hash      String
+  createdAt DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([actorId, createdAt])
+}
+
+/// Emergency switches and feature flags (PRD A-05), cached in Redis.
+model Flag {
+  key       String   @id
+  value     Json
+  setById   String?
+  reason    String?
+  updatedAt DateTime @updatedAt
+}

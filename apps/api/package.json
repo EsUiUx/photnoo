@@ -1,0 +1,51 @@
+{
+  "name": "@photnoo/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc-watch -p tsconfig.build.json --onSuccess \"node --env-file-if-exists=../../.env dist/main.js\"",
+    "start": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "@photnoo/db": "workspace:*",
+    "@photnoo/shared": "workspace:*",
+    "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.8.1",
+    "jose": "^6.1.0",
+    "nestjs-pino": "^4.4.1",
+    "pino": "^9.13.1",
+    "pino-http": "^10.5.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.6",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.18.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "pino-pretty": "^13.1.2",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "tsc-watch": "^7.2.0",
+    "typescript": "^5.9.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src", "<rootDir>/test"],
+    "testRegex": "\\.spec\\.ts$"
+  }
+}

@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from the Photnoo Figma file (variables on the dashboard frame).
+ * Green scale = brand; neutral scale = borders and quiet surfaces; ink = text.
+ * Use logical utilities (ms-*, me-*, ps-*, pe-*, start-*, end-*) so layouts mirror in Arabic.
+ */
+@theme {
+  --color-primary-50: #f4f8f5;
+  --color-primary-100: #e7f0e8;
+  --color-primary-200: #c7dcc9;
+  --color-primary-300: #588157;
+  --color-primary-400: #3a5a40;
+  --color-primary-500: #344e41;
+  --color-primary-600: #2e453a;
+  --color-primary-700: #263930;
+  --color-primary-900: #14201b;
+
+  --color-neutral-100: #f1f3f5;
+  --color-neutral-200: #e9ecef;
+  --color-neutral-400: #ced4da;
+  --color-neutral-500: #adb5bd;
+
+  --color-ink: #141b34;
+  --color-ink-muted: #606060;
+  --color-ink-subtle: #898989;
+  --color-line: #dedede;
+
+  --font-sans: var(--font-latin), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --radius-card: 1rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html[lang="ar"] {
+  --font-sans: var(--font-arabic), var(--font-latin), ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: photnoo
+          POSTGRES_PASSWORD: photnoo
+          POSTGRES_DB: photnoo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U photnoo" --health-interval 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://photnoo:photnoo@localhost:5432/photnoo
+      REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (lockfile must match)
+        run: pnpm install --frozen-lockfile
+
+      - name: Fail on critical vulnerabilities
+        run: pnpm audit --prod --audit-level=critical
+
+      - name: Apply database migrations
+        run: pnpm --filter @photnoo/db migrate:deploy
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
