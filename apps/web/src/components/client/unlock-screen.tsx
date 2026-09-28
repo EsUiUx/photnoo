@@ -3,6 +3,7 @@
 import { Clock, LockKeyhole } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
+import { Reveal } from '@/components/motion/reveal';
 import { Button } from '@/components/ui/button';
 import { PasswordField } from '@/components/ui/field';
 import { Alert } from '@/components/ui/state';
@@ -85,7 +86,7 @@ export function UnlockScreen({ token, summary, onUnlocked }: { token: string; su
 
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
-      <section className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-card sm:p-8">
+      <Reveal as="section" className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-card sm:p-8">
         <div className="flex flex-col items-center text-center">
           <PhotographerMark name={summary.photographer.name} size="lg" />
           <p className="mt-4 text-sm font-medium text-fg-secondary">{summary.photographer.name}</p>
@@ -126,7 +127,7 @@ export function UnlockScreen({ token, summary, onUnlocked }: { token: string; su
             {t('open')}
           </Button>
         </form>
-      </section>
+      </Reveal>
     </div>
   );
 }

@@ -6,6 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ANALYTICS_RANGES } from '@photnoo/shared';
+import { HANDOFF, ListStagger } from '@/components/app/app-motion';
+import { CountUp } from '@/components/motion/count-up';
+import { DevelopImg } from '@/components/motion/develop';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Button, ButtonLink } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { SelectField } from '@/components/ui/field';
@@ -79,18 +83,18 @@ export function AnalyticsView() {
             <h2 id="kpi-title" className="sr-only">
               {t('kpis')}
             </h2>
-            <ul className={cn('grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4', overview.isPlaceholderData && 'opacity-60 transition-opacity')}>
-              <Kpi icon={Eye} label={t('views')} metric={overview.data?.views} />
-              <Kpi icon={Download} label={t('downloads')} metric={overview.data?.downloads} />
-              <Kpi icon={ShoppingBag} label={t('orders')} metric={overview.data?.orders} />
-              <Kpi icon={Banknote} label={t('revenue')} metric={overview.data?.revenueEgp} money />
-            </ul>
+            <ListStagger className={cn('grid grid-cols-2 gap-3 transition-opacity sm:gap-4 xl:grid-cols-4', overview.isPlaceholderData && 'opacity-60')}>
+              <Kpi index={0} icon={Eye} label={t('views')} metric={overview.data?.views} />
+              <Kpi index={1} icon={Download} label={t('downloads')} metric={overview.data?.downloads} />
+              <Kpi index={2} icon={ShoppingBag} label={t('orders')} metric={overview.data?.orders} />
+              <Kpi index={3} icon={Banknote} label={t('revenue')} metric={overview.data?.revenueEgp} money />
+            </ListStagger>
           </section>
 
           <div className="grid gap-6 lg:grid-cols-3">
             <Card className="p-5 lg:col-span-2 sm:p-6">
               <h2 className="text-base font-semibold text-fg">{t('chartTitle')}</h2>
-              <div className={cn('mt-4', series.isPlaceholderData && 'opacity-60 transition-opacity')}>
+              <div className={cn('mt-4 transition-opacity', series.isPlaceholderData && 'opacity-60')}>
                 {series.isError && !series.data ? (
                   <ErrorState onRetry={() => void series.refetch()} className="py-10" />
                 ) : !series.data ? (
@@ -149,7 +153,7 @@ export function AnalyticsView() {
   );
 }
 
-function Kpi({ icon: Icon, label, metric, money }: { icon: LucideIcon; label: string; metric?: Metric; money?: boolean }) {
+function Kpi({ index, icon: Icon, label, metric, money }: { index: number; icon: LucideIcon; label: string; metric?: Metric; money?: boolean }) {
   const t = useTranslations('App.analytics');
   const n = useNumbers();
   const show = (v: number) => (money ? n.money(v) : n.number(v));
@@ -166,7 +170,7 @@ function Kpi({ icon: Icon, label, metric, money }: { icon: LucideIcon; label: st
           : t(change > 0 ? 'changeUp' : 'changeDown', { value: n.percent(Math.abs(change)) });
 
   return (
-    <li className="rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
+    <li {...staggerItem(index)} className="rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-fg-muted">{label}</p>
         <span className="flex size-9 items-center justify-center rounded-md bg-brand-soft text-brand">
@@ -180,10 +184,13 @@ function Kpi({ icon: Icon, label, metric, money }: { icon: LucideIcon; label: st
         </>
       ) : (
         <>
-          <p className={cn('tabular mt-3 font-semibold tracking-tight text-fg', money ? 'text-2xl' : 'text-3xl')}>{show(metric.value)}</p>
+          <p className={cn('tabular mt-3 font-semibold tracking-tight text-fg', money ? 'text-2xl' : 'text-3xl', HANDOFF)}>
+            <CountUp value={metric.value} format={show} />
+          </p>
           <p
             className={cn(
               'mt-2 inline-flex items-start gap-1 text-xs font-medium',
+              HANDOFF,
               tone === 'up' ? 'text-success' : tone === 'down' ? 'text-danger' : 'text-fg-muted',
             )}
             title={t('previousValue', { value: show(metric.previous) })}
@@ -214,9 +221,9 @@ function TopClients({ query }: { query: ReturnType<typeof useTopClients> }) {
   }
   if (query.data.items.length === 0) return <EmptyState icon={Users} title={t('noClients')} className="py-10" />;
   return (
-    <ol className={cn('divide-y divide-border', query.isPlaceholderData && 'opacity-60')}>
-      {query.data.items.map((client) => (
-        <li key={`${client.rank}-${client.name}`} className="flex items-center gap-3 px-5 py-3">
+    <ListStagger as="ol" className={cn('divide-y divide-border transition-opacity', query.isPlaceholderData && 'opacity-60')}>
+      {query.data.items.map((client, index) => (
+        <li key={`${client.rank}-${client.name}`} {...staggerItem(index)} className="flex items-center gap-3 px-5 py-3">
           <span
             className={cn(
               'tabular flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
@@ -234,7 +241,7 @@ function TopClients({ query }: { query: ReturnType<typeof useTopClients> }) {
           </div>
         </li>
       ))}
-    </ol>
+    </ListStagger>
   );
 }
 
@@ -260,11 +267,10 @@ function MostViewed({ query }: { query: ReturnType<typeof useTopGalleries> }) {
       ) : !gallery ? (
         <EmptyState icon={ImageIcon} title={t('noGallery')} className="py-10" />
       ) : (
-        <div className={cn('mt-4 flex flex-col gap-5 sm:flex-row sm:items-stretch', query.isPlaceholderData && 'opacity-60')}>
+        <div className={cn('mt-4 flex flex-col gap-5 transition-opacity sm:flex-row sm:items-stretch', HANDOFF, query.isPlaceholderData && 'opacity-60')}>
           <div className="flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-sunken text-fg-muted sm:w-72">
             {gallery.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-              <img src={gallery.coverUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+              <DevelopImg src={gallery.coverUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
             ) : (
               <ImageIcon size={22} strokeWidth={1.75} aria-hidden />
             )}
@@ -348,9 +354,9 @@ function Bars({ rows }: { rows: Array<{ key: string; label: string; value: numbe
   const total = rows.reduce((s, r) => s + r.value, 0);
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
-    <ul className="mt-4 flex flex-col gap-4">
-      {rows.map((row) => (
-        <li key={row.key}>
+    <ListStagger className="group/bars mt-4 flex flex-col gap-4">
+      {rows.map((row, index) => (
+        <li key={row.key} {...staggerItem(index)}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="font-medium text-fg" dir="auto">
               {row.label}
@@ -361,11 +367,15 @@ function Bars({ rows }: { rows: Array<{ key: string; label: string; value: numbe
             </span>
           </div>
           <div aria-hidden className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-surface-sunken">
-            <div className="h-full rounded-full bg-brand" style={{ width: `${(row.value / max) * 100}%` }} />
+            {/* Grows from the start edge (right in Arabic) once, as the list arrives. */}
+            <div
+              className="h-full origin-left rounded-full bg-brand transition-[scale] duration-700 ease-[var(--ease-out-expo)] [scale:0_1] group-data-revealed/bars:[scale:1] group-[:not([data-stagger])]/bars:[scale:1] motion-reduce:transition-none rtl:origin-right"
+              style={{ width: `${(row.value / max) * 100}%`, transitionDelay: `${Math.min(index, 8) * 45}ms` }}
+            />
           </div>
         </li>
       ))}
-    </ul>
+    </ListStagger>
   );
 }
 

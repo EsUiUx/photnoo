@@ -1,8 +1,12 @@
 'use client';
 
 import { Bell, CheckCheck, Inbox } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Button } from '@/components/ui/button';
 import { Card, Segmented } from '@/components/ui/primitives';
 import { Alert, EmptyState, ErrorState, Skeleton } from '@/components/ui/state';
@@ -80,13 +84,18 @@ export function NotificationsView() {
             <EmptyState icon={Bell} title={t('emptyTitle')} body={t('emptyBody')} />
           )
         ) : (
-          <ul className="divide-y divide-border">
-            {items.map((n) => (
-              <li key={n.id}>
-                <NotificationItem notification={n} onRead={(id) => markRead.mutate(id)} />
-              </li>
-            ))}
-          </ul>
+          <ListStagger className="divide-y divide-border">
+            {/* In "Unread", a notification that has been read fades out of the list. */}
+            <AnimatePresence initial={false}>
+              {items.map((n, index) => (
+                <li key={n.id} {...staggerItem(index)}>
+                  <m.div exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+                    <NotificationItem notification={n} onRead={(id) => markRead.mutate(id)} />
+                  </m.div>
+                </li>
+              ))}
+            </AnimatePresence>
+          </ListStagger>
         )}
       </Card>
 

@@ -4,6 +4,8 @@ import { annualSavingPercent } from '@photnoo/shared';
 import { Check, Mail, MessageCircle } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { contact } from '@/content/site';
 import { Button, buttonClasses } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
@@ -106,9 +108,9 @@ export function PlanPicker({ plans, subscription, paymentOpen }: { plans: Catalo
           <p className="text-sm text-fg-muted">{t('noPlans')}</p>
         </Card>
       ) : null}
-      <ul className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {visible.map((plan) => (
-          <li key={plan.id}>
+      <ListStagger className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {visible.map((plan, index) => (
+          <li key={plan.id} {...staggerItem(index)}>
             <PlanCard
               plan={plan}
               subscription={subscription}
@@ -124,10 +126,10 @@ export function PlanPicker({ plans, subscription, paymentOpen }: { plans: Catalo
             />
           </li>
         ))}
-        <li>
+        <li {...staggerItem(visible.length)}>
           <EnterpriseCard />
         </li>
-      </ul>
+      </ListStagger>
 
       <ReviewDialog
         plan={review}

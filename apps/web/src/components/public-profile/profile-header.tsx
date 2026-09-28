@@ -1,5 +1,6 @@
 import { Globe, Link as LinkIcon, MapPin, MessageCircle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { DevelopImg } from '@/components/motion/develop';
 import type { PublicProfile } from '@/lib/types-insights';
 import { BehanceMark, InstagramMark } from './brand-marks';
 
@@ -45,8 +46,7 @@ export async function ProfileHeader({ profile, locale }: { profile: PublicProfil
       ) : null}
       <span className="flex size-24 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-2xl font-semibold text-brand ring-4 ring-surface shadow-card sm:size-28">
         {profile.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img src={profile.avatarUrl} alt="" width={112} height={112} className="size-full object-cover" />
+          <DevelopImg src={profile.avatarUrl} alt="" width={112} height={112} className="size-full object-cover" />
         ) : (
           <span aria-hidden>{initials(title)}</span>
         )}

@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, ImageIcon, Receipt, Search } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/field';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/state';
@@ -146,8 +147,7 @@ function Thumb({ order }: { order: Order }) {
   const url = order.items[0]?.thumbnailUrl;
   return (
     <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-sunken text-fg-muted">
-      {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-      {url ? <img src={url} alt="" loading="lazy" className="size-full object-cover" /> : <ImageIcon size={16} strokeWidth={1.75} aria-hidden />}
+      {url ? <DevelopImg src={url} alt="" loading="lazy" className="size-full object-cover" /> : <ImageIcon size={16} strokeWidth={1.75} aria-hidden />}
     </span>
   );
 }

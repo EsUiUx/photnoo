@@ -2,7 +2,8 @@
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState, ViewTransition } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
 import { categoryLabel } from '@/components/portfolio/categories';
 import { cn } from '@/lib/cn';
 import type { PublicPortfolioItem } from '@/lib/types-insights';
@@ -38,7 +39,7 @@ export function PortfolioShowcase({ items, categories }: { items: PublicPortfoli
                   key={c ?? 'all'}
                   type="button"
                   aria-pressed={active}
-                  onClick={() => setFilter(c)}
+                  onClick={() => startTransition(() => setFilter(c))}
                   className={cn(
                     'inline-flex h-10 shrink-0 items-center rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 pointer-coarse:h-11',
                     active ? 'border-fg bg-fg text-fg-inverse' : 'border-border-strong bg-surface text-fg-secondary hover:text-fg',
@@ -52,6 +53,8 @@ export function PortfolioShowcase({ items, categories }: { items: PublicPortfoli
         ) : null}
       </div>
 
+      {/* A filter change crossfades the grid (view transition); where unsupported it simply swaps. */}
+      <ViewTransition update="auto" default="none">
       {shown.length === 0 ? (
         <p className="mt-10 text-center text-sm text-fg-muted">{t('empty')}</p>
       ) : (
@@ -68,8 +71,7 @@ export function PortfolioShowcase({ items, categories }: { items: PublicPortfoli
                   backgroundImage: item.blurDataUrl ? `url(${item.blurDataUrl})` : undefined,
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL, already web-sized */}
-                <img
+                <DevelopImg
                   src={item.previewUrl}
                   alt={item.caption ?? ''}
                   width={item.width ?? undefined}
@@ -84,6 +86,7 @@ export function PortfolioShowcase({ items, categories }: { items: PublicPortfoli
           ))}
         </ul>
       )}
+      </ViewTransition>
 
       <Lightbox items={shown} index={open} onIndex={setOpen} />
     </section>

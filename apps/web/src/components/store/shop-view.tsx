@@ -4,6 +4,9 @@ import { CheckCircle2, ImageIcon, MapPin, Minus, Plus, ShoppingBag } from 'lucid
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { PhotographerMark, WhatsAppButton } from '@/components/client/client-shell';
+import { DevelopImg } from '@/components/motion/develop';
+import { Stagger } from '@/components/motion/reveal';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { TextareaField, TextField } from '@/components/ui/field';
@@ -72,13 +75,13 @@ export function ShopView({ slug, shop, initialProductId }: { slug: string; shop:
         {shop.products.length === 0 ? (
           <EmptyState icon={ShoppingBag} title={t('emptyTitle')} body={t('empty')} />
         ) : (
-          <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
-            {shop.products.map((product) => (
-              <li key={product.id}>
+          <Stagger as="ul" className="mt-5 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+            {shop.products.map((product, i) => (
+              <li key={product.id} {...staggerItem(i)}>
                 <ProductTile product={product} onOpen={() => setSelected(product)} />
               </li>
             ))}
-          </ul>
+          </Stagger>
         )}
       </section>
 
@@ -112,12 +115,11 @@ function ProductTile({ product, onOpen }: { product: PublicProduct; onOpen: () =
     <button
       type="button"
       onClick={onOpen}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-surface text-start shadow-xs transition-shadow duration-150 hover:shadow-card"
+      className="group flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-surface text-start shadow-xs transition-[box-shadow,translate] duration-200 ease-out-expo hover:-translate-y-0.5 hover:shadow-card motion-reduce:hover:translate-y-0"
     >
-      <span className="relative block aspect-square w-full bg-surface-sunken">
+      <span className="relative block aspect-square w-full overflow-hidden bg-surface-sunken">
         {product.previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img src={product.previewUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+          <DevelopImg src={product.previewUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
         ) : (
           <span className="flex size-full items-center justify-center text-fg-muted">
             <ImageIcon size={22} strokeWidth={1.75} aria-hidden />
@@ -240,8 +242,7 @@ function ProductDetail({
       <div>
         <div className="overflow-hidden rounded-lg bg-surface-sunken">
           {product.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-            <img src={product.imageUrl} alt={product.name} className="aspect-square w-full object-cover" />
+            <DevelopImg src={product.imageUrl} alt={product.name} className="aspect-square w-full object-cover" />
           ) : (
             <span className="flex aspect-square items-center justify-center text-fg-muted">
               <ImageIcon size={22} strokeWidth={1.75} aria-hidden />

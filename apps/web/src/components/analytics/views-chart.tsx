@@ -31,6 +31,9 @@ function niceMax(max: number): { top: number; step: number } {
 
 const parse = (date: string) => new Date(`${date}T00:00:00Z`);
 
+/** Line draw-in: dash offset eases from hidden to drawn; reduced motion shows the line at once. */
+const DRAW = 'transition-[stroke-dashoffset] duration-[900ms] ease-[var(--ease-out-expo)] motion-reduce:transition-none';
+
 /**
  * Two-line chart (one shared count axis) with an area under views, a crosshair tooltip on
  * hover or arrow keys, a legend, and a table for screen readers.
@@ -41,8 +44,12 @@ export function ViewsChart({ data }: { data: AnalyticsTimeseries }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [active, setActive] = useState<number | null>(null);
+  // The lines draw in once, left to right, when the chart first appears; later data just swaps.
+  const [drawn, setDrawn] = useState(false);
   const titleId = useId();
   const tableId = useId();
+  // A plain id: url(#…) references do not tolerate the punctuation useId may produce.
+  const maskId = `draw${useId().replace(/[^\w-]/g, '')}`;
   const points = data.points;
 
   useEffect(() => {
@@ -51,6 +58,18 @@ export function ViewsChart({ data }: { data: AnalyticsTimeseries }) {
     const observer = new ResizeObserver(([entry]) => setWidth(Math.max(280, Math.round(entry!.contentRect.width))));
     observer.observe(el);
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let second = 0;
+    // Two frames, so the undrawn state is painted before the transition starts.
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setDrawn(true));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
   }, []);
 
   const number = (n: number) => format.number(n, { numberingSystem: 'latn' });
@@ -158,15 +177,54 @@ export function ViewsChart({ data }: { data: AnalyticsTimeseries }) {
             </text>
           ))}
 
-          <path d={paths.area} fill={SERIES.views} opacity={0.08} />
-          <path d={paths.views} fill="none" stroke={SERIES.views} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-          <path d={paths.downloads} fill="none" stroke={SERIES.downloads} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" strokeDasharray="6 4" />
+          {/* The dashed downloads line is revealed through a solid copy of itself that draws in. */}
+          <defs>
+            <mask id={maskId} maskUnits="userSpaceOnUse" x={0} y={0} width={width} height={HEIGHT}>
+              <path
+                d={paths.downloads}
+                pathLength={1}
+                fill="none"
+                stroke="white"
+                strokeWidth={6}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                strokeDasharray="1 1"
+                className={cn(DRAW, drawn ? '[stroke-dashoffset:0]' : '[stroke-dashoffset:1]')}
+              />
+            </mask>
+          </defs>
+          <path
+            d={paths.area}
+            fill={SERIES.views}
+            className={cn('transition-opacity delay-300 duration-500 ease-[var(--ease-out-expo)] motion-reduce:delay-0', drawn ? 'opacity-[0.08]' : 'opacity-0')}
+          />
+          <path
+            d={paths.views}
+            pathLength={1}
+            fill="none"
+            stroke={SERIES.views}
+            strokeWidth={2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            strokeDasharray="1 1"
+            className={cn(DRAW, drawn ? '[stroke-dashoffset:0]' : '[stroke-dashoffset:1]')}
+          />
+          <path
+            d={paths.downloads}
+            fill="none"
+            stroke={SERIES.downloads}
+            strokeWidth={2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            strokeDasharray="6 4"
+            mask={`url(#${maskId})`}
+          />
 
           {last && endLabels ? (
-            <>
+            <g className={cn('transition-opacity delay-700 duration-300 motion-reduce:delay-0', drawn ? 'opacity-100' : 'opacity-0')}>
               <circle cx={x(points.length - 1)} cy={y(last.views)} r={3.5} fill={SERIES.views} className="stroke-surface" strokeWidth={2} />
               <circle cx={x(points.length - 1)} cy={y(last.downloads)} r={3.5} fill={SERIES.downloads} className="stroke-surface" strokeWidth={2} />
-            </>
+            </g>
           ) : null}
 
           {point && active !== null ? (

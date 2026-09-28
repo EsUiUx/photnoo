@@ -63,8 +63,8 @@ export function SiteHeader() {
     <header
       data-surface={light ? 'dark' : undefined}
       className={cn(
-        'fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,border-color] duration-200',
-        solid ? 'border-b border-border bg-surface/95 shadow-xs backdrop-blur-md' : 'border-b border-transparent bg-gradient-to-b from-black/35 to-transparent',
+        'fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300 ease-out-expo motion-reduce:duration-150',
+        solid ? 'border-b border-border bg-surface/95 shadow-xs backdrop-blur-md' : 'border-b border-transparent bg-gradient-to-b from-black/35 to-transparent backdrop-blur-none',
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:h-18 lg:px-8">

@@ -1,8 +1,10 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { EasedMeter, ListStagger } from '@/components/app/app-motion';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/state';
-import { Badge, Card, DetailList, Meter } from '@/components/ui/primitives';
+import { Badge, Card, DetailList } from '@/components/ui/primitives';
 import { formatBytes, formatDate, isolate, percent } from '@/lib/format';
 import { useBilling } from '@/lib/queries';
 import type { Subscription } from '@/lib/types';
@@ -31,10 +33,14 @@ export function BillingView() {
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <CurrentPlanCard subscription={billing.data.subscription} />
-            <AllowanceCard subscription={billing.data.subscription} />
-          </div>
+          <ListStagger as="div" className="grid gap-4 lg:grid-cols-2">
+            <div {...staggerItem(0)} className="grid">
+              <CurrentPlanCard subscription={billing.data.subscription} />
+            </div>
+            <div {...staggerItem(1)} className="grid">
+              <AllowanceCard subscription={billing.data.subscription} />
+            </div>
+          </ListStagger>
 
           {billing.data.openPayment ? <PaymentPanel payment={billing.data.openPayment} details={billing.data.paymentDetails} /> : null}
 
@@ -167,7 +173,7 @@ function AllowanceCard({ subscription }: { subscription: Subscription }) {
         <span className="text-2xl font-semibold tracking-tight text-fg">{formatBytes(subscription.usedBytes, locale)}</span>
         <span className="text-sm text-fg-muted">{t('allowanceOf', { total: formatBytes(subscription.allowanceBytes, locale) })}</span>
       </p>
-      <Meter value={used} label={t('allowanceMeter')} tone={tone} className="mt-5" />
+      <EasedMeter value={used} label={t('allowanceMeter')} tone={tone} className="mt-5" />
       <p className={`mt-2 text-sm tabular ${tone === 'danger' ? 'font-medium text-danger' : tone === 'warning' ? 'font-medium text-warning' : 'text-fg-secondary'}`}>
         {t('allowanceUsed', { percent: number(used), remaining: formatBytes(remaining, locale) })}
       </p>

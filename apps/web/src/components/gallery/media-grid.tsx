@@ -2,7 +2,10 @@
 
 import { Ellipsis, FileImage, FileWarning, FolderInput, Images, Star, Trash2, X } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { useState } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
 import { Button, IconButton } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { Menu, type MenuItem } from '@/components/ui/menu';
@@ -41,6 +44,8 @@ export function MediaGrid({
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [moving, setMoving] = useState<string[] | null>(null);
+  // Deleted tiles leave by fading and shrinking; moved ones (out of this folder) only fade.
+  const [deleting, setDeleting] = useState<Set<string>>(new Set());
 
   // Files that left the view (moved, deleted) drop out of the selection.
   const visibleSelection = files.filter((f) => selected.has(f.id)).map((f) => f.id);
@@ -65,9 +70,15 @@ export function MediaGrid({
     });
     if (!ok) return;
     setError(null);
+    setDeleting((current) => new Set(current).add(file.id));
     try {
       await remove.mutateAsync(file.id);
     } catch {
+      setDeleting((current) => {
+        const next = new Set(current);
+        next.delete(file.id);
+        return next;
+      });
       setError(t('deleteFileFailed', { name: file.name }));
     }
   }
@@ -113,30 +124,36 @@ export function MediaGrid({
         </div>
       ) : null}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {files.map((file) => {
-          const items: MenuItem[] = [];
-          if (canEdit && file.status === 'ready' && file.previewUrl && file.id !== gallery.coverFileId) {
-            items.push({ label: t('setCover'), icon: Star, onSelect: () => void onCover(file) });
-          }
-          if (canMove && movable(file)) items.push({ label: t('moveFile'), icon: FolderInput, onSelect: () => setMoving([file.id]) });
-          if (canEdit && file.status !== 'uploading') {
-            if (items.length) items.push({ type: 'separator' });
-            items.push({ label: t('deleteFileAction'), icon: Trash2, tone: 'danger', onSelect: () => void onDelete(file) });
-          }
-          return (
-            <li key={file.id}>
-              <Tile
-                file={file}
-                cover={file.id === gallery.coverFileId}
-                selectable={canMove && movable(file)}
-                selected={selected.has(file.id)}
-                selecting={selecting}
-                onToggle={() => toggle(file.id)}
-                menu={items}
-              />
-            </li>
-          );
-        })}
+        <AnimatePresence initial={false}>
+          {files.map((file) => {
+            const items: MenuItem[] = [];
+            if (canEdit && file.status === 'ready' && file.previewUrl && file.id !== gallery.coverFileId) {
+              items.push({ label: t('setCover'), icon: Star, onSelect: () => void onCover(file) });
+            }
+            if (canMove && movable(file)) items.push({ label: t('moveFile'), icon: FolderInput, onSelect: () => setMoving([file.id]) });
+            if (canEdit && file.status !== 'uploading') {
+              if (items.length) items.push({ type: 'separator' });
+              items.push({ label: t('deleteFileAction'), icon: Trash2, tone: 'danger', onSelect: () => void onDelete(file) });
+            }
+            return (
+              <m.li
+                key={file.id}
+                exit={deleting.has(file.id) ? { opacity: 0, scale: 0.9 } : { opacity: 0 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Tile
+                  file={file}
+                  cover={file.id === gallery.coverFileId}
+                  selectable={canMove && movable(file)}
+                  selected={selected.has(file.id)}
+                  selecting={selecting}
+                  onToggle={() => toggle(file.id)}
+                  menu={items}
+                />
+              </m.li>
+            );
+          })}
+        </AnimatePresence>
       </ul>
       <MoveFilesDialog
         gallery={gallery}
@@ -175,15 +192,18 @@ function Tile({
   const size = formatBytes(file.sizeBytes, locale);
   const rejected = file.status === 'rejected';
   const pending = file.status === 'processing' || file.status === 'uploading';
+  // The blur placeholder sits behind the photo, which develops over it as it loads.
+  const placeholder = !rejected && file.previewUrl && file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})` } : undefined;
 
   return (
     // The menu sits outside the clipped figure so its popover is not cut off.
     <div className="group relative">
     <figure
       className={cn(
-        'relative aspect-4/3 overflow-hidden rounded-md bg-surface-sunken',
+        'relative aspect-4/3 overflow-hidden rounded-md bg-surface-sunken bg-cover bg-center',
         selected && 'ring-2 ring-brand ring-offset-2 ring-offset-canvas',
       )}
+      style={placeholder}
     >
       {rejected ? (
         <div className="flex size-full flex-col items-center justify-center gap-1.5 bg-danger-soft p-3 text-center">
@@ -192,15 +212,7 @@ function Tile({
           <p className="line-clamp-2 text-xs text-fg-secondary">{file.rejectReason ?? t('rejectedUnknown')}</p>
         </div>
       ) : file.previewUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed storage URL, already resized by the API
-        <img
-          src={file.previewUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="size-full bg-cover bg-center object-cover"
-          style={file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})` } : undefined}
-        />
+        <DevelopImg src={file.previewUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
       ) : (
         <div
           className="flex size-full items-center justify-center bg-cover bg-center text-fg-muted"

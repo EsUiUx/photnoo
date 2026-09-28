@@ -91,8 +91,13 @@
   --shadow-popover: 0 4px 12px -2px rgb(20 32 27 / 0.08), 0 16px 40px -12px rgb(20 32 27 / 0.18);
   --shadow-overlay: 0 24px 64px -16px rgb(20 32 27 / 0.35);
 
-  /* Motion: exponential ease-out, short. */
+  /* Motion: exponential ease-out, short. Exits run faster than entrances. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+  --duration-develop: 900ms;
 }
 
 :root {
@@ -149,13 +154,251 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------------------------------------------------------------------------
+   Motion system. Thesis: photos "develop" (soft blur resolving to focus); the
+   interface moves only to explain what changed. Reduced motion keeps fades and
+   drops movement and blur (see the block at the end).
+   --------------------------------------------------------------------------- */
+
+:root {
+  --motion-shift: 14px;
+  --motion-blur: 6px;
+}
+
+/* Reveal on scroll (components/motion/reveal.tsx). Content is visible by default: only
+   pages with scripting hide it, and a failsafe shows it if the observer never fires. */
+@media (scripting: enabled) {
+  [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+    translate: 0 var(--motion-shift);
+    animation: reveal-failsafe 0s 2.5s forwards;
+  }
+  [data-reveal="develop"]:not([data-revealed]) {
+    translate: none;
+    filter: blur(var(--motion-blur)) saturate(0.6);
+  }
+  [data-reveal="clip"]:not([data-revealed]) {
+    opacity: 1;
+    translate: none;
+    clip-path: inset(18% 0 0 0 round var(--radius-xl));
+  }
+  [data-stagger]:not([data-revealed]) > [data-stagger-item] {
+    opacity: 0;
+    translate: 0 calc(var(--motion-shift) * 0.6);
+    animation: reveal-failsafe 0s 2.5s forwards;
+  }
+}
+/* Resting clip matches the hidden one's shape so the mask interpolates instead of snapping. */
+[data-reveal="clip"] {
+  clip-path: inset(0 0 0 0 round var(--radius-xl));
+}
+[data-reveal] {
+  transition:
+    opacity var(--duration-slow) var(--ease-out-expo),
+    translate 640ms var(--ease-out-expo),
+    filter var(--duration-develop) var(--ease-out-expo),
+    clip-path 820ms var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-stagger] > [data-stagger-item] {
+  transition:
+    opacity 360ms var(--ease-out-expo),
+    translate 520ms var(--ease-out-expo);
+  /* Capped: the 9th item onwards arrives with the 8th. */
+  transition-delay: calc(min(var(--i, 0), 8) * 45ms);
+}
+@keyframes reveal-failsafe {
+  to {
+    opacity: 1;
+    translate: none;
+    filter: none;
+    clip-path: none;
+  }
+}
+
+/* Photos develop as they load (components/motion/develop.tsx marks them). */
+img[data-develop] {
+  transition:
+    filter var(--duration-develop) var(--ease-out-expo),
+    opacity 500ms var(--ease-out-expo),
+    scale 1200ms var(--ease-out-expo);
+}
+@media (scripting: enabled) {
+  img[data-develop="pending"] {
+    opacity: 0.001;
+    filter: blur(14px) saturate(0.5);
+    scale: 1.03;
+    animation: reveal-failsafe 0s 4s forwards;
+  }
+}
+
+/* Native <dialog> and popovers: enter from @starting-style, exit before display flips. */
+dialog {
+  transition:
+    opacity var(--duration-fast) var(--ease-in-quart),
+    translate var(--duration-fast) var(--ease-in-quart),
+    scale var(--duration-fast) var(--ease-in-quart),
+    display var(--duration-fast) allow-discrete,
+    overlay var(--duration-fast) allow-discrete;
+  opacity: 0;
+}
+dialog[open] {
+  opacity: 1;
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--duration-base);
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+  }
+}
+/* Shape of each entrance; exits reverse it. --motion-dir flips the side in Arabic. */
+:root {
+  --motion-dir: 1;
+}
+[dir="rtl"] {
+  --motion-dir: -1;
+}
+dialog[data-motion="dialog"] {
+  translate: 0 8px;
+  scale: 0.98;
+}
+dialog[data-motion="drawer-end"] {
+  translate: calc(var(--motion-dir) * 48px) 0;
+}
+dialog[data-motion="drawer-start"] {
+  translate: calc(var(--motion-dir) * -48px) 0;
+}
+dialog[data-motion][open] {
+  translate: none;
+  scale: none;
+}
+@starting-style {
+  dialog[data-motion="dialog"][open] {
+    translate: 0 8px;
+    scale: 0.98;
+  }
+  dialog[data-motion="drawer-end"][open] {
+    translate: calc(var(--motion-dir) * 48px) 0;
+  }
+  dialog[data-motion="drawer-start"][open] {
+    translate: calc(var(--motion-dir) * -48px) 0;
+  }
+}
+dialog::backdrop {
+  transition:
+    opacity var(--duration-base) var(--ease-out-expo),
+    display var(--duration-base) allow-discrete,
+    overlay var(--duration-base) allow-discrete;
+  opacity: 0;
+}
+dialog[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Page transitions (the template.tsx files under app/[locale]). The shell stays anchored; content
+   leaves fast and arrives with a short rise and a little focus pull. */
+::view-transition {
+  pointer-events: none;
+}
+/* Only the page content animates; the rest of the window cuts, so the shell never flickers. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(.page) {
+  animation: var(--duration-fast) var(--ease-in-quart) both page-out;
+}
+::view-transition-new(.page) {
+  animation: 360ms var(--ease-out-expo) 90ms both page-in;
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+    filter: blur(3px);
+  }
+}
+::view-transition-group(app-sidebar),
+::view-transition-group(app-header),
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 50;
+}
+::view-transition-old(app-sidebar),
+::view-transition-old(app-header),
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(app-sidebar),
+::view-transition-new(app-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+/* Shared photo morph: gallery card cover → gallery page cover. */
+::view-transition-group(.photo-morph) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+::view-transition-image-pair(.photo-morph) {
+  animation-name: morph-soften;
+}
+@keyframes morph-soften {
+  35% {
+    filter: blur(2px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  :root {
+    --motion-shift: 0px;
+    --motion-blur: 0px;
+    --duration-develop: 200ms;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  [data-reveal],
+  [data-stagger] > [data-stagger-item] {
+    transition-duration: 200ms !important;
+    transition-delay: 0ms !important;
+  }
+  [data-reveal="clip"]:not([data-revealed]) {
+    clip-path: none;
+    opacity: 0;
+  }
+  img[data-develop] {
+    filter: none !important;
+    scale: none !important;
+  }
+  dialog,
+  dialog::backdrop {
+    translate: none !important;
+    scale: none !important;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-name: page-fade !important;
+    animation-duration: 120ms !important;
+    animation-delay: 0ms !important;
+  }
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+  }
+  @keyframes page-fade {
+    from {
+      opacity: 0;
+    }
   }
 }

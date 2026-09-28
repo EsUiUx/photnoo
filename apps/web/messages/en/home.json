@@ -103,10 +103,14 @@
       "f3": "Proof of every view and download",
       "f4": "Pay by InstaPay, Vodafone Cash or bank transfer",
       "cta": "Request access",
-      "more": "Also available: {sizes}.",
-      "enterprise": "Delivering more than 2 TB a year?",
+      "enterprise": "Delivering more than 2 TB a year, or a studio with several photographers? We will size a plan for you.",
       "enterpriseCta": "Talk to us",
-      "note": "Photnoo is invite-only while we onboard photographers in Egypt. Request access and we'll reply within two working days."
+      "note": "Photnoo is invite-only while we onboard photographers in Egypt. Request access and we'll reply within two working days.",
+      "railLabel": "Plans",
+      "prev": "Previous plans",
+      "next": "More plans",
+      "enterpriseTitle": "Enterprise",
+      "enterprisePrice": "Custom"
     },
     "faq": {
       "title": "Questions photographers ask",

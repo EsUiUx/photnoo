@@ -3,6 +3,7 @@
 import { Check, Download, Eye, ImageIcon, Link2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/format';
@@ -27,11 +28,10 @@ export function GalleryCard({ gallery, now }: { gallery: GalleryListItem; now: n
   const closed = gallery.state !== 'draft' && gallery.state !== 'active';
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-xs transition-shadow duration-200 ease-[var(--ease-out-expo)] focus-within:shadow-card hover:shadow-card">
+    <article className="relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-xs transition-[box-shadow,translate] duration-200 ease-[var(--ease-out-expo)] focus-within:shadow-card hover:-translate-y-0.5 hover:shadow-card motion-reduce:hover:translate-y-0">
       <div className="relative aspect-4/3 overflow-hidden bg-surface-sunken">
         {gallery.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL, sized by the card
-          <img
+          <DevelopImg
             src={gallery.coverUrl}
             alt=""
             loading="lazy"

@@ -1,6 +1,9 @@
 import { CalendarClock, LockKeyhole, ReceiptText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { Stagger } from '@/components/motion/reveal';
+import { staggerItem } from '@/components/motion/stagger-item';
+
 const ITEMS = [
   { key: 'private', icon: LockKeyhole },
   { key: 'window', icon: CalendarClock },
@@ -16,9 +19,9 @@ export function Features() {
         <h2 id="features-title" className="sr-only">
           {t('title')}
         </h2>
-        <ul className="grid gap-12 md:grid-cols-3 md:gap-8">
-          {ITEMS.map(({ key, icon: Icon }) => (
-            <li key={key} className="flex flex-col items-center text-center md:items-start md:text-start">
+        <Stagger as="ul" className="grid gap-12 md:grid-cols-3 md:gap-8">
+          {ITEMS.map(({ key, icon: Icon }, i) => (
+            <li key={key} {...staggerItem(i)} className="flex flex-col items-center text-center md:items-start md:text-start">
               <span className="flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand">
                 <Icon size={24} strokeWidth={1.75} aria-hidden />
               </span>
@@ -26,7 +29,7 @@ export function Features() {
               <p className="mt-2 max-w-sm text-base leading-relaxed text-fg-muted">{t(`${key}.body`)}</p>
             </li>
           ))}
-        </ul>
+        </Stagger>
       </div>
     </section>
   );

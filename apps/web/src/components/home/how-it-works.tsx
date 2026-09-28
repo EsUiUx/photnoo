@@ -1,6 +1,9 @@
 import { CheckCheck, Download, Eye, FileImage, Link2, LockKeyhole, UploadCloud } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+import { Reveal, Stagger } from '@/components/motion/reveal';
+import { staggerItem } from '@/components/motion/stagger-item';
+
 /**
  * Three steps, each shown as a slice of the real product rather than an icon tile: the upload
  * queue, the two WhatsApp messages, and the proof log. The numbers carry the sequence.
@@ -15,15 +18,15 @@ export function HowItWorks() {
   return (
     <section id="how" aria-labelledby="how-title" className="scroll-mt-20 bg-surface-subtle">
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
-        <div className="max-w-2xl">
+        <Reveal className="max-w-2xl">
           <h2 id="how-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
             {t('title')}
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-fg-muted">{t('subtitle')}</p>
-        </div>
-        <ol className="mt-14 grid gap-6 lg:grid-cols-3">
+        </Reveal>
+        <Stagger as="ol" className="mt-14 grid gap-6 lg:grid-cols-3">
           {steps.map((step, i) => (
-            <li key={step.key} className="flex flex-col rounded-xl border border-border bg-surface p-6 shadow-card">
+            <li key={step.key} {...staggerItem(i)} className="flex flex-col rounded-xl border border-border bg-surface p-6 shadow-card">
               <div aria-hidden className="h-60">
                 {step.demo}
               </div>
@@ -38,7 +41,7 @@ export function HowItWorks() {
               </div>
             </li>
           ))}
-        </ol>
+        </Stagger>
       </div>
     </section>
   );

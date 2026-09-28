@@ -38,6 +38,7 @@ export function Drawer({ open, onClose, title, description, children, footer, si
   return (
     <dialog
       ref={ref}
+      data-motion="drawer-end"
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={(event) => {
@@ -49,7 +50,6 @@ export function Drawer({ open, onClose, title, description, children, footer, si
       }}
       className={cn(
         'fixed inset-y-0 start-auto end-0 m-0 h-dvh max-h-dvh w-full max-w-full border-s border-border bg-surface p-0 text-fg shadow-overlay backdrop:bg-overlay backdrop:backdrop-blur-[2px]',
-        'open:animate-[drawer-in_220ms_var(--ease-out-expo)] rtl:open:animate-[drawer-in-rtl_220ms_var(--ease-out-expo)] motion-reduce:open:animate-none',
         size === 'lg' ? 'sm:max-w-xl' : 'sm:max-w-md',
       )}
     >
@@ -81,8 +81,6 @@ export function Drawer({ open, onClose, title, description, children, footer, si
           {footer ? <div className="flex flex-wrap justify-end gap-3 border-t border-border bg-surface-subtle px-6 py-4">{footer}</div> : null}
         </div>
       ) : null}
-      <style>{`@keyframes drawer-in { from { opacity: 0.4; transform: translateX(24px); } to { opacity: 1; transform: none; } }
-@keyframes drawer-in-rtl { from { opacity: 0.4; transform: translateX(-24px); } to { opacity: 1; transform: none; } }`}</style>
     </dialog>
   );
 }

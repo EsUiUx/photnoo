@@ -4,16 +4,19 @@ import type { LucideIcon } from 'lucide-react';
 import { ArrowRight, Clock, Download, Eye, HardDrive, ImagePlus, Images, Plus, SearchX, TrendingDown, TrendingUp, Upload, Users } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
+import { CountUp } from '@/components/motion/count-up';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { DateRangeFilter, type DateRange, SearchInput, useDebounced } from '@/components/gallery/gallery-filters';
 import { GalleryTable } from '@/components/gallery/gallery-table';
 import { Button, ButtonLink } from '@/components/ui/button';
-import { Card, Meter } from '@/components/ui/primitives';
+import { Card } from '@/components/ui/primitives';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/state';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/cn';
 import { formatBytes, percent } from '@/lib/format';
 import { useDashboard, useGalleries, useMe } from '@/lib/queries';
 import type { ActivityItem, Dashboard, Trend } from '@/lib/types';
+import { EasedMeter, HANDOFF, ListStagger } from './app-motion';
 import { CreateGalleryDialog, type CreateIntent } from './create-gallery-dialog';
 
 const ACTIVITY_PREVIEW = 5;
@@ -42,10 +45,10 @@ export function DashboardView() {
         <h2 id="quick-actions-title" className="text-lg font-semibold text-fg">
           {t('quickActions')}
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <QuickAction icon={ImagePlus} title={t('createGallery')} body={t('createGalleryBody')} onClick={() => setCreating('gallery')} />
-          <QuickAction icon={Upload} title={t('uploadProject')} body={t('uploadProjectBody')} onClick={() => setCreating('upload')} />
-        </div>
+        <ListStagger as="div" className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <QuickAction index={0} icon={ImagePlus} title={t('createGallery')} body={t('createGalleryBody')} onClick={() => setCreating('gallery')} />
+          <QuickAction index={1} icon={Upload} title={t('uploadProject')} body={t('uploadProjectBody')} onClick={() => setCreating('upload')} />
+        </ListStagger>
       </section>
 
       {dashboard.isError && !data ? (
@@ -59,12 +62,12 @@ export function DashboardView() {
               {t('overview')}
             </h2>
             <div className="grid items-start gap-6 xl:grid-cols-3">
-              <ul className="grid grid-cols-1 content-start gap-3 min-[420px]:grid-cols-2 sm:gap-4 xl:col-span-2">
-                <Stat icon={Users} label={t('clients')} value={data?.clients} trend={data?.trends.clients} href="/clients" />
-                <Stat icon={Download} label={t('downloadsCycle')} value={data?.downloads} trend={data?.trends.downloads} />
-                <Stat icon={Images} label={t('activeGalleries')} value={data?.activeGalleries} trend={data?.trends.activeGalleries} trendLabel={t('trendShared')} />
-                <AllowanceStat data={data} loading={dashboard.isPending} />
-              </ul>
+              <ListStagger className="grid grid-cols-1 content-start gap-3 min-[420px]:grid-cols-2 sm:gap-4 xl:col-span-2">
+                <Stat index={0} icon={Users} label={t('clients')} value={data?.clients} trend={data?.trends.clients} href="/clients" />
+                <Stat index={1} icon={Download} label={t('downloadsCycle')} value={data?.downloads} trend={data?.trends.downloads} />
+                <Stat index={2} icon={Images} label={t('activeGalleries')} value={data?.activeGalleries} trend={data?.trends.activeGalleries} trendLabel={t('trendShared')} />
+                <AllowanceStat index={3} data={data} loading={dashboard.isPending} />
+              </ListStagger>
               <ActivityCard data={data} />
             </div>
           </section>
@@ -78,11 +81,12 @@ export function DashboardView() {
   );
 }
 
-function QuickAction({ icon: Icon, title, body, onClick }: { icon: LucideIcon; title: string; body: string; onClick: () => void }) {
+function QuickAction({ index, icon: Icon, title, body, onClick }: { index: number; icon: LucideIcon; title: string; body: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      {...staggerItem(index)}
       className="group flex min-h-24 items-center gap-4 rounded-lg border border-dashed border-brand/40 bg-brand-soft/60 p-5 text-start transition-colors duration-150 hover:border-brand hover:bg-brand-soft"
     >
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand text-brand-fg">
@@ -118,9 +122,9 @@ function Delta({ trend, label, neutral }: { trend?: Trend; label: string; neutra
   );
 }
 
-function StatShell({ icon: Icon, label, children, href }: { icon: LucideIcon; label: string; children: React.ReactNode; href?: string }) {
+function StatShell({ index, icon: Icon, label, children, href }: { index: number; icon: LucideIcon; label: string; children: React.ReactNode; href?: string }) {
   return (
-    <li className="relative rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
+    <li {...staggerItem(index)} className="relative rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
       <div className="flex items-center justify-between gap-3">
         {href ? (
           <Link href={href} className="rounded-md text-sm font-medium text-fg-muted after:absolute after:inset-0 after:content-[''] hover:text-fg">
@@ -138,15 +142,17 @@ function StatShell({ icon: Icon, label, children, href }: { icon: LucideIcon; la
   );
 }
 
-function Stat({ icon, label, value, trend, trendLabel, href }: { icon: LucideIcon; label: string; value?: number; trend?: Trend; trendLabel?: string; href?: string }) {
+function Stat({ index, icon, label, value, trend, trendLabel, href }: { index: number; icon: LucideIcon; label: string; value?: number; trend?: Trend; trendLabel?: string; href?: string }) {
   const format = useFormatter();
   return (
-    <StatShell icon={icon} label={label} href={href}>
+    <StatShell index={index} icon={icon} label={label} href={href}>
       {value === undefined ? (
         <Skeleton className="mt-3 h-9 w-20" />
       ) : (
         <>
-          <p className="tabular mt-3 text-3xl font-semibold tracking-tight text-fg">{format.number(value)}</p>
+          <p className={cn('tabular mt-3 text-3xl font-semibold tracking-tight text-fg', HANDOFF)}>
+            <CountUp value={value} format={(n) => format.number(n)} />
+          </p>
           <Delta trend={trend} label={trendLabel ?? ''} />
         </>
       )}
@@ -154,13 +160,13 @@ function Stat({ icon, label, value, trend, trendLabel, href }: { icon: LucideIco
   );
 }
 
-function AllowanceStat({ data, loading }: { data?: Dashboard; loading: boolean }) {
+function AllowanceStat({ index, data, loading }: { index: number; data?: Dashboard; loading: boolean }) {
   const t = useTranslations('App.dashboard');
   const locale = useLocale();
   const storage = data?.storage;
   const used = storage ? percent(storage.usedBytes, storage.allowanceBytes) : 0;
   return (
-    <StatShell icon={HardDrive} label={t('allowance')}>
+    <StatShell index={index} icon={HardDrive} label={t('allowance')}>
       {loading ? (
         <>
           <Skeleton className="mt-3 h-7 w-32" />
@@ -168,10 +174,10 @@ function AllowanceStat({ data, loading }: { data?: Dashboard; loading: boolean }
         </>
       ) : storage ? (
         <>
-          <p className="tabular mt-3 text-lg font-semibold text-fg">
+          <p className={cn('tabular mt-3 text-lg font-semibold text-fg', HANDOFF)}>
             {t('allowanceUsed', { used: formatBytes(storage.usedBytes, locale), total: formatBytes(storage.allowanceBytes, locale) })}
           </p>
-          <Meter value={used} label={t('allowanceMeter')} tone={used >= 95 ? 'danger' : used >= 80 ? 'warning' : 'brand'} className="mt-3" />
+          <EasedMeter value={used} label={t('allowanceMeter')} tone={used >= 95 ? 'danger' : used >= 80 ? 'warning' : 'brand'} className="mt-3" />
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
             <Link href="/billing" className="relative rounded-md text-xs text-fg-muted hover:text-fg">
               {t(`plan.${storage.state}` as 'plan.active')}
@@ -228,22 +234,22 @@ function ActivityCard({ data }: { data?: Dashboard }) {
       ) : items.length === 0 ? (
         <EmptyState icon={Eye} title={t('noActivityTitle')} body={t('noActivity')} className="py-10" />
       ) : (
-        <ul className="divide-y divide-border" aria-labelledby="recent-activity">
+        <ListStagger className="divide-y divide-border" aria-labelledby="recent-activity">
           {shown.map((item, index) => (
-            <ActivityRow key={`${item.type}-${item.galleryId}-${index}`} item={item} now={now} />
+            <ActivityRow key={`${item.type}-${item.galleryId}-${index}`} index={index} item={item} now={now} />
           ))}
-        </ul>
+        </ListStagger>
       )}
     </Card>
   );
 }
 
-function ActivityRow({ item, now }: { item: ActivityItem; now: number }) {
+function ActivityRow({ index, item, now }: { index: number; item: ActivityItem; now: number }) {
   const t = useTranslations('App.dashboard');
   const format = useFormatter();
   const { icon: Icon, tone } = ACTIVITY[item.type];
   return (
-    <li className="flex items-center gap-3 px-5 py-3">
+    <li {...staggerItem(index)} className="flex items-center gap-3 px-5 py-3">
       <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', tone)}>
         <Icon size={16} strokeWidth={1.75} aria-hidden />
       </span>
@@ -315,7 +321,7 @@ function RecentGalleries({ hasAny, onCreate }: { hasAny?: boolean; onCreate: () 
     );
   } else {
     body = (
-      <div aria-busy={galleries.isFetching || undefined}>
+      <div aria-busy={galleries.isFetching || undefined} className="transition-opacity duration-150 aria-busy:opacity-70">
         <GalleryTable galleries={items} now={now} caption={t('recentGalleries')} />
       </div>
     );

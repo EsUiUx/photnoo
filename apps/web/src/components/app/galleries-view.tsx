@@ -6,11 +6,14 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { DateRangeFilter, type DateRange, SearchInput, useDebounced } from '@/components/gallery/gallery-filters';
 import { GalleryTable } from '@/components/gallery/gallery-table';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Button } from '@/components/ui/button';
 import { controlClasses } from '@/components/ui/field';
 import { Card, Segmented } from '@/components/ui/primitives';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/state';
+import { cn } from '@/lib/cn';
 import { useGalleries } from '@/lib/queries';
+import { ListStagger } from './app-motion';
 import { CreateGalleryDialog } from './create-gallery-dialog';
 import { GalleryCard } from './gallery-card';
 
@@ -61,6 +64,9 @@ export function GalleriesView() {
 
   const items = useMemo(() => galleries.data?.pages.flatMap((page) => page.items) ?? [], [galleries.data]);
   const narrowed = Boolean(q || range.from || range.to);
+  // A new search, filter or sort dims the current list until the answer lands (no re-stagger).
+  const refreshing = galleries.isFetching && !galleries.isFetchingNextPage;
+  const dim = cn('transition-opacity duration-150', refreshing && 'opacity-70');
   const create = () => setCreating(true);
   const reset = () => {
     setSearch('');
@@ -119,15 +125,15 @@ export function GalleriesView() {
     body = (
       <>
         {view === 'grid' ? (
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" aria-busy={galleries.isFetching || undefined}>
-            {items.map((gallery) => (
-              <li key={gallery.id} className="grid">
+          <ListStagger className={cn('grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4', dim)} aria-busy={galleries.isFetching || undefined}>
+            {items.map((gallery, index) => (
+              <li key={gallery.id} {...staggerItem(index)} className="grid">
                 <GalleryCard gallery={gallery} now={now} />
               </li>
             ))}
-          </ul>
+          </ListStagger>
         ) : (
-          <Card aria-busy={galleries.isFetching || undefined} className="overflow-hidden">
+          <Card aria-busy={galleries.isFetching || undefined} className={cn('overflow-hidden', dim)}>
             <GalleryTable galleries={items} now={now} caption={t('title')} />
           </Card>
         )}

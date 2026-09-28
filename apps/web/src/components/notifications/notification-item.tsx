@@ -1,6 +1,8 @@
 'use client';
 
 import { Check } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { useFormatter, useNow, useTranslations } from 'next-intl';
 import { IconButton } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
@@ -75,9 +77,19 @@ export function NotificationItem({
           ) : (
             heading
           )}
-          {unread ? (
-            <span className="inline-flex items-center rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand">{t('new')}</span>
-          ) : null}
+          {/* Marking read (one or all) lets the pill go instead of cutting it. */}
+          <AnimatePresence initial={false}>
+            {unread ? (
+              <m.span
+                key="new"
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand"
+              >
+                {t('new')}
+              </m.span>
+            ) : null}
+          </AnimatePresence>
         </div>
         {body ? <p className={cn('mt-0.5 text-sm text-fg-secondary', compact && 'line-clamp-2')}>{body}</p> : null}
         {compact ? <RelativeTime iso={notification.createdAt} className="mt-1 block" /> : null}

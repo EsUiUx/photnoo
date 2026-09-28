@@ -3,12 +3,14 @@
 import { ArrowDown, ArrowLeft, ArrowUp, CalendarClock, ChevronRight, Ellipsis, FolderPlus, GripVertical, ImageOff, Pencil, Phone, Share2, Trash2 } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { EasedMeter, HANDOFF } from '@/components/app/app-motion';
 import { galleryBadge, StatusBadge } from '@/components/app/status-badge';
 import { useUploader } from '@/components/app/providers';
+import { DevelopImg } from '@/components/motion/develop';
 import { Button, ButtonLink, IconButton } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { Menu } from '@/components/ui/menu';
-import { Card, Meter } from '@/components/ui/primitives';
+import { Card } from '@/components/ui/primitives';
 import { Alert, ErrorState, Skeleton } from '@/components/ui/state';
 import { Link } from '@/i18n/navigation';
 import { ApiError } from '@/lib/api';
@@ -86,7 +88,7 @@ export function GalleryDetailView({ id }: { id: string }) {
 
   return (
     <div
-      className="mx-auto flex max-w-7xl flex-col gap-6"
+      className={cn('mx-auto flex max-w-7xl flex-col gap-6', HANDOFF)}
       onDragOver={(event) => {
         if (!open || !event.dataTransfer.types.includes('Files')) return;
         event.preventDefault();
@@ -213,8 +215,7 @@ function Header({ gallery, open, onDialog }: { gallery: GalleryDetail; open: boo
         <div className="flex min-w-0 items-start gap-4">
           <div className="hidden size-16 shrink-0 overflow-hidden rounded-md bg-surface-sunken sm:block">
             {gallery.coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-              <img src={gallery.coverUrl} alt="" className="size-full object-cover" />
+              <DevelopImg src={gallery.coverUrl} alt="" className="size-full object-cover" />
             ) : null}
           </div>
           <div className="min-w-0">
@@ -292,7 +293,7 @@ function Summary({ gallery }: { gallery: GalleryDetail }) {
             <span className="font-medium text-fg">{t('allowance')}</span>
             <span className="tabular text-fg-muted">{t('allowancePercent', { percent: format.number(used) })}</span>
           </div>
-          <Meter
+          <EasedMeter
             className="mt-2"
             value={used}
             label={t('allowance')}

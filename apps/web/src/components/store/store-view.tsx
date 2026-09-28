@@ -3,6 +3,9 @@
 import { Banknote, Clock, ExternalLink, ImageIcon, Package, Pencil, Plus, Receipt, ShoppingBag } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
+import { DevelopImg } from '@/components/motion/develop';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { StatCard, Switch, useMoney } from '@/components/orders/commerce-ui';
 import { OrdersPanel } from '@/components/orders/orders-panel';
 import { Button, ButtonLink } from '@/components/ui/button';
@@ -51,18 +54,19 @@ export function StoreView({ initialTab = 'products', initialOrderId }: { initial
             <ErrorState onRetry={() => void stats.refetch()} className="py-8" />
           </Card>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-            <StatCard icon={Package} label={t('stats.products')} value={s ? format.number(s.products.value) : undefined} delta={s?.products.delta} />
-            <StatCard icon={Receipt} label={t('stats.orders')} value={s ? format.number(s.orders.value) : undefined} delta={s?.orders.delta} />
+          <ListStagger className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+            <StatCard index={0} icon={Package} label={t('stats.products')} value={s ? format.number(s.products.value) : undefined} delta={s?.products.delta} />
+            <StatCard index={1} icon={Receipt} label={t('stats.orders')} value={s ? format.number(s.orders.value) : undefined} delta={s?.orders.delta} />
             <StatCard
+              index={2}
               icon={Banknote}
               label={t('stats.revenue')}
               value={s ? money(s.revenueEgp.value) : undefined}
               delta={s?.revenueEgp.delta}
               hint={t('stats.revenueHint')}
             />
-            <StatCard icon={Clock} label={t('stats.pending')} value={s ? format.number(s.pending) : undefined} />
-          </ul>
+            <StatCard index={3} icon={Clock} label={t('stats.pending')} value={s ? format.number(s.pending) : undefined} />
+          </ListStagger>
         )}
       </section>
 
@@ -180,27 +184,26 @@ function ProductGrid({ slug, onAdd, onEdit }: { slug: string | null; onAdd: () =
     );
   }
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {products.data.map((product) => (
-        <ProductCard key={product.id} product={product} slug={slug} onEdit={() => onEdit(product)} />
+    <ListStagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {products.data.map((product, index) => (
+        <ProductCard key={product.id} index={index} product={product} slug={slug} onEdit={() => onEdit(product)} />
       ))}
-    </ul>
+    </ListStagger>
   );
 }
 
 /** Product card (Figma 0:5750). */
-function ProductCard({ product, slug, onEdit }: { product: Product; slug: string | null; onEdit: () => void }) {
+function ProductCard({ index, product, slug, onEdit }: { index: number; product: Product; slug: string | null; onEdit: () => void }) {
   const t = useTranslations('App.store');
   const locale = useLocale();
   const money = useMoney();
   const onSale = product.salePriceEgp !== null;
   const path = slug ? `/${locale}/p/${slug}/shop?product=${product.id}` : null;
   return (
-    <li className="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
-      <div className="relative aspect-[4/3] bg-surface-sunken">
+    <li {...staggerItem(index)} className="flex flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
+      <div className="relative aspect-[4/3] overflow-hidden bg-surface-sunken">
         {product.previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img src={product.previewUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+          <DevelopImg src={product.previewUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
         ) : (
           <span className="flex size-full items-center justify-center text-fg-muted">
             <ImageIcon size={22} strokeWidth={1.75} aria-hidden />

@@ -4,6 +4,8 @@ import type { LucideIcon } from 'lucide-react';
 import { TrendingDown, TrendingUp, X } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useEffect, useId, useRef } from 'react';
+import { HANDOFF } from '@/components/app/app-motion';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Badge, type Tone } from '@/components/ui/primitives';
 import { Skeleton } from '@/components/ui/state';
 import { cn } from '@/lib/cn';
@@ -47,6 +49,7 @@ export function Drawer({ open, onClose, title, description, children, footer, di
   return (
     <dialog
       ref={ref}
+      data-motion="drawer-end"
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={(event) => {
@@ -58,7 +61,7 @@ export function Drawer({ open, onClose, title, description, children, footer, di
       }}
       className={cn(
         'ms-auto me-0 my-0 h-dvh max-h-none w-full max-w-md border-0 border-s border-border bg-surface p-0 text-fg shadow-overlay backdrop:bg-overlay sm:rounded-s-xl',
-        'open:flex open:animate-[drawer-in_220ms_var(--ease-out-expo)] motion-reduce:open:animate-none rtl:open:animate-[drawer-in-rtl_220ms_var(--ease-out-expo)]',
+        'open:flex',
       )}
     >
       {open ? (
@@ -93,7 +96,6 @@ export function Drawer({ open, onClose, title, description, children, footer, di
           ) : null}
         </div>
       ) : null}
-      <style>{`@keyframes drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } } @keyframes drawer-in-rtl { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }`}</style>
     </dialog>
   );
 }
@@ -163,18 +165,21 @@ export function StatCard({
   value,
   delta,
   hint,
+  index,
 }: {
   icon: LucideIcon;
   label: string;
   value?: string;
   delta?: number | null;
   hint?: string;
+  /** Position in a staggered list (see ListStagger). */
+  index?: number;
 }) {
   const t = useTranslations('App.orders');
   const format = useFormatter();
   const up = (delta ?? 0) >= 0;
   return (
-    <li className="rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
+    <li {...(index === undefined ? {} : staggerItem(index))} className="rounded-lg border border-border bg-surface p-4 shadow-xs sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-fg-muted">{label}</p>
         <span className="flex size-9 items-center justify-center rounded-md bg-brand-soft text-brand">
@@ -184,7 +189,7 @@ export function StatCard({
       {value === undefined ? (
         <Skeleton className="mt-3 h-9 w-24" />
       ) : (
-        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className={cn('mt-3 flex flex-wrap items-center gap-x-2 gap-y-1', HANDOFF)}>
           <p className="tabular text-2xl font-semibold tracking-tight text-fg sm:text-3xl">{value}</p>
           {delta !== undefined && delta !== null ? (
             <Badge tone={up ? 'success' : 'danger'} className="tabular gap-1">

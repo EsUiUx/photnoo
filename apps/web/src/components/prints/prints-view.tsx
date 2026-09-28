@@ -3,6 +3,9 @@
 import { Banknote, CheckCircle2, Clock, Factory, Frame, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
+import { DevelopImg } from '@/components/motion/develop';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { StatCard, Switch, useMoney } from '@/components/orders/commerce-ui';
 import { OrdersPanel } from '@/components/orders/orders-panel';
 import { Button, IconButton } from '@/components/ui/button';
@@ -50,12 +53,12 @@ export function PrintsView({ initialTab = 'catalog', initialOrderId }: { initial
             <ErrorState onRetry={() => void stats.refetch()} className="py-8" />
           </Card>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-            <StatCard icon={Clock} label={t('stats.pending')} value={s ? format.number(s.pending) : undefined} />
-            <StatCard icon={Factory} label={t('stats.inProduction')} value={s ? format.number(s.inProduction) : undefined} />
-            <StatCard icon={CheckCircle2} label={t('stats.delivered')} value={s ? format.number(s.delivered) : undefined} />
-            <StatCard icon={Banknote} label={t('stats.revenue')} value={s ? money(s.revenueEgp.value) : undefined} delta={s?.revenueEgp.delta} hint={t('stats.revenueHint')} />
-          </ul>
+          <ListStagger className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+            <StatCard index={0} icon={Clock} label={t('stats.pending')} value={s ? format.number(s.pending) : undefined} />
+            <StatCard index={1} icon={Factory} label={t('stats.inProduction')} value={s ? format.number(s.inProduction) : undefined} />
+            <StatCard index={2} icon={CheckCircle2} label={t('stats.delivered')} value={s ? format.number(s.delivered) : undefined} />
+            <StatCard index={3} icon={Banknote} label={t('stats.revenue')} value={s ? money(s.revenueEgp.value) : undefined} delta={s?.revenueEgp.delta} hint={t('stats.revenueHint')} />
+          </ListStagger>
         )}
       </section>
 
@@ -168,18 +171,18 @@ function Catalog({ onAdd, onEdit }: { onAdd: (type?: PrintType) => void; onEdit:
               {t('add')}
             </Button>
           </div>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group.items.map((item) => (
-              <PrintRow key={item.id} item={item} onEdit={() => onEdit(item)} />
+          <ListStagger className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {group.items.map((item, index) => (
+              <PrintRow key={item.id} index={index} item={item} onEdit={() => onEdit(item)} />
             ))}
-          </ul>
+          </ListStagger>
         </section>
       ))}
     </div>
   );
 }
 
-function PrintRow({ item, onEdit }: { item: PrintItem; onEdit: () => void }) {
+function PrintRow({ index, item, onEdit }: { index: number; item: PrintItem; onEdit: () => void }) {
   const t = useTranslations('App.prints');
   const money = useMoney();
   const remove = useDeletePrintItem();
@@ -195,11 +198,10 @@ function PrintRow({ item, onEdit }: { item: PrintItem; onEdit: () => void }) {
   }
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-border bg-surface-subtle p-3">
+    <li {...staggerItem(index)} className="flex items-center gap-3 rounded-lg border border-border bg-surface-subtle p-3">
       <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-brand-soft text-brand">
         {item.previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img src={item.previewUrl} alt="" loading="lazy" className="size-full object-cover" />
+          <DevelopImg src={item.previewUrl} alt="" loading="lazy" className="size-full object-cover" />
         ) : (
           <Frame size={20} strokeWidth={1.75} aria-hidden />
         )}

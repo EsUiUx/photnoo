@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { DevelopImage } from '@/components/motion/develop';
+import { Reveal } from '@/components/motion/reveal';
 import { Link } from '@/i18n/navigation';
 import { LanguageSwitch } from './language-switch';
 
@@ -46,7 +47,7 @@ export function AuthShell({ title, subtitle, children, photo = 'bouquet', titleR
         </header>
 
         <main id="main" className="flex flex-1 items-center justify-center px-4 pt-6 pb-12 sm:px-6 lg:px-10">
-          <div className="w-full max-w-sm">
+          <Reveal className="w-full max-w-sm">
             <div className="mb-8">
               <h1 ref={titleRef} tabIndex={titleRef ? -1 : undefined} className="text-2xl font-semibold tracking-tight text-fg outline-none sm:text-3xl">
                 {title}
@@ -54,7 +55,7 @@ export function AuthShell({ title, subtitle, children, photo = 'bouquet', titleR
               {subtitle ? <p className="mt-2 text-base leading-relaxed text-fg-muted">{subtitle}</p> : null}
             </div>
             {children}
-          </div>
+          </Reveal>
         </main>
 
         <footer className="flex flex-wrap items-center gap-x-5 gap-y-1 px-4 pb-6 text-sm text-fg-muted sm:px-6 lg:px-10">
@@ -78,7 +79,7 @@ function PhotoPanel({ photo }: { photo: AuthPhoto }) {
   const { src, position } = PHOTOS[photo];
   return (
     <aside aria-hidden className="sticky top-0 hidden h-dvh overflow-hidden bg-surface-sunken lg:block lg:w-1/2">
-      <Image src={src} alt="" fill priority sizes="50vw" className={`object-cover ${position}`} />
+      <DevelopImage src={src} alt="" fill priority sizes="50vw" className={`object-cover ${position}`} />
       <div className="absolute inset-0 bg-linear-to-t from-fg/80 via-fg/15 to-fg/35" />
       <div className="absolute inset-0 flex flex-col justify-between p-10 xl:p-12">
         {/* eslint-disable-next-line @next/next/no-img-element -- static brand SVG */}

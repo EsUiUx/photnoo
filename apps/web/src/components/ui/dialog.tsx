@@ -41,6 +41,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
   return (
     <dialog
       ref={ref}
+      data-motion="dialog"
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={(event) => {
@@ -52,7 +53,6 @@ export function Dialog({ open, onClose, title, description, children, footer, si
       }}
       className={cn(
         'm-auto w-[calc(100%-2rem)] rounded-xl border border-border bg-surface p-0 text-fg shadow-overlay backdrop:bg-overlay backdrop:backdrop-blur-[2px]',
-        'open:animate-[dialog-in_220ms_var(--ease-out-expo)] motion-reduce:open:animate-none',
         WIDTHS[size],
       )}
     >
@@ -84,7 +84,6 @@ export function Dialog({ open, onClose, title, description, children, footer, si
           {footer ? <div className="flex flex-wrap justify-end gap-3 border-t border-border bg-surface-subtle px-6 py-4 rounded-b-xl">{footer}</div> : null}
         </div>
       ) : null}
-      <style>{`@keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }`}</style>
     </dialog>
   );
 }

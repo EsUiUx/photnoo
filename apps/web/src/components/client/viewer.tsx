@@ -2,7 +2,8 @@
 
 import { ChevronLeft, ChevronRight, Download, FileImage, Frame, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState, ViewTransition } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
 import { Button } from '@/components/ui/button';
 import type { ClientFile } from '@/lib/client-api';
 import { cn } from '@/lib/cn';
@@ -76,7 +77,7 @@ export function Viewer(props: Props) {
 function ViewerFrame({
   files,
   index,
-  onIndex,
+  onIndex: setIndex,
   onClose,
   onDownload,
   busy,
@@ -90,6 +91,8 @@ function ViewerFrame({
 }: Props & { file: ClientFile; closeRef: React.RefObject<HTMLButtonElement | null>; rtl: boolean }) {
   const t = useTranslations('Client.viewer');
   const tPrints = useTranslations('ClientPrints');
+  // Photo changes run as a transition so the named view transition below crossfades them.
+  const onIndex = useCallback((next: number) => startTransition(() => setIndex(next)), [setIndex]);
   const locale = useLocale();
   const [zoom, setZoom] = useState<Zoom>(NO_ZOOM);
   const [dragX, setDragX] = useState(0);
@@ -235,18 +238,24 @@ function ViewerFrame({
         onPointerCancel={onPointerUp}
       >
         {file.previewUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img
-            src={file.previewUrl}
-            alt={file.name}
-            draggable={false}
-            className="max-h-full max-w-full object-contain"
-            style={{
-              transform: zoomed ? `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` : `translateX(${dragX}px)`,
-              transition: touching ? 'none' : 'transform 200ms var(--ease-out-expo)',
-              ...(file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})`, backgroundSize: 'cover' } : {}),
-            }}
-          />
+          // One name across frames: the outgoing and incoming photo crossfade (and settle into the new
+          // size), and a photo that is still loading develops. Browsers without view transitions cut.
+          <ViewTransition name="client-viewer-photo" share="auto" default="none">
+            <DevelopImg
+              src={file.previewUrl}
+              alt={file.name}
+              draggable={false}
+              className="max-h-full max-w-full object-contain"
+              style={{
+                transform: zoomed ? `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` : `translateX(${dragX}px)`,
+                // The inline transition replaces the develop one from globals.css, so it is repeated here.
+                transition: touching
+                  ? 'none'
+                  : 'transform 200ms var(--ease-out-expo), filter var(--duration-develop) var(--ease-out-expo), opacity 500ms var(--ease-out-expo), scale 1200ms var(--ease-out-expo)',
+                ...(file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})`, backgroundSize: 'cover' } : {}),
+              }}
+            />
+          </ViewTransition>
         ) : (
           <div className="flex flex-col items-center gap-3 px-6 text-center">
             <span className="flex size-12 items-center justify-center rounded-full bg-white/10">

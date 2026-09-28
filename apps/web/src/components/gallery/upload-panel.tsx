@@ -1,11 +1,14 @@
 'use client';
 
 import { CircleAlert, CloudUpload, RotateCw, X } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
+import { EasedMeter } from '@/components/app/app-motion';
 import { useUploader } from '@/components/app/providers';
 import { Button, IconButton } from '@/components/ui/button';
-import { Card, Meter } from '@/components/ui/primitives';
+import { Card } from '@/components/ui/primitives';
 import { cn } from '@/lib/cn';
 import { formatBytes, formatDuration, percent } from '@/lib/format';
 import type { UploadSnapshot } from '@/lib/uploader';
@@ -130,58 +133,71 @@ export function UploadPanel({ galleryId }: { galleryId: string }) {
       <p aria-live="polite" className="sr-only">
         {status}
       </p>
-      {items.length > 0 ? (
-        <Card className="p-5" as="section">
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <h2 className="flex items-center gap-2 text-base font-semibold text-fg">
-              {!active && failed.length > 0 ? (
-                <CircleAlert size={18} strokeWidth={1.75} aria-hidden className="text-danger" />
-              ) : null}
-              {status}
-            </h2>
-            <p className="tabular text-sm text-fg-muted">
-              {t('bytes', { uploaded: formatBytes(uploaded, locale), total: formatBytes(total, locale) })}
-            </p>
-          </div>
-          <Meter className="mt-3" value={percent(uploaded, total)} label={t('progressLabel')} tone={!active && failed.length > 0 ? 'danger' : 'brand'} />
-          <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-fg-muted">
-            <span className="tabular">
-              {active && snapshot && snapshot.bytesPerSecond > 0 ? t('speed', { speed: formatBytes(snapshot.bytesPerSecond, locale) }) : null}
-              {active && snapshot?.secondsLeft ? ` · ${t('timeLeft', { time: formatDuration(snapshot.secondsLeft, locale) })}` : null}
-            </span>
-            <span>{t('resumeNote')}</span>
-          </div>
+      <AnimatePresence initial={false}>
+        {items.length > 0 ? (
+          <m.div key="uploads" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}>
+            <Card className="p-5" as="section">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <h2 className="flex items-center gap-2 text-base font-semibold text-fg">
+                  {!active && failed.length > 0 ? (
+                    <CircleAlert size={18} strokeWidth={1.75} aria-hidden className="text-danger" />
+                  ) : null}
+                  {status}
+                </h2>
+                <p className="tabular text-sm text-fg-muted">
+                  {t('bytes', { uploaded: formatBytes(uploaded, locale), total: formatBytes(total, locale) })}
+                </p>
+              </div>
+              <EasedMeter className="mt-3" value={percent(uploaded, total)} label={t('progressLabel')} tone={!active && failed.length > 0 ? 'danger' : 'brand'} />
+              <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs text-fg-muted">
+                <span className="tabular">
+                  {active && snapshot && snapshot.bytesPerSecond > 0 ? t('speed', { speed: formatBytes(snapshot.bytesPerSecond, locale) }) : null}
+                  {active && snapshot?.secondsLeft ? ` · ${t('timeLeft', { time: formatDuration(snapshot.secondsLeft, locale) })}` : null}
+                </span>
+                <span>{t('resumeNote')}</span>
+              </div>
 
-          {failed.length > 0 ? (
-            <ul className="mt-4 divide-y divide-border border-t border-border">
-              {failed.map((item) => {
-                const key = errorKey(item.error?.code);
-                return (
-                  <li key={item.key} className="flex items-center gap-3 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-fg">{item.name}</p>
-                      <p className="text-xs text-danger">{t(`errors.${key}`)}</p>
-                    </div>
-                    {retryable(item.error?.code) ? (
-                      <Button variant="secondary" size="sm" icon={RotateCw} onClick={() => uploader.retry(item.key)} aria-label={t('retryFile', { name: item.name })}>
-                        {t('retry')}
-                      </Button>
-                    ) : null}
-                    <IconButton icon={X} size="sm" label={t('dismissFile', { name: item.name })} onClick={() => uploader.cancel(item.key)} />
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-          {!active ? (
-            <div className="mt-3 flex justify-end">
-              <Button variant="ghost" size="sm" onClick={() => uploader.clearFinished()}>
-                {t('clear')}
-              </Button>
-            </div>
-          ) : null}
-        </Card>
-      ) : null}
+              {failed.length > 0 ? (
+                <ul className="mt-4 divide-y divide-border border-t border-border">
+                  <AnimatePresence initial={false}>
+                    {failed.map((item) => {
+                      const key = errorKey(item.error?.code);
+                      return (
+                        <m.li
+                          key={item.key}
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.18 }}
+                          className="flex items-center gap-3 py-2.5"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-fg">{item.name}</p>
+                            <p className="text-xs text-danger">{t(`errors.${key}`)}</p>
+                          </div>
+                          {retryable(item.error?.code) ? (
+                            <Button variant="secondary" size="sm" icon={RotateCw} onClick={() => uploader.retry(item.key)} aria-label={t('retryFile', { name: item.name })}>
+                              {t('retry')}
+                            </Button>
+                          ) : null}
+                          <IconButton icon={X} size="sm" label={t('dismissFile', { name: item.name })} onClick={() => uploader.cancel(item.key)} />
+                        </m.li>
+                      );
+                    })}
+                  </AnimatePresence>
+                </ul>
+              ) : null}
+              {!active ? (
+                <div className="mt-3 flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => uploader.clearFinished()}>
+                    {t('clear')}
+                  </Button>
+                </div>
+              ) : null}
+            </Card>
+          </m.div>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }

@@ -78,6 +78,7 @@ function MobileNav({ open, onClose, me, loading }: { open: boolean; onClose: () 
 
   return (
     <dialog
+      data-motion="drawer-start"
       ref={ref}
       aria-label={tNav('label')}
       onCancel={(event) => {
@@ -87,7 +88,7 @@ function MobileNav({ open, onClose, me, loading }: { open: boolean; onClose: () 
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
-      className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] border-e border-border bg-surface-subtle p-0 text-fg shadow-overlay backdrop:bg-overlay open:animate-[drawer-in_220ms_var(--ease-out-expo)] motion-reduce:open:animate-none lg:hidden"
+      className="fixed inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-72 max-w-[85vw] border-e border-border bg-surface-subtle p-0 text-fg shadow-overlay backdrop:bg-overlay lg:hidden"
     >
       {open ? (
         <div className="relative h-full">
@@ -95,7 +96,6 @@ function MobileNav({ open, onClose, me, loading }: { open: boolean; onClose: () 
           <Sidebar me={me} loading={loading} onNavigate={onClose} />
         </div>
       ) : null}
-      <style>{`@keyframes drawer-in { from { opacity: 0; translate: calc(var(--drawer-dir, -1) * 24px) 0; } to { opacity: 1; translate: 0 0; } } [dir="rtl"] dialog { --drawer-dir: 1; }`}</style>
     </dialog>
   );
 }

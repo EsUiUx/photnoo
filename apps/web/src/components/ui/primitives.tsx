@@ -2,7 +2,7 @@
 
 import { Check, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 export type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'info';
@@ -89,6 +89,21 @@ export function Segmented<T extends string>({
 }) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const index = Math.max(0, options.findIndex((o) => o.value === value));
+  // The selected pill slides between options instead of jumping (measured, so labels of any
+  // length and either writing direction work).
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = refs.current[index];
+      if (el) setPill({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    const group = refs.current[index]?.parentElement;
+    if (!group || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(group);
+    return () => observer.disconnect();
+  }, [index, options.length]);
 
   function move(event: React.KeyboardEvent, current: number) {
     const rtl = document.documentElement.dir === 'rtl';
@@ -106,7 +121,14 @@ export function Segmented<T extends string>({
   }
 
   return (
-    <div role="radiogroup" aria-label={label} className={cn('inline-flex rounded-md bg-surface-sunken p-1', className)}>
+    <div role="radiogroup" aria-label={label} className={cn('relative isolate inline-flex rounded-md bg-surface-sunken p-1', className)}>
+      {pill ? (
+        <span
+          aria-hidden
+          className="absolute inset-y-1 -z-10 rounded-[7px] bg-surface shadow-xs transition-[left,width] duration-300 ease-[var(--ease-out-expo)] motion-reduce:transition-none"
+          style={{ left: pill.left, width: pill.width }}
+        />
+      ) : null}
       {options.map((option, i) => {
         const checked = i === index;
         return (
@@ -124,7 +146,7 @@ export function Segmented<T extends string>({
             className={cn(
               'inline-flex items-center justify-center gap-2 rounded-[7px] px-3.5 font-medium whitespace-nowrap transition-colors duration-150',
               size === 'sm' ? 'h-8 text-sm' : 'h-9 text-sm pointer-coarse:h-10',
-              checked ? 'bg-surface text-fg shadow-xs' : 'text-fg-muted hover:text-fg',
+              checked ? cn('text-fg', !pill && 'bg-surface shadow-xs') : 'text-fg-muted hover:text-fg',
             )}
           >
             {option.label}

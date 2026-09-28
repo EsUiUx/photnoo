@@ -3,9 +3,12 @@
 import { Phone, Plus, SearchX, Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
 import { SearchInput, useDebounced } from '@/components/gallery/gallery-filters';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { Button } from '@/components/ui/button';
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/state';
+import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/format';
 import { useClients } from '@/lib/queries-galleries';
 import type { ClientListItem } from '@/lib/types-galleries';
@@ -57,13 +60,19 @@ export function ClientsView() {
   } else {
     body = (
       <>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" aria-busy={clients.isFetching || undefined}>
-          {items.map((client) => (
-            <li key={client.id} className="grid">
+        <ListStagger
+          className={cn(
+            'grid gap-4 transition-opacity duration-150 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4',
+            clients.isFetching && !clients.isFetchingNextPage && 'opacity-70',
+          )}
+          aria-busy={clients.isFetching || undefined}
+        >
+          {items.map((client, index) => (
+            <li key={client.id} {...staggerItem(index)} className="grid">
               <ClientCard client={client} onOpen={() => setOpenId(client.id)} />
             </li>
           ))}
-        </ul>
+        </ListStagger>
         {clients.hasNextPage ? (
           <div className="flex justify-center pt-2">
             <Button variant="secondary" pending={clients.isFetchingNextPage} onClick={() => void clients.fetchNextPage()}>

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { direction, routing } from '@/i18n/routing';
+import { MotionProvider } from '@/components/motion/motion-provider';
 import { SkipLink } from '@/components/ui/skip-link';
 import '../globals.css';
 
@@ -45,7 +46,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <div hidden dangerouslySetInnerHTML={{ __html: '<!-- DIRECTION CONTRACT. THESIS: photographs lead, the product frames them; refuses the SaaS hero of gradient blobs and dashboard screenshots. OWN-WORLD: forest green brand (#3a5a40) on warm off-white canvas, Geist and Readex Pro, lucide icons at 1.75 stroke, 10-14px radii, quiet hairline borders, soft card shadows. STORY: an Egyptian photographer sees their work delivered beautifully, trusts the proofing and download flow, and requests access. FIRST VIEWPORT: full-bleed Cairo rooftop couple photo, headline and two CTAs on the leading side, live activity card floating trailing-bottom, transparent header over the image. FORM: canon category standard (Pixieset, Pic-Time), image-led composition B, seed 39ff7672. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->' }} />
         <NextIntlClientProvider>
           <SkipLink />
-          {children}
+          <MotionProvider>{children}</MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

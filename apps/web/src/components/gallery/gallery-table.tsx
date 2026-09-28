@@ -2,8 +2,11 @@
 
 import { ArrowRight, ImageIcon } from 'lucide-react';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
+import { ListStagger } from '@/components/app/app-motion';
 import { CopyLinkButton, daysLeft } from '@/components/app/gallery-card';
 import { galleryBadge, StatusBadge } from '@/components/app/status-badge';
+import { DevelopImg } from '@/components/motion/develop';
+import { staggerItem } from '@/components/motion/stagger-item';
 import { ButtonLink } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { formatDate } from '@/lib/format';
@@ -13,8 +16,7 @@ function Cover({ gallery, className }: { gallery: GalleryListItem; className: st
   return (
     <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-sunken text-fg-muted ${className}`}>
       {gallery.coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-        <img src={gallery.coverUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+        <DevelopImg src={gallery.coverUrl} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
       ) : (
         <ImageIcon size={16} strokeWidth={1.75} aria-hidden />
       )}
@@ -70,9 +72,9 @@ export function GalleryTable({ galleries, now, caption }: { galleries: GalleryLi
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
-            {galleries.map((gallery) => (
-              <tr key={gallery.id} className="transition-colors duration-150 hover:bg-surface-subtle">
+          <ListStagger as="tbody" className="divide-y divide-border">
+            {galleries.map((gallery, index) => (
+              <tr key={gallery.id} {...staggerItem(index)} className="transition-colors duration-150 hover:bg-surface-subtle">
                 <td className="px-4 py-2.5">
                   <Cover gallery={gallery} className="h-10 w-14" />
                 </td>
@@ -101,15 +103,15 @@ export function GalleryTable({ galleries, now, caption }: { galleries: GalleryLi
                 </td>
               </tr>
             ))}
-          </tbody>
+          </ListStagger>
         </table>
       </div>
 
-      <ul className="divide-y divide-border md:hidden" aria-label={caption}>
-        {galleries.map((gallery) => {
+      <ListStagger className="divide-y divide-border md:hidden" aria-label={caption}>
+        {galleries.map((gallery, index) => {
           const left = daysLeft(gallery, now);
           return (
-            <li key={gallery.id} className="relative flex items-start gap-3 px-4 py-3">
+            <li key={gallery.id} {...staggerItem(index)} className="relative flex items-start gap-3 px-4 py-3">
               <Cover gallery={gallery} className="h-12 w-16" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
@@ -137,7 +139,7 @@ export function GalleryTable({ galleries, now, caption }: { galleries: GalleryLi
             </li>
           );
         })}
-      </ul>
+      </ListStagger>
     </>
   );
 }

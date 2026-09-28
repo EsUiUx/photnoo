@@ -3,6 +3,8 @@
 import { ArrowDown, ArrowDownToLine, ArrowUp, ArrowUpToLine, GripVertical, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
+import { ListStagger } from '@/components/app/app-motion';
+import { DevelopImg } from '@/components/motion/develop';
 import { IconButton } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { Menu } from '@/components/ui/menu';
@@ -128,7 +130,7 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
       <p aria-live="assertive" className="sr-only">
         {announcement}
       </p>
-      <ul aria-label={t('gridLabel')} className="flex flex-wrap gap-2 [--row-h:7rem] sm:gap-3 sm:[--row-h:10rem] lg:[--row-h:12rem]">
+      <ListStagger aria-label={t('gridLabel')} className="flex flex-wrap gap-2 [--row-h:7rem] sm:gap-3 sm:[--row-h:10rem] lg:[--row-h:12rem]">
         {shown.map((item, index) => {
           const ratio = ratioOf(item);
           const name = item.caption || t('imageName', { position: index + 1 });
@@ -136,6 +138,7 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
           return (
             <li
               key={item.id}
+              data-stagger-item=""
               draggable
               onDragStart={(e) => {
                 setDragId(item.id);
@@ -161,7 +164,7 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
                 setDragId(null);
                 commit(shown.map((i) => i.id));
               }}
-              style={{ flexGrow: ratio, flexBasis: `calc(var(--row-h) * ${ratio.toFixed(3)})` }}
+              style={{ '--i': index, flexGrow: ratio, flexBasis: `calc(var(--row-h) * ${ratio.toFixed(3)})` } as React.CSSProperties}
               className={cn(
                 'group relative min-w-0 overflow-hidden rounded-md bg-surface-sunken',
                 dragId === item.id && 'opacity-40',
@@ -172,8 +175,7 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
                 className="relative w-full bg-cover bg-center"
                 style={{ aspectRatio: ratio, backgroundImage: item.blurDataUrl ? `url(${item.blurDataUrl})` : undefined }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-                <img
+                <DevelopImg
                   src={item.previewUrl}
                   alt={item.caption ?? ''}
                   loading="lazy"
@@ -249,7 +251,7 @@ export function PortfolioGrid({ items }: { items: PortfolioItem[] }) {
         })}
         {/* Soaks up the spare width so the last row keeps its natural height. */}
         <li aria-hidden className="h-0 grow-[999]" />
-      </ul>
+      </ListStagger>
       <EditItemDialog item={editing} onClose={() => setEditing(null)} />
       {dialog}
     </>

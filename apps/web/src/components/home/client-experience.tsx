@@ -1,6 +1,7 @@
 import { Check, Download } from 'lucide-react';
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { DevelopImage } from '@/components/motion/develop';
+import { Reveal } from '@/components/motion/reveal';
 import p1 from '../../../public/photos/engagement-citadel-1.jpg';
 import p2 from '../../../public/photos/engagement-citadel-2.jpg';
 import p3 from '../../../public/photos/engagement-citadel-3.jpg';
@@ -17,7 +18,7 @@ export function ClientExperience() {
         <div className="order-2 flex justify-center lg:order-1">
           <Phone t={t} />
         </div>
-        <div className="order-1 lg:order-2">
+        <Reveal className="order-1 lg:order-2">
           <h2 id="clients-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
             {t('title')}
           </h2>
@@ -32,7 +33,7 @@ export function ClientExperience() {
               </li>
             ))}
           </ul>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -43,10 +44,12 @@ function Phone({ t }: { t: ReturnType<typeof useTranslations<'Home.clients'>> })
   return (
     <figure className="relative w-[300px] shrink-0 sm:w-[320px]">
       <div aria-hidden className="absolute -inset-16 -z-10 rounded-full bg-brand-soft/70 blur-3xl" />
+      {/* The resting clip-path gives the mask an inset to interpolate from (none is not animatable). */}
+      <Reveal variant="clip" className="rounded-[44px] [clip-path:inset(0_0_0_0_round_44px)]">
       <div className="rounded-[44px] border-[10px] border-primary-900 bg-primary-900 shadow-overlay">
         <div className="relative overflow-hidden rounded-[34px] bg-surface">
           <div className="relative h-56">
-            <Image src={cover} alt={t('phoneAlt')} fill sizes="320px" className="object-cover" />
+            <DevelopImage src={cover} alt={t('phoneAlt')} fill sizes="320px" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4 text-white">
               <p className="text-lg font-semibold">{t('demoGallery')}</p>
@@ -64,11 +67,12 @@ function Phone({ t }: { t: ReturnType<typeof useTranslations<'Home.clients'>> })
           </div>
           <div className="grid grid-cols-2 gap-1 p-1">
             {grid.map((src, i) => (
-              <Image key={i} src={src} alt="" sizes="160px" className="aspect-[4/5] w-full rounded-sm object-cover" />
+              <DevelopImage key={i} src={src} alt="" sizes="160px" className="aspect-[4/5] w-full rounded-sm object-cover" />
             ))}
           </div>
         </div>
       </div>
+      </Reveal>
     </figure>
   );
 }

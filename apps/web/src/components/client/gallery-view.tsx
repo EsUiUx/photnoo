@@ -4,6 +4,8 @@ import { AlertTriangle, Clock, Download, FileImage, Images, Info } from 'lucide-
 import { useQuery } from '@tanstack/react-query';
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useMemo, useRef, useState } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
+import { Reveal } from '@/components/motion/reveal';
 import { Button } from '@/components/ui/button';
 import { Badge, Meter } from '@/components/ui/primitives';
 import { EmptyState } from '@/components/ui/state';
@@ -116,20 +118,17 @@ export function GalleryView({ token, content, onGone }: { token: string; content
       >
         {cover?.previewUrl ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element -- signed storage URL */}
-            <img
-              src={cover.previewUrl}
-              alt=""
-              fetchPriority="high"
-              className="absolute inset-0 -z-10 size-full object-cover"
-              style={cover.blurDataUrl ? { backgroundImage: `url(${cover.blurDataUrl})`, backgroundSize: 'cover' } : undefined}
-            />
+            {/* The blur placeholder sits under the photo so it stays visible while the cover develops. */}
+            {cover.blurDataUrl ? (
+              <div aria-hidden className="absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: `url(${cover.blurDataUrl})` }} />
+            ) : null}
+            <DevelopImg src={cover.previewUrl} alt="" fetchPriority="high" className="absolute inset-0 -z-10 size-full object-cover" />
             {/* Two washes: one keeps the language toggle legible, the other carries the title. */}
             <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-32 bg-linear-to-b from-black/45 to-transparent" />
             <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-3/4 bg-linear-to-t from-black/85 via-black/45 to-transparent" />
           </>
         ) : null}
-        <div className="mx-auto w-full max-w-screen-2xl px-4 pt-24 pb-8 sm:px-6 sm:pb-12 lg:px-8">
+        <Reveal delay={120} className="mx-auto w-full max-w-screen-2xl px-4 pt-24 pb-8 sm:px-6 sm:pb-12 lg:px-8">
           <div className="flex items-center gap-3">
             <PhotographerMark name={content.photographer.name} size="sm" className="ring-2 ring-white/70" />
             <p className="text-sm font-medium text-white/90">{content.photographer.name}</p>
@@ -147,7 +146,7 @@ export function GalleryView({ token, content, onGone }: { token: string; content
               </>
             ) : null}
           </p>
-        </div>
+        </Reveal>
       </header>
 
       <div className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
@@ -285,22 +284,14 @@ function Tile({ file, done, onOpen, ref }: { file: ClientFile; done: boolean; on
       ref={ref}
       type="button"
       onClick={onOpen}
-      className="group relative block w-full overflow-hidden rounded-md bg-surface-sunken text-start focus-visible:outline-offset-3"
+      className="group relative block w-full overflow-hidden rounded-md bg-surface-sunken bg-cover bg-center text-start focus-visible:outline-offset-3"
+      // The blur placeholder lives on the tile, under the photo, so it shows while the photo develops.
+      style={file.previewUrl && file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})` } : undefined}
       aria-label={done ? `${t('open', { name: file.name })}, ${t('saved')}` : t('open', { name: file.name })}
     >
+      {/* Develop only: hundreds of photos never stagger. */}
       {file.previewUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-        <img
-          src={file.previewUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="block w-full object-cover"
-          style={{
-            aspectRatio: ratio,
-            ...(file.blurDataUrl ? { backgroundImage: `url(${file.blurDataUrl})`, backgroundSize: 'cover' } : {}),
-          }}
-        />
+        <DevelopImg src={file.previewUrl} alt="" loading="lazy" decoding="async" className="block w-full object-cover" style={{ aspectRatio: ratio }} />
       ) : (
         <span className="flex aspect-square flex-col items-center justify-center gap-2 p-4 text-center">
           <FileImage size={22} strokeWidth={1.75} aria-hidden className="text-fg-muted" />

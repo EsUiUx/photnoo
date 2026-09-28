@@ -2,8 +2,12 @@
 
 import type { UseMutationResult } from '@tanstack/react-query';
 import { Camera, CircleCheck, Trash2, type LucideIcon } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { useTranslations } from 'next-intl';
 import { useEffect, useId, useRef, useState } from 'react';
+import { DevelopImg } from '@/components/motion/develop';
+import { Reveal } from '@/components/motion/reveal';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/primitives';
@@ -27,16 +31,18 @@ export function SettingsSection({
 }) {
   const headingId = `${id}-title`;
   return (
-    <Card as="section" id={id} aria-labelledby={headingId} className="scroll-mt-24">
-      <header className="border-b border-border px-5 py-5 sm:px-6">
-        <h2 id={headingId} className="text-lg font-semibold text-fg">
-          {title}
-        </h2>
-        {description ? <p className="mt-1 max-w-2xl text-sm text-fg-muted">{description}</p> : null}
-      </header>
-      <div className="px-5 py-6 sm:px-6">{children}</div>
-      {footer ? <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-surface-subtle px-5 py-4 sm:px-6">{footer}</footer> : null}
-    </Card>
+    <Reveal variant="rise">
+      <Card as="section" id={id} aria-labelledby={headingId} className="scroll-mt-24">
+        <header className="border-b border-border px-5 py-5 sm:px-6">
+          <h2 id={headingId} className="text-lg font-semibold text-fg">
+            {title}
+          </h2>
+          {description ? <p className="mt-1 max-w-2xl text-sm text-fg-muted">{description}</p> : null}
+        </header>
+        <div className="px-5 py-6 sm:px-6">{children}</div>
+        {footer ? <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-surface-subtle px-5 py-4 sm:px-6">{footer}</footer> : null}
+      </Card>
+    </Reveal>
   );
 }
 
@@ -45,14 +51,22 @@ export function SaveStatus({ state, error }: { state: 'idle' | 'saved' | 'error'
   const t = useTranslations('App.settings');
   return (
     <p role="status" aria-live="polite" className={cn('me-auto text-sm', state === 'error' ? 'font-medium text-danger' : 'text-success')}>
-      {state === 'saved' ? (
-        <span className="inline-flex items-center gap-1.5">
-          <CircleCheck size={16} strokeWidth={1.75} aria-hidden />
-          {t('saved')}
-        </span>
-      ) : state === 'error' ? (
-        (error ?? t('saveFailed'))
-      ) : null}
+      <AnimatePresence initial={false}>
+        {state === 'saved' ? (
+          <m.span
+            key="saved"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="inline-flex items-center gap-1.5"
+          >
+            <CircleCheck size={16} strokeWidth={1.75} aria-hidden />
+            {t('saved')}
+          </m.span>
+        ) : null}
+      </AnimatePresence>
+      {state === 'error' ? (error ?? t('saveFailed')) : null}
     </p>
   );
 }
@@ -164,8 +178,7 @@ export function ImagePicker({
         )}
       >
         {src ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-          <img src={src} alt={alt} className={cn('size-full', shape === 'round' ? 'object-cover' : 'object-contain p-2')} />
+          <DevelopImg key={src} src={src} alt={alt} className={cn('size-full', shape === 'round' ? 'object-cover' : 'object-contain p-2')} />
         ) : (
           fallback
         )}
