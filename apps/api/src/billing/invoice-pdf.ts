@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { invoiceNumber } from '@photnoo/shared';
 import PDFDocument from 'pdfkit';
@@ -16,7 +17,8 @@ export type InvoiceData = {
 };
 
 const fonts = (() => {
-  const dir = join(dirname(require.resolve('@fontsource/ibm-plex-sans-arabic/package.json')), 'files');
+  const bundled = join(__dirname, '..', 'fonts');
+  const dir = existsSync(bundled) ? bundled : join(dirname(require.resolve('@fontsource/ibm-plex-sans-arabic/package.json')), 'files');
   const file = (subset: 'latin' | 'arabic', weight: 400 | 600) => join(dir, `ibm-plex-sans-arabic-${subset}-${weight}-normal.woff`);
   return { latin: file('latin', 400), latinBold: file('latin', 600), arabic: file('arabic', 400), arabicBold: file('arabic', 600) };
 })();

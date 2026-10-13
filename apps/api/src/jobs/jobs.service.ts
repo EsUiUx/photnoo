@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { PgBoss } from 'pg-boss';
+import { waitUntil } from '@vercel/functions';
+import type { PgBoss } from 'pg-boss';
 import { ENV, type Env } from '../config/env';
 
 /** Background job names and their payloads. */
@@ -25,11 +26,14 @@ const QUEUES: Record<JobName, { retryLimit: number; retryDelay: number; expireIn
 export class JobsService implements OnModuleDestroy {
   private readonly logger = new Logger(JobsService.name);
   private boss?: Promise<PgBoss>;
+  private readonly inlineHandlers = new Map<JobName, (data: unknown) => Promise<void>>();
 
   constructor(@Inject(ENV) private readonly env: Env) {}
 
   private start(): Promise<PgBoss> {
     this.boss ??= (async () => {
+      // Loaded on first use: pg-boss is ESM-only, and the serverless runtime cannot require() it.
+      const { PgBoss } = await import('pg-boss');
       const boss = new PgBoss({ connectionString: this.env.DATABASE_URL, schema: 'pgboss' });
       boss.on('error', (err) => this.logger.error({ err }, 'Job queue error'));
       await boss.start();
@@ -42,7 +46,18 @@ export class JobsService implements OnModuleDestroy {
   }
 
   async send<N extends JobName>(name: N, data: JobPayloads[N]): Promise<void> {
-    await (await this.start()).send(name, data);
+    const inline = this.env.JOBS_INLINE ? this.inlineHandlers.get(name) : undefined;
+    if (!inline) {
+      await (await this.start()).send(name, data);
+      return;
+    }
+    // Serverless: run after the response is sent, keeping the function alive until it finishes.
+    waitUntil(inline(data).catch((err: unknown) => this.logger.error({ err, name }, 'Inline job failed')));
+  }
+
+  /** Handlers for JOBS_INLINE mode, where no worker process polls the queue. */
+  registerInline<N extends JobName>(name: N, handler: (data: JobPayloads[N]) => Promise<void>): void {
+    this.inlineHandlers.set(name, handler as (data: unknown) => Promise<void>);
   }
 
   async work<N extends JobName>(

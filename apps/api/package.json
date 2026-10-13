@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-fonts.mjs",
     "dev": "tsc-watch -p tsconfig.build.json --onSuccess \"node --env-file-if-exists=../../.env dist/main.js\"",
     "start": "node --env-file-if-exists=../../.env dist/main.js",
     "start:worker": "node --env-file-if-exists=../../.env dist/worker.js",
@@ -23,6 +23,7 @@
     "@nestjs/platform-express": "^11.1.6",
     "@photnoo/db": "workspace:*",
     "@photnoo/shared": "workspace:*",
+    "@vercel/functions": "^3.9.11",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.1.0",

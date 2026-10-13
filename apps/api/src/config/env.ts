@@ -9,6 +9,8 @@ const envSchema = z
     /** Base URL browsers use to reach the API; only the local storage driver signs URLs against it. */
     PUBLIC_API_URL: z.string().url().default('http://localhost:4000'),
     DATABASE_URL: z.string().min(1),
+    /** Connections per process. Keep small on serverless, where many instances share one pooler. */
+    DB_POOL_MAX: z.coerce.number().int().positive().optional(),
     REDIS_URL: z.string().min(1),
     JWT_ACCESS_SECRET: z.string().min(32),
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
@@ -47,6 +49,12 @@ const envSchema = z
      */
     CF_ACCESS_TEAM_DOMAIN: z.string().optional(),
     CF_ACCESS_AUD: z.string().optional(),
+    /**
+     * Serverless hosting (Vercel) has no long-running worker: background jobs run right after the
+     * request that queued them, and the scheduled tick runs from a cron request carrying CRON_SECRET.
+     */
+    JOBS_INLINE: z.stringbool().default(false),
+    CRON_SECRET: z.string().min(16).optional(),
     /** Test-only prefix for switch keys, so parallel test files cannot flip each other's switches. */
     FLAG_NAMESPACE: z.string().default(''),
   })

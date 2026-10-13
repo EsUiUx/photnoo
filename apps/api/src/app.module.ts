@@ -26,6 +26,7 @@ import { StorageModule } from './storage/storage.module';
 import { MailModule } from './mail/mail.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { ServerlessModule } from './serverless/serverless.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { RedisModule } from './redis/redis.module';
     PrintsModule,
     PortfolioModule,
     AnalyticsModule,
+    ServerlessModule,
   ],
   controllers: [HealthController],
 })
