@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["API_URL", "NEXT_DIST_DIR"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": { "cache": false, "persistent": true, "dependsOn": ["^build"] },
