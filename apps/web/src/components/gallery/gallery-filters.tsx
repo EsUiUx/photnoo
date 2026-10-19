@@ -69,7 +69,8 @@ export function DateRangeFilter({ value, onChange, className }: { value: DateRan
   const toId = useId();
   const input = controlClasses(false, 'h-10 w-full min-w-0 px-2.5 pointer-coarse:h-11 sm:w-40');
   return (
-    <fieldset className={cn('flex min-w-0 flex-wrap items-end gap-2', className)}>
+    // One row from sm up: the search box beside it shrinks instead of pushing "to" under "from".
+    <fieldset className={cn('flex min-w-0 flex-wrap items-end gap-2 sm:shrink-0 sm:flex-nowrap', className)}>
       <legend className="sr-only">{t('createdRange')}</legend>
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-none">
         <label htmlFor={fromId} className="text-xs font-medium text-fg-muted">
@@ -101,7 +102,7 @@ export function DateRangeFilter({ value, onChange, className }: { value: DateRan
         <button
           type="button"
           onClick={() => onChange({ from: '', to: '' })}
-          className="h-10 rounded-md px-3 text-sm font-medium text-brand hover:bg-brand-soft pointer-coarse:h-11"
+          className="h-10 rounded-md px-3 text-sm font-medium whitespace-nowrap text-brand hover:bg-brand-soft pointer-coarse:h-11"
         >
           {t('clearDates')}
         </button>

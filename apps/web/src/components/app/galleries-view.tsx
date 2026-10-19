@@ -167,7 +167,7 @@ export function GalleriesView() {
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <SearchInput value={search} onChange={setSearch} label={t('search')} placeholder={t('searchPlaceholder')} className="sm:max-w-xs" />
+            <SearchInput value={search} onChange={setSearch} label={t('search')} placeholder={t('searchPlaceholder')} className="sm:min-w-48 sm:max-w-xs sm:flex-1" />
             <DateRangeFilter value={range} onChange={setRange} />
           </div>
           <div className="flex flex-wrap items-end gap-3">
