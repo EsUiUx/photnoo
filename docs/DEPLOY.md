@@ -29,6 +29,42 @@ corepack pnpm@9.15.4 install
 corepack pnpm@9.15.4 turbo run build --filter=@photnoo/api
 ```
 
+## If you received an existing Supabase project
+
+If the Supabase project was transferred to you, its database, bucket, tables and data are already in place.
+Use this section in place of step 1, then continue with steps 2, 3 and 5. A previous owner's site keeps using
+the old credentials until you replace them, so treat every one of them as compromised.
+
+Skip these parts of the guide:
+
+- Step 1, except finding the pooler host (1.5). You still need your project's ref and pooler host for the URLs.
+- Creating demo data in step 4. Create your own admin and photographer only if you need them.
+  `seed-plans` is safe to run: it changes nothing if plans already exist.
+
+Replace the credentials in this order:
+
+1. Set up the Vercel projects in steps 2 and 3, but do not deploy yet.
+2. Create new storage keys (**Storage → S3 Configuration → New access key**) for the API's `S3_ACCESS_KEY_ID`
+   and `S3_SECRET_ACCESS_KEY`.
+3. Generate a new database password, letters and digits only, and set it in the **SQL Editor**. This stops any
+   previous owner's site from reaching the database.
+
+   ```sql
+   alter role photnoo_app password '<generated password>';
+   ```
+
+4. Build `DATABASE_URL` from step 1.5 with that password, and generate your own `JWT_ACCESS_SECRET` and
+   `CRON_SECRET` as shown in step 2. Never reuse the previous values. A new JWT secret signs everyone out.
+5. Deploy the API and the website, then run the checks in steps 2 and 3.
+6. Delete the old access keys under **Storage → S3 Configuration**.
+7. Review the accounts in the data. Delete demo photographers, clients and galleries you do not want, or change
+   their passwords. Passwords for demo accounts may have been shared with others during testing.
+
+Moving a domain: the previous owner must first remove it from their Vercel project. Then follow step 5.
+
+Until the previous owner deletes their API project on Vercel, its daily cron request fails once the database
+password has changed. That has no effect on your site.
+
 ## 1. Supabase
 
 1. Create a project and choose the region closest to your users. These steps use Frankfurt (`eu-central-1`).
