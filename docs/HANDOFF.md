@@ -4,12 +4,13 @@ Read this first in a new Claude session. It replaces the conversation history.
 
 ## What exists
 Photo-delivery SaaS for photographers in Egypt. The monorepo is `G:\Photography` (pnpm + Turborepo):
-- `apps/api`: NestJS 11, Prisma 7, pg-boss worker.
+- `apps/api`: NestJS 11, Prisma 7, pg-boss worker locally; a Vercel Function with inline jobs when hosted.
 - `apps/web`: Next.js 16, Tailwind 4, next-intl. English is the default, Arabic is RTL.
 - `apps/admin`: Next.js admin console on :3001.
 - `packages/db`: Prisma schema and migrations. `packages/shared`: zod schemas.
 
 Built and committed, newest first:
+- Vercel and Supabase hosting: `apps/api/api/index.js`, `JOBS_INLINE`, the daily cron tick.
 - `aaabedf`: motion system and pricing rail.
   - React ViewTransition page transitions and Motion for React.
   - `components/motion/*`: Reveal, Stagger, DevelopImage, CountUp.
@@ -21,8 +22,7 @@ Built and committed, newest first:
 - Earlier: auth, galleries, uploads, sharing, the client gallery `/g/<token>`, billing with manual payments and invoices, the admin console, and the demo seed.
 
 ## Product truth
-- **PRD v1** (Claude Docs artifact): https://claude.ai/code/artifact/f418ec22-a43d-4181-8713-e64c06f5ba31
-- **Recommendation doc:** https://claude.ai/code/artifact/5ff23037-8f59-444e-b679-f82ffce94df5
+- **PRD v1** and the **Recommendation doc** are private documents; ask the previous owner for copies.
 - The user later asked for full Figma parity, including Store, Prints, Portfolio and Analytics, which PRD v1 had deferred.
 - `apps/web/PRODUCT.md` holds the design context. The design bar is Pixieset / Pic-Time, keeping the logo and the green brand.
 
@@ -37,17 +37,14 @@ cd apps/web && pnpm build && node node_modules/next/dist/bin/next start -p 3000
 - Run exactly one API, the newest build.
 - Redis is not installed. Health reports "degraded"; that is fine.
 - Demo data: `pnpm --filter @photnoo/api seed:demo` (idempotent).
-- Test logins are in `.local/dev-accounts.md` (git-ignored). Never paste them in chat.
+- Test logins go in `.local/dev-accounts.md` (git-ignored; each developer keeps their own).
 - Checks from the repo root: `pnpm typecheck`, `pnpm lint`, `pnpm --filter @photnoo/api test` (108 tests).
 
-## Preview link for the owner (Cloudflare quick tunnel)
-- `cloudflared` is installed (`C:\Program Files (x86)\cloudflared\cloudflared.exe`).
-- Start it: `cloudflared tunnel --no-autoupdate --url http://localhost:3000`, then read the `https://*.trycloudflare.com` URL from its output. The URL changes on every restart; tell the user the new one.
-- The API and worker must run with `WEB_ORIGIN` and `PUBLIC_API_URL` set to the tunnel URL. Otherwise share links say localhost and images break.
-- **Standing rule:** redeploy every change to the tunnel with `node scripts/preview-redeploy.mjs --origin <tunnel url> [--api]`. It builds into `.next-staging` and swaps it in. Never rebuild `.next` in place while it is being served.
+## Hosting
+Hosting is Vercel plus Supabase, with nothing running on a local machine. To set up your own copy, follow [DEPLOY.md](DEPLOY.md).
+The Cloudflare tunnel flow (`scripts/preview-redeploy.mjs`) is retired; the script remains for local previews only.
 
 ## Conventions
-- Commit as `git -c user.name="Designer" -c user.email="Designer@yez.travel"`, ending the message with the Co-Authored-By line.
 - Per-area message files live in `apps/web/messages/{en,ar}/*.json`. After adding one, run `node scripts/sync-message-index.mjs` in `apps/web`.
 - Every API query is scoped by `photographerId`. Errors return `{ code, message }`.
 
@@ -58,11 +55,10 @@ cd apps/web && pnpm build && node node_modules/next/dist/bin/next start -p 3000
   - testimonials, social URLs, the public phone number;
   - online payment (Paymob) versus pay-the-photographer-directly.
 - **Not built:**
-  - notification emails (the preference is stored, nothing is sent);
+  - notification emails (the preference is stored, nothing is sent), and SMTP login for hosted email providers;
   - a captcha after 3 wrong gallery passwords (the API sets `captchaRequired`, the web ignores it);
   - Redis rate limiting;
   - an admin revenue dashboard (A-10);
   - DESIGN.md (impeccable documenter);
   - an Arabic visual pass on the new screens;
   - security review and load test.
-- **Connectors to re-authorise on the new account:** Figma, Higgsfield (image generation), and any others that were used.

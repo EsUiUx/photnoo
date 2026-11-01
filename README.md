@@ -8,12 +8,15 @@ Product scope and rules live in **Photnoo PRD v1**; architecture and roadmap in 
 **Project Recommendation** doc. Delivery rules shared by every app are in
 [`packages/shared/src/rules.ts`](packages/shared/src/rules.ts).
 
+**Deploying your own copy:** see [docs/DEPLOY.md](docs/DEPLOY.md). **Project status and open items:** see [docs/HANDOFF.md](docs/HANDOFF.md).
+
 ## Repository layout
 
 | Path | What it is |
 | --- | --- |
 | `apps/api` | NestJS modular monolith (REST API under `/v1`, `/health` for probes) |
 | `apps/web` | Next.js app: marketing site, photographer app, client gallery (Arabic + English, RTL) |
+| `apps/admin` | Next.js admin console |
 | `packages/db` | Prisma schema, migrations and client factory |
 | `packages/shared` | Delivery rules, zod schemas and types shared by API and web |
 
